@@ -4,7 +4,8 @@ RÉGLAGES SERVO — version hors ligne
 Contenu
 -------
 index.html                  Le site complet (un seul fichier). La base est déjà dedans :
-                            17 moteurs SH3, 247 réducteurs (SEW, Neugart, Atlanta),
+                            17 moteurs SH3, 271 réducteurs (Neugart PLFN/PLN/PLE/PLQE 120,
+                            Atlanta, SEW KH49),
                             5 variateurs LXM62, projet 250114_Popellier avec C1, P1, P2.
 base-reglages-servo.json    La même base en fichier séparé (sauvegarde / import).
 LISEZMOI.txt                Ce fichier.
@@ -18,6 +19,9 @@ Utilisation
 
 Sauvegarde et autre poste
 -------------------------
+- Nouvelle version du fichier index.html : les nouvelles références du catalogue
+  (moteurs, réducteurs, variateurs) s'ajoutent toutes seules à ta base, sans toucher
+  à tes projets ni à tes modifications.
 - La base vit dans le navigateur : si tu vides les données du navigateur, elle repart
   de la base d'origine contenue dans index.html.
 - En bas de page : « Exporter la base » télécharge un fichier .json avec tout
