@@ -97,6 +97,11 @@ td.n,th.n{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-
 td.p{font-family:var(--mono);font-weight:500;white-space:nowrap}
 td.dir{color:var(--muted);font-size:12px;white-space:nowrap}
 tr.hl td{background:var(--accent-soft)}
+tr.ref td{color:var(--muted)}
+tr.ref td.p{color:var(--fg)}
+.pt{display:inline-block;min-width:52px;padding:1px 7px;border-radius:99px;font-weight:600;text-align:right}
+.pt.ok{background:var(--ok-soft);color:var(--ok)} .pt.warn{background:var(--warn-soft);color:var(--warn)} .pt.crit{background:var(--crit-soft);color:var(--crit)}
+.gear-sum{font-size:12px;color:var(--muted);margin-top:4px}
 .checks{display:flex;flex-direction:column;gap:6px;margin:0;padding:0;list-style:none}
 .checks li{display:flex;gap:10px;align-items:flex-start;padding:8px 10px;border-radius:var(--r);font-size:13px}
 .checks li .tag{font-family:var(--mono);font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;padding:2px 6px;border-radius:4px;flex:none;margin-top:1px}
@@ -226,7 +231,8 @@ const AXIS_GROUPS = [
     { k: 'tStop', l: 'Durée visée de l’arrêt', u: 's', h: '0,15 à 0,2 s en général' },
     { k: 'iStopMa', l: 'Limite de courant imposée à l’arrêt', u: 'mA', h: 'Vide : limite réducteur calculée' } ] },
   { t: 'Sécurité réducteur', f: [
-    { k: 'marge', l: 'Part de T2B autorisée', u: '%', h: '80 % = marge de 20 %' } ] },
+    { k: 'marge', l: 'Part de T2B autorisée', u: '%', h: '80 % = marge de 20 %' },
+    { k: 'uclSaisi', l: 'UserCurrentLimit réglé dans le variateur', u: '%', h: 'Optionnel : pour contrôler le couple que ce réglage donne en sortie du réducteur' } ] },
   { t: 'Réglage actuel du variateur', h: 'Pour transposer Vel_P_Gain quand l’inertie déclarée change.', f: [
     { k: 'velPActuel', l: 'Vel_P_Gain actuel', u: '' },
     { k: 'jLoadActuel', l: 'J_Load actuel', u: 'kg·cm²' },
@@ -295,6 +301,21 @@ function compute(a) {
   const driveStopMa = iStopMa ?? (IstopA ? Math.floor(IstopA * 10) * 100 : null);
   Object.assign(R, { tStop, dec, decLimited, jerkStop, tArret, stl, dist, driveStopMa, IstopA });
 
+  // Couples vus par le réducteur (sans rendement : cas le plus défavorable pour le réducteur)
+  const Tout = I => I != null ? I * kt * i : null;
+  const pctOf = I => Iref && I != null ? I / Iref * 100 : null;
+  const ucl = num(a.uclSaisi), Iucl = ucl != null && Iref ? ucl / 100 * Iref : null;
+  const TR = [];
+  if (t2n) TR.push({ l: 'T2N · couple nominal', t: t2n, I: I_T2N, ref: true });
+  if (t2b) TR.push({ l: 'T2B · couple max', t: t2b, I: I_T2B, ref: true });
+  if (t2not) TR.push({ l: 'T2Not · arrêt d’urgence', t: t2not, I: I_T2Not, ref: true });
+  if (Ilim) TR.push({ l: `Limite calculée (${fmt(pct, 1)} %)`, t: Tout(Ilim), I: Ilim, hl: true });
+  if (Iucl != null) TR.push({ l: `Réglage variateur (${fmt(ucl, 1)} %)`, t: Tout(Iucl), I: Iucl, hl: true });
+  if (vertical && Ihold) TR.push({ l: 'Maintien de la charge', t: Ihold * kt * i * eta, I: Ihold });
+  if (IstopA && iStopMa) TR.push({ l: `Arrêt d’urgence (${fmt(iStopMa, 0)} mA)`, t: Tout(IstopA), I: IstopA });
+  TR.forEach(x => { x.tm = x.t != null ? x.t / i : null; x.pc = pctOf(x.I) != null ? Math.floor(pctOf(x.I) * 10 + 1e-9) / 10 : null; x.pT2B = t2b && x.t != null ? x.t / t2b * 100 : null; });
+  Object.assign(R, { TR, ucl, Iucl, Tucl: Tout(Iucl) });
+
   // Jerk du mouvement
   const per = num(a.periode);
   R.jerkMove = per && acc ? nice(acc / per) : null;
@@ -313,6 +334,9 @@ function compute(a) {
   if (vertical && Ihold > Ilim) C.push(['crit', `Le maintien demande ${fmt(Ihold)} A, plus que la limite de ${fmt(Ilim)} A : l’axe ne peut pas tenir la charge.`]);
   if (vertical && iStopMa && iStopMa / 1000 <= Ihold) C.push(['crit', `La limite d’arrêt (${fmt(iStopMa, 0)} mA) est sous le courant de maintien (${fmt(Ihold)} A) : la charge tombe pendant l’arrêt.`]);
   if (vPhys && vMax && vMax > vPhys) C.push(['crit', `Vitesse programmée ${fmt(vMax, 0)} au-delà du maximum moteur (${fmt(vPhys, 0)} Units/s).`]);
+  if (R.Tucl != null && t2b && R.Tucl > t2b) C.push(['crit', `Le UserCurrentLimit réglé (${fmt(ucl, 1)} %) laisse passer ${fmt(R.Tucl, 0)} Nm en sortie, au-delà du T2B (${fmt(t2b, 0)} Nm) : risque de casse du réducteur. Descendre à ${fmt(pct, 1)} %.`]);
+  else if (R.Tucl != null && t2b && R.Tucl > t2b * marge) C.push(['warn', `Le UserCurrentLimit réglé (${fmt(ucl, 1)} %) donne ${fmt(R.Tucl, 0)} Nm en sortie, soit ${fmt(R.Tucl / t2b * 100, 0)} % du T2B : au-dessus de la marge choisie.`]);
+  else if (R.Tucl != null && t2b) C.push(['ok', `Le UserCurrentLimit réglé (${fmt(ucl, 1)} %) donne ${fmt(R.Tucl, 0)} Nm en sortie, soit ${fmt(R.Tucl / t2b * 100, 0)} % du T2B.`]);
   if (!t2b) C.push(['warn', 'Le réducteur n’a pas de T2B : la limite de courant n’est pas calculée vis-à-vis du réducteur.']);
   if (I_T2N && vertical && Ihold > I_T2N) C.push(['warn', `Le maintien (${fmt(Ihold)} A) dépasse le couple nominal T2N du réducteur (${fmt(I_T2N)} A).`]);
   if (accMax != null && acc && acc > accMax) C.push(['warn', `L’accélération programmée (${fmt(acc, 0)}) dépasse ce que permet la limite de courant (${fmt(accMax, 0)} Units/s²${vertical ? ' en montée' : ''}).`]);
@@ -443,7 +467,7 @@ function inputHtml(f, val, prefix) {
   if (f.t === 'motor' || f.t === 'reducer' || f.t === 'drive') {
     const list = f.t === 'motor' ? S.motors : f.t === 'reducer' ? S.reducers : S.drives;
     const groups = new Map(); list.forEach(x => { const g = x.serie || 'Autres'; if (!groups.has(g)) groups.set(g, []); groups.get(g).push(x); });
-    const opt = x => `<option value="${esc(x.id)}" ${x.id === val ? 'selected' : ''}>${esc(x.ref)}${f.t === 'reducer' && x.ratio ? ' · i=' + esc(x.ratio) : ''}${f.t === 'drive' && x.iPeak ? ' · ' + esc(x.iPeak) + ' A' : ''}</option>`;
+    const opt = x => `<option value="${esc(x.id)}" ${x.id === val ? 'selected' : ''}>${esc(x.ref)}${f.t === 'reducer' && x.ratio ? ' · i=' + esc(x.ratio) : ''}${f.t === 'reducer' && x.t2b ? ' · T2B ' + esc(x.t2b) + ' Nm' : ''}${f.t === 'drive' && x.iPeak ? ' · ' + esc(x.iPeak) + ' A' : ''}</option>`;
     ctrl = `<select id="${id}" data-k="${f.k}"><option value="">— Choisir —</option>${[...groups].map(([g, xs]) => `<optgroup label="${esc(g)}">${xs.map(opt).join('')}</optgroup>`).join('')}</select>`;
     return `<div class="field wide"><label for="${id}">${esc(f.l)}</label>${ctrl}</div>`;
   }
@@ -516,6 +540,10 @@ function renderResults() {
   box.innerHTML = `<div class="panel-h"><h2>Réglages calculés</h2><button class="btn" id="copyP">Copier les paramètres</button></div>
   <div class="panel-b">
     <div class="stats">${stats.map(s => `<div class="stat"><div class="k">${esc(s[0])}</div><div class="v">${s[1]}<small>${esc(s[2])}</small></div><div class="s">${esc(s[3])}</div></div>`).join('')}</div>
+    ${R.TR.length ? `<div><h3>Couples du réducteur · ${esc(R.r.ref || '')} · i=${fmt(R.i, 3)}</h3><div class="tblwrap"><table><thead><tr><th></th><th class="n">Sortie réducteur</th><th class="n">Côté moteur</th><th class="n">Courant</th><th class="n">% Imax</th><th class="n">% T2B</th></tr></thead><tbody>
+      ${R.TR.map(x => { const c = x.pT2B == null ? '' : x.pT2B > 100.05 ? 'crit' : x.pT2B > (R.marge * 100 + 0.05) ? 'warn' : 'ok';
+        return `<tr class="${x.hl ? 'hl' : x.ref ? 'ref' : ''}"><td class="p">${esc(x.l)}</td><td class="n">${fmt(x.t, 0)} Nm</td><td class="n">${fmt(x.tm, 2)} Nm</td><td class="n">${fmt(x.I, 2)} A</td><td class="n">${fmt(x.pc, 1)} %</td><td class="n">${x.ref ? fmt(x.pT2B, 0) + ' %' : `<span class="pt ${c}">${fmt(x.pT2B, 0)} %</span>`}</td></tr>`; }).join('')}
+      </tbody></table></div><p class="gear-sum">Couple sortie = courant × Kt (${fmt(R.kt, 3)} Nm/A) × i, sans rendement (cas le plus défavorable pour le réducteur). Vert : sous la marge de ${fmt(R.marge * 100, 0)} % du T2B · orange : entre la marge et le T2B · rouge : au-delà du T2B.</p></div>` : ''}
     <div><h3>Paramètres à saisir dans le variateur</h3><div class="tblwrap"><table><thead><tr><th>Paramètre</th><th class="n">Valeur</th><th>Unité</th><th>Dossier</th></tr></thead><tbody>
       ${P.map(p => `<tr class="${p[4] ? 'hl' : ''}"><td class="p">${esc(p[0])}</td><td class="n">${esc(p[1])}</td><td class="dir">${esc(p[2])}</td><td class="dir">${esc(p[3])}</td></tr>`).join('')}
     </tbody></table></div></div>
