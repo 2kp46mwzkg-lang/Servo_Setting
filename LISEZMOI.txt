@@ -1,0 +1,42 @@
+RÉGLAGES SERVO — version hors ligne
+====================================
+
+Contenu
+-------
+index.html                  Le site complet (un seul fichier). La base est déjà dedans :
+                            17 moteurs SH3, 247 réducteurs (SEW, Neugart, Atlanta),
+                            5 variateurs LXM62, projet 250114_Popellier avec C1, P1, P2.
+base-reglages-servo.json    La même base en fichier séparé (sauvegarde / import).
+LISEZMOI.txt                Ce fichier.
+
+Utilisation
+-----------
+1. Dézipper le dossier où tu veux.
+2. Ouvrir index.html avec Chrome, Edge ou Firefox (double-clic). Pas besoin d'internet
+   (sans internet, la police change, c'est tout).
+3. Tout ce que tu ajoutes ou modifies est enregistré dans le navigateur de ce PC.
+
+Sauvegarde et autre poste
+-------------------------
+- La base vit dans le navigateur : si tu vides les données du navigateur, elle repart
+  de la base d'origine contenue dans index.html.
+- En bas de page : « Exporter la base » télécharge un fichier .json avec tout
+  (projets, axes, moteurs, réducteurs). Fais-le régulièrement.
+- « Importer une base » recharge un fichier .json exporté (remplace la base actuelle).
+- Pour passer sur un autre PC : exporter ici, importer là-bas.
+
+Mise en ligne (optionnel)
+-------------------------
+index.html peut être mis tel quel sur GitHub Pages ou un serveur interne.
+Chaque navigateur aura alors sa propre base : utiliser Exporter / Importer pour partager.
+
+Attention
+---------
+Cette version et la page Claude (artefact) ont chacune leur base, elles ne se
+synchronisent pas. Choisir l'une des deux comme référence.
+
+Calcul de UserCurrentLimit
+--------------------------
+Courant limite = T2B ÷ i ÷ Kt × part autorisée (80 % par défaut)
+UserCurrentLimit (%) = Courant limite ÷ Imax moteur × 100 (arrondi en dessous)
+Exemple C1 : 500 ÷ 449 ÷ 1,208 × 0,8 = 0,74 A → 0,74 ÷ 17,1 = 4,3 %
