@@ -1,5 +1,5 @@
 {
- "_version": "20261007-0842",
+ "_version": "20261007-1402",
  "motors": [
   {
    "id": "sh30701p",
@@ -416,6 +416,8 @@
    "ratio": 9.25,
    "ref": "E 50 i=9,25 (59 03 009)",
    "serie": "Atlanta E 050",
+   "t2b": 330,
+   "t2n": 325,
    "t2not": 275
   },
   {
@@ -3496,6 +3498,23 @@
  ],
  "axes": [
   {
+   "id": "bfdq3kg0g83n2pnk65dc",
+   "acc": 500,
+   "feed": 320,
+   "jSupp": 0,
+   "marge": 95,
+   "masse": 50,
+   "moteurId": "sh31402p",
+   "nom": "T1",
+   "periode": 0.0005,
+   "projetId": "projet-1",
+   "reducteurId": "plqe120-7",
+   "tStop": 0.2,
+   "typeCharge": "lineaire",
+   "vMax": 250,
+   "variateurId": "lxm62dd45"
+  },
+  {
    "id": "c1",
    "acc": 200,
    "feed": 645.2,
@@ -3518,6 +3537,39 @@
    "vertical": false
   },
   {
+   "id": "coktxhwbuwwfqomz5gs1",
+   "acc": 500,
+   "feed": 320,
+   "jSupp": 0,
+   "marge": 80,
+   "masse": 50,
+   "moteurId": "sh31402p",
+   "nom": "T3",
+   "projetId": "projet-1",
+   "reducteurId": "atl-e050-925",
+   "tStop": 0.2,
+   "typeCharge": "lineaire",
+   "vMax": 250,
+   "variateurId": "lxm62dd45"
+  },
+  {
+   "id": "lzfwnjgp8y4fwf4sfiu2",
+   "acc": 500,
+   "feed": 320,
+   "jSupp": 0,
+   "marge": 95,
+   "masse": 50,
+   "moteurId": "sh31402p",
+   "nom": "T2",
+   "periode": 0.0005,
+   "projetId": "projet-1",
+   "reducteurId": "plqe120-7",
+   "tStop": 0.2,
+   "typeCharge": "lineaire",
+   "vMax": 250,
+   "variateurId": "lxm62dd45"
+  },
+  {
    "id": "p1",
    "acc": 500,
    "feed": 280,
@@ -3525,7 +3577,7 @@
    "jLoadActuel": 140,
    "jSupp": 20,
    "marge": 80,
-   "masse": 104,
+   "masse": 75,
    "moteurId": "sh31004p",
    "nom": "P1",
    "notes": "Chariot de découpe vertical, 3 lames, courroie AT10, poulie 28 dents. Maintien mesuré 4,15 A. Instable à Vel_P 8,9 ou Vel_I 4 (résonance ≥ 100 Hz). Erreur de poursuite ±0,02 mm.",
