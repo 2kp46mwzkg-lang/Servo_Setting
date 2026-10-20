@@ -44,3 +44,5 @@ Calcul de UserCurrentLimit
 Courant limite = T2B ÷ i ÷ Kt × part autorisée (80 % par défaut)
 UserCurrentLimit (%) = Courant limite ÷ Imax moteur × 100 (arrondi en dessous)
 Exemple C1 : 500 ÷ 449 ÷ 1,208 × 0,8 = 0,74 A → 0,74 ÷ 17,1 = 4,3 %
+
+Catalogue SEW : 1502 rapports (KH19/29/39/49, K, R, S, F, W serie 7) integres dans la page. Seul le T2B des KH est pre-rempli (Mamax). Pour les autres, ouvre le reducteur et saisis T2B, J_Gear, rendement : la fiche est alors enregistree dans ta base.

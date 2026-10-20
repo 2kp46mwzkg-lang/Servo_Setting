@@ -1,5 +1,5 @@
 {
- "_version": "20261007-1402",
+ "_version": "20261015-1610",
  "motors": [
   {
    "id": "sh30701p",
@@ -254,6 +254,306 @@
    "notes": "Catalogue PacDrive 3 / Lexium SH3 (Schneider, 2018). Kt = M0 ÷ I0. Mmax 131.9 Nm. Inertie sans frein ; avec frein 26.794 kg·cm². Le variateur peut lire une inertie plus élevée sur le moteur réel : prendre MotorInertia du dossier Motor.",
    "ref": "SH31404P",
    "serie": "SH3 140",
+   "sonde": ""
+  },
+  {
+   "ref": "ILM0701P avec frein",
+   "serie": "ILM 070",
+   "kt": 0.71,
+   "jMotor": 0.35,
+   "m0": 1.1,
+   "i0": 1.55,
+   "imax": 5.7,
+   "nNom": 6000,
+   "nMax": 6000,
+   "frein": true,
+   "sonde": "Seuil 100 °C",
+   "notes": "Lexium 62 ILM (variateur intégré), Hardware Guide EIO0000001351 (02/2020). Mmax 3.5 Nm, MN 0.5 Nm, nN 6000 tr/min, masse 3.0 kg, arbre Ø11 mm. Kt à 120 °C ; Imax = courant crête 23 s. Inertie avec frein ; sans frein : 0.25 kg·cm². Frein : couple de maintien 3.0 Nm. Vitesse max non donnée dans le guide : vitesse nominale reprise.",
+   "id": "ilm0701p-frein"
+  },
+  {
+   "ref": "ILM0701P",
+   "serie": "ILM 070",
+   "kt": 0.71,
+   "jMotor": 0.25,
+   "m0": 1.1,
+   "i0": 1.55,
+   "imax": 5.7,
+   "nNom": 6000,
+   "nMax": 6000,
+   "frein": false,
+   "sonde": "Seuil 100 °C",
+   "notes": "Lexium 62 ILM (variateur intégré), Hardware Guide EIO0000001351 (02/2020). Mmax 3.5 Nm, MN 0.5 Nm, nN 6000 tr/min, masse 2.7 kg, arbre Ø11 mm. Kt à 120 °C ; Imax = courant crête 23 s. Inertie sans frein ; avec frein : 0.35 kg·cm². Réf. complète sans frein : lettre A dans ILMxxxxxxA0000. Vitesse max non donnée dans le guide : vitesse nominale reprise.",
+   "id": "ilm0701p"
+  },
+  {
+   "ref": "ILM0702P avec frein",
+   "serie": "ILM 070",
+   "kt": 0.68,
+   "jMotor": 0.51,
+   "m0": 1.7,
+   "i0": 2.5,
+   "imax": 11.8,
+   "nNom": 6000,
+   "nMax": 6000,
+   "frein": true,
+   "sonde": "Seuil 100 °C",
+   "notes": "Lexium 62 ILM (variateur intégré), Hardware Guide EIO0000001351 (02/2020). Mmax 7.6 Nm, MN 1.15 Nm, nN 6000 tr/min, masse 3.7 kg, arbre Ø11 mm. Kt à 120 °C ; Imax = courant crête 23 s. Inertie avec frein ; sans frein : 0.41 kg·cm². Frein : couple de maintien 3.0 Nm. Vitesse max non donnée dans le guide : vitesse nominale reprise.",
+   "id": "ilm0702p-frein"
+  },
+  {
+   "ref": "ILM0702P",
+   "serie": "ILM 070",
+   "kt": 0.68,
+   "jMotor": 0.41,
+   "m0": 1.7,
+   "i0": 2.5,
+   "imax": 11.8,
+   "nNom": 6000,
+   "nMax": 6000,
+   "frein": false,
+   "sonde": "Seuil 100 °C",
+   "notes": "Lexium 62 ILM (variateur intégré), Hardware Guide EIO0000001351 (02/2020). Mmax 7.6 Nm, MN 1.15 Nm, nN 6000 tr/min, masse 3.4 kg, arbre Ø11 mm. Kt à 120 °C ; Imax = courant crête 23 s. Inertie sans frein ; avec frein : 0.51 kg·cm². Réf. complète sans frein : lettre A dans ILMxxxxxxA0000. Vitesse max non donnée dans le guide : vitesse nominale reprise.",
+   "id": "ilm0702p"
+  },
+  {
+   "ref": "ILM0703P avec frein",
+   "serie": "ILM 070",
+   "kt": 0.73,
+   "jMotor": 0.88,
+   "m0": 2.2,
+   "i0": 2.7,
+   "imax": 12.0,
+   "nNom": 6000,
+   "nMax": 6000,
+   "frein": true,
+   "sonde": "Seuil 100 °C",
+   "notes": "Lexium 62 ILM (variateur intégré), Hardware Guide EIO0000001351 (02/2020). Mmax 8.7 Nm, MN 1.15 Nm, nN 6000 tr/min, masse 4.7 kg, arbre Ø14 mm. Kt à 120 °C ; Imax = courant crête 23 s. Inertie avec frein ; sans frein : 0.58 kg·cm². Frein : couple de maintien 3.0 Nm. Vitesse max non donnée dans le guide : vitesse nominale reprise.",
+   "id": "ilm0703p-frein"
+  },
+  {
+   "ref": "ILM0703P",
+   "serie": "ILM 070",
+   "kt": 0.73,
+   "jMotor": 0.58,
+   "m0": 2.2,
+   "i0": 2.7,
+   "imax": 12.0,
+   "nNom": 6000,
+   "nMax": 6000,
+   "frein": false,
+   "sonde": "Seuil 100 °C",
+   "notes": "Lexium 62 ILM (variateur intégré), Hardware Guide EIO0000001351 (02/2020). Mmax 8.7 Nm, MN 1.15 Nm, nN 6000 tr/min, masse 4.2 kg, arbre Ø14 mm. Kt à 120 °C ; Imax = courant crête 23 s. Inertie sans frein ; avec frein : 0.88 kg·cm². Réf. complète sans frein : lettre A dans ILMxxxxxxA0000. Vitesse max non donnée dans le guide : vitesse nominale reprise.",
+   "id": "ilm0703p"
+  },
+  {
+   "ref": "ILM1001P avec frein",
+   "serie": "ILM 100",
+   "kt": 1.39,
+   "jMotor": 2.1,
+   "m0": 2.5,
+   "i0": 1.8,
+   "imax": 7.4,
+   "nNom": 3000,
+   "nMax": 3000,
+   "frein": true,
+   "sonde": "Seuil 130 °C",
+   "notes": "Lexium 62 ILM (variateur intégré), Hardware Guide EIO0000001351 (02/2020). Mmax 9.6 Nm, MN 1.9 Nm, nN 3000 tr/min, masse 5.7 kg, arbre Ø19 mm. Kt à 120 °C ; Imax = courant crête 23 s. Inertie avec frein ; sans frein : 1.4 kg·cm². Frein : couple de maintien 5.5 Nm. Vitesse max non donnée dans le guide : vitesse nominale reprise.",
+   "id": "ilm1001p-frein"
+  },
+  {
+   "ref": "ILM1001P",
+   "serie": "ILM 100",
+   "kt": 1.39,
+   "jMotor": 1.4,
+   "m0": 2.5,
+   "i0": 1.8,
+   "imax": 7.4,
+   "nNom": 3000,
+   "nMax": 3000,
+   "frein": false,
+   "sonde": "Seuil 130 °C",
+   "notes": "Lexium 62 ILM (variateur intégré), Hardware Guide EIO0000001351 (02/2020). Mmax 9.6 Nm, MN 1.9 Nm, nN 3000 tr/min, masse 4.9 kg, arbre Ø19 mm. Kt à 120 °C ; Imax = courant crête 23 s. Inertie sans frein ; avec frein : 2.1 kg·cm². Réf. complète sans frein : lettre A dans ILMxxxxxxA0000. Vitesse max non donnée dans le guide : vitesse nominale reprise.",
+   "id": "ilm1001p"
+  },
+  {
+   "ref": "ILM1002P avec frein",
+   "serie": "ILM 100",
+   "kt": 1.52,
+   "jMotor": 3.01,
+   "m0": 4.4,
+   "i0": 2.9,
+   "imax": 13.1,
+   "nNom": 3000,
+   "nMax": 3000,
+   "frein": true,
+   "sonde": "Seuil 130 °C",
+   "notes": "Lexium 62 ILM (variateur intégré), Hardware Guide EIO0000001351 (02/2020). Mmax 18.3 Nm, MN 2.9 Nm, nN 3000 tr/min, masse 7.2 kg, arbre Ø19 mm. Kt à 120 °C ; Imax = courant crête 23 s. Inertie avec frein ; sans frein : 2.31 kg·cm². Frein : couple de maintien 5.5 Nm. Vitesse max non donnée dans le guide : vitesse nominale reprise.",
+   "id": "ilm1002p-frein"
+  },
+  {
+   "ref": "ILM1002P",
+   "serie": "ILM 100",
+   "kt": 1.52,
+   "jMotor": 2.31,
+   "m0": 4.4,
+   "i0": 2.9,
+   "imax": 13.1,
+   "nNom": 3000,
+   "nMax": 3000,
+   "frein": false,
+   "sonde": "Seuil 130 °C",
+   "notes": "Lexium 62 ILM (variateur intégré), Hardware Guide EIO0000001351 (02/2020). Mmax 18.3 Nm, MN 2.9 Nm, nN 3000 tr/min, masse 6.4 kg, arbre Ø19 mm. Kt à 120 °C ; Imax = courant crête 23 s. Inertie sans frein ; avec frein : 3.01 kg·cm². Réf. complète sans frein : lettre A dans ILMxxxxxxA0000. Vitesse max non donnée dans le guide : vitesse nominale reprise.",
+   "id": "ilm1002p"
+  },
+  {
+   "ref": "ILM1003P avec frein",
+   "serie": "ILM 100",
+   "kt": 1.61,
+   "jMotor": 3.92,
+   "m0": 5.8,
+   "i0": 3.6,
+   "imax": 21.2,
+   "nNom": 3000,
+   "nMax": 3000,
+   "frein": true,
+   "sonde": "Seuil 130 °C",
+   "notes": "Lexium 62 ILM (variateur intégré), Hardware Guide EIO0000001351 (02/2020). Mmax 28.3 Nm, MN 3.5 Nm, nN 3000 tr/min, masse 8.9 kg, arbre Ø19 mm. Kt à 120 °C ; Imax = courant crête 23 s. Inertie avec frein ; sans frein : 3.22 kg·cm². Frein : couple de maintien 9.0 Nm. Vitesse max non donnée dans le guide : vitesse nominale reprise.",
+   "id": "ilm1003p-frein"
+  },
+  {
+   "ref": "ILM1003P",
+   "serie": "ILM 100",
+   "kt": 1.61,
+   "jMotor": 3.22,
+   "m0": 5.8,
+   "i0": 3.6,
+   "imax": 21.2,
+   "nNom": 3000,
+   "nMax": 3000,
+   "frein": false,
+   "sonde": "Seuil 130 °C",
+   "notes": "Lexium 62 ILM (variateur intégré), Hardware Guide EIO0000001351 (02/2020). Mmax 28.3 Nm, MN 3.5 Nm, nN 3000 tr/min, masse 8.1 kg, arbre Ø19 mm. Kt à 120 °C ; Imax = courant crête 23 s. Inertie sans frein ; avec frein : 3.92 kg·cm². Réf. complète sans frein : lettre A dans ILMxxxxxxA0000. Vitesse max non donnée dans le guide : vitesse nominale reprise.",
+   "id": "ilm1003p"
+  },
+  {
+   "ref": "ILM1401M avec frein",
+   "serie": "ILM 140",
+   "kt": 2.65,
+   "jMotor": 8.91,
+   "m0": 8.5,
+   "i0": 3.2,
+   "imax": 14.6,
+   "nNom": 1500,
+   "nMax": 1500,
+   "frein": true,
+   "sonde": "Seuil 130 °C",
+   "notes": "Lexium 62 ILM (variateur intégré), Hardware Guide EIO0000001351 (02/2020). Mmax 27.0 Nm, MN 8.3 Nm, nN 1500 tr/min, masse 13.8 kg, arbre Ø24 mm. Kt à 120 °C ; Imax = courant crête 23 s. Inertie avec frein ; sans frein : 7.41 kg·cm². Frein : couple de maintien 18.0 Nm. Vitesse max non donnée dans le guide : vitesse nominale reprise.",
+   "id": "ilm1401m-frein"
+  },
+  {
+   "ref": "ILM1401M",
+   "serie": "ILM 140",
+   "kt": 2.65,
+   "jMotor": 7.41,
+   "m0": 8.5,
+   "i0": 3.2,
+   "imax": 14.6,
+   "nNom": 1500,
+   "nMax": 1500,
+   "frein": false,
+   "sonde": "Seuil 130 °C",
+   "notes": "Lexium 62 ILM (variateur intégré), Hardware Guide EIO0000001351 (02/2020). Mmax 27.0 Nm, MN 8.3 Nm, nN 1500 tr/min, masse 12.5 kg, arbre Ø24 mm. Kt à 120 °C ; Imax = courant crête 23 s. Inertie sans frein ; avec frein : 8.91 (calculée : rotor + 1.5 du frein) kg·cm². Réf. complète sans frein : lettre A dans ILMxxxxxxA0000. Vitesse max non donnée dans le guide : vitesse nominale reprise.",
+   "id": "ilm1401m"
+  },
+  {
+   "ref": "ILM1401P avec frein",
+   "serie": "ILM 140",
+   "kt": 1.6,
+   "jMotor": 8.91,
+   "m0": 7.5,
+   "i0": 4.7,
+   "imax": 18.8,
+   "nNom": 3000,
+   "nMax": 3000,
+   "frein": true,
+   "sonde": "Seuil 130 °C",
+   "notes": "Lexium 62 ILM (variateur intégré), Hardware Guide EIO0000001351 (02/2020). Mmax 27.0 Nm, MN 4.6 Nm, nN 3000 tr/min, masse 13.8 kg, arbre Ø24 mm. Kt à 120 °C ; Imax = courant crête 23 s. Inertie avec frein ; sans frein : 7.41 kg·cm². Frein : couple de maintien 18.0 Nm. Vitesse max non donnée dans le guide : vitesse nominale reprise.",
+   "id": "ilm1401p-frein"
+  },
+  {
+   "ref": "ILM1401P",
+   "serie": "ILM 140",
+   "kt": 1.6,
+   "jMotor": 7.41,
+   "m0": 7.5,
+   "i0": 4.7,
+   "imax": 18.8,
+   "nNom": 3000,
+   "nMax": 3000,
+   "frein": false,
+   "sonde": "Seuil 130 °C",
+   "notes": "Lexium 62 ILM (variateur intégré), Hardware Guide EIO0000001351 (02/2020). Mmax 27.0 Nm, MN 4.6 Nm, nN 3000 tr/min, masse 12.5 kg, arbre Ø24 mm. Kt à 120 °C ; Imax = courant crête 23 s. Inertie sans frein ; avec frein : 8.91 (calculée : rotor + 1.5 du frein) kg·cm². Réf. complète sans frein : lettre A dans ILMxxxxxxA0000. Vitesse max non donnée dans le guide : vitesse nominale reprise.",
+   "id": "ilm1401p"
+  },
+  {
+   "ref": "ILM1402P avec frein",
+   "serie": "ILM 140",
+   "kt": 2.6,
+   "jMotor": 15.23,
+   "m0": 12.5,
+   "i0": 4.8,
+   "imax": 24.0,
+   "nNom": 2000,
+   "nMax": 2000,
+   "frein": true,
+   "sonde": "Seuil 130 °C",
+   "notes": "Lexium 62 ILM (variateur intégré), Hardware Guide EIO0000001351 (02/2020). Mmax 55.0 Nm, MN 9.1 Nm, nN 2000 tr/min, masse 18.5 kg, arbre Ø24 mm. Kt à 120 °C ; Imax = courant crête 23 s. Inertie avec frein ; sans frein : 12.68 kg·cm². Frein : couple de maintien 23.0 Nm. Vitesse max non donnée dans le guide : vitesse nominale reprise.",
+   "id": "ilm1402p-frein"
+  },
+  {
+   "ref": "ILM1402P",
+   "serie": "ILM 140",
+   "kt": 2.6,
+   "jMotor": 12.68,
+   "m0": 12.5,
+   "i0": 4.8,
+   "imax": 24.0,
+   "nNom": 2000,
+   "nMax": 2000,
+   "frein": false,
+   "sonde": "Seuil 130 °C",
+   "notes": "Lexium 62 ILM (variateur intégré), Hardware Guide EIO0000001351 (02/2020). Mmax 55.0 Nm, MN 9.1 Nm, nN 2000 tr/min, masse 17.2 kg, arbre Ø24 mm. Kt à 120 °C ; Imax = courant crête 23 s. Inertie sans frein ; avec frein : 15.23 (calculée : rotor + 2.55 du frein) kg·cm². Réf. complète sans frein : lettre A dans ILMxxxxxxA0000. Vitesse max non donnée dans le guide : vitesse nominale reprise.",
+   "id": "ilm1402p"
+  },
+  {
+   "id": "sh31002p01f2000",
+   "frein": true,
+   "i0": 4.8,
+   "imax": 17.1,
+   "jMotor": 2.31,
+   "kt": 1.208,
+   "m0": 5.8,
+   "nMax": 6000,
+   "nNom": 4000,
+   "notes": "SH3 100 taille 2, avec frein (F), bout d'arbre lisse (sans clavette), connecteur coudé 90°, IP54/IP65. M0 5,8 Nm, I0 4,8 A, Imax 17,1 A, Mmax 18,3 Nm : mêmes valeurs électriques que la fiche SH31002P01A2000 (même Kt 1,208). Inertie : 2,31 kg·cm² reprise de cette fiche, À CONFIRMER (catalogue 1,909 sans frein ; avec frein non lu) : prendre MotorInertia dans le dossier Motor du variateur.",
+   "ref": "SH31002P01F2000",
+   "serie": "SH3 100",
+   "sonde": "PTC"
+  },
+  {
+   "id": "sh30703p01f2000",
+   "frein": true,
+   "i0": 4.1,
+   "imax": 17,
+   "jMotor": 0.616,
+   "kt": 0.717,
+   "m0": 2.94,
+   "nMax": 8000,
+   "nNom": 6000,
+   "notes": "SH3 070 taille 3, avec frein (F). Mêmes valeurs que la fiche SH30703P du catalogue PacDrive 3 / Lexium SH3 (Schneider, 2018) : M0 2,94 Nm, I0 4,1 A, Imax 17 A, Mmax 11,3 Nm, Kt = M0 ÷ I0. Inertie avec frein 0,616 kg·cm² (0,503 sans frein). Le variateur peut lire une valeur plus élevée sur le moteur réel : prendre MotorInertia du dossier Motor.",
+   "ref": "SH30703P01F2000",
+   "serie": "SH3 070",
    "sonde": ""
   }
  ],
@@ -3447,6 +3747,3178 @@
    "rendement": 90,
    "serie": "SEW K/R (conique + cylindrique)",
    "t2b": 500
+  },
+  {
+   "ref": "K29AMS63 i=19.99",
+   "marque": "SEW",
+   "serie": "SEW K29",
+   "ratio": 19.99,
+   "t2b": 130.0,
+   "notes": "Mamax 130 Nm mis en T2B (liste fournie). Sortie 70 tr/min, charge radiale max 3550 N, perçage entrée 11 x 23 mm, bride adaptateur 140 mm, moteur max 0,25 kW. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k29ams63-19.99"
+  },
+  {
+   "ref": "K29AMS63 i=22.08",
+   "marque": "SEW",
+   "serie": "SEW K29",
+   "ratio": 22.08,
+   "t2b": 105.0,
+   "notes": "Mamax 105 Nm mis en T2B (liste fournie). Sortie 63 tr/min, charge radiale max 3820 N, perçage entrée 11 x 23 mm, bride adaptateur 140 mm, moteur max 0,25 kW. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k29ams63-22.08"
+  },
+  {
+   "ref": "K29AMS63 i=23.19",
+   "marque": "SEW",
+   "serie": "SEW K29",
+   "ratio": 23.19,
+   "t2b": 130.0,
+   "notes": "Mamax 130 Nm mis en T2B (liste fournie). Sortie 60 tr/min, charge radiale max 3790 N, perçage entrée 11 x 23 mm, bride adaptateur 140 mm, moteur max 0,25 kW. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k29ams63-23.19"
+  },
+  {
+   "ref": "K29AMS63 i=24.91",
+   "marque": "SEW",
+   "serie": "SEW K29",
+   "ratio": 24.91,
+   "t2b": 109.0,
+   "notes": "Mamax 109 Nm mis en T2B (liste fournie). Sortie 56 tr/min, charge radiale max 3980 N, perçage entrée 11 x 23 mm, bride adaptateur 140 mm, moteur max 0,25 kW. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k29ams63-24.91"
+  },
+  {
+   "ref": "K29AMS63 i=27.23",
+   "marque": "SEW",
+   "serie": "SEW K29",
+   "ratio": 27.23,
+   "t2b": 130.0,
+   "notes": "Mamax 130 Nm mis en T2B (liste fournie). Sortie 51 tr/min, charge radiale max 4060 N, perçage entrée 11 x 23 mm, bride adaptateur 140 mm, moteur max 0,25 kW. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k29ams63-27.23"
+  },
+  {
+   "ref": "K29AMS63 i=29.69",
+   "marque": "SEW",
+   "serie": "SEW K29",
+   "ratio": 29.69,
+   "t2b": 130.0,
+   "notes": "Mamax 130 Nm mis en T2B (liste fournie). Sortie 47 tr/min, charge radiale max 4210 N, perçage entrée 11 x 23 mm, bride adaptateur 140 mm, moteur max 0,25 kW. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k29ams63-29.69"
+  },
+  {
+   "ref": "K29AMS63 i=30.11",
+   "marque": "SEW",
+   "serie": "SEW K29",
+   "ratio": 30.11,
+   "t2b": 115.0,
+   "notes": "Mamax 115 Nm mis en T2B (liste fournie). Sortie 46 tr/min, charge radiale max 4250 N, perçage entrée 11 x 23 mm, bride adaptateur 140 mm, moteur max 0,25 kW. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k29ams63-30.11"
+  },
+  {
+   "ref": "K29AMS71 i=19.99",
+   "marque": "SEW",
+   "serie": "SEW K29",
+   "ratio": 19.99,
+   "t2b": 130.0,
+   "notes": "Mamax 130 Nm mis en T2B (liste fournie). Sortie 70 tr/min, charge radiale max 3550 N, perçage entrée 14 x 30 mm, bride adaptateur 160 mm, moteur max 0,37 kW. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k29ams71-19.99"
+  },
+  {
+   "ref": "K29AMS71 i=22.08",
+   "marque": "SEW",
+   "serie": "SEW K29",
+   "ratio": 22.08,
+   "t2b": 105.0,
+   "notes": "Mamax 105 Nm mis en T2B (liste fournie). Sortie 63 tr/min, charge radiale max 3820 N, perçage entrée 14 x 30 mm, bride adaptateur 160 mm, moteur max 0,37 kW. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k29ams71-22.08"
+  },
+  {
+   "ref": "K29AMS71 i=23.19",
+   "marque": "SEW",
+   "serie": "SEW K29",
+   "ratio": 23.19,
+   "t2b": 130.0,
+   "notes": "Mamax 130 Nm mis en T2B (liste fournie). Sortie 60 tr/min, charge radiale max 3790 N, perçage entrée 14 x 30 mm, bride adaptateur 160 mm, moteur max 0,37 kW. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k29ams71-23.19"
+  },
+  {
+   "ref": "K29AMS71 i=24.91",
+   "marque": "SEW",
+   "serie": "SEW K29",
+   "ratio": 24.91,
+   "t2b": 109.0,
+   "notes": "Mamax 109 Nm mis en T2B (liste fournie). Sortie 56 tr/min, charge radiale max 3980 N, perçage entrée 14 x 30 mm, bride adaptateur 160 mm, moteur max 0,37 kW. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k29ams71-24.91"
+  },
+  {
+   "ref": "K29AMS71 i=27.23",
+   "marque": "SEW",
+   "serie": "SEW K29",
+   "ratio": 27.23,
+   "t2b": 130.0,
+   "notes": "Mamax 130 Nm mis en T2B (liste fournie). Sortie 51 tr/min, charge radiale max 4060 N, perçage entrée 14 x 30 mm, bride adaptateur 160 mm, moteur max 0,37 kW. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k29ams71-27.23"
+  },
+  {
+   "ref": "K29AMS71 i=29.69",
+   "marque": "SEW",
+   "serie": "SEW K29",
+   "ratio": 29.69,
+   "t2b": 130.0,
+   "notes": "Mamax 130 Nm mis en T2B (liste fournie). Sortie 47 tr/min, charge radiale max 4210 N, perçage entrée 14 x 30 mm, bride adaptateur 160 mm, moteur max 0,37 kW. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k29ams71-29.69"
+  },
+  {
+   "ref": "K29AMS71 i=30.11",
+   "marque": "SEW",
+   "serie": "SEW K29",
+   "ratio": 30.11,
+   "t2b": 115.0,
+   "notes": "Mamax 115 Nm mis en T2B (liste fournie). Sortie 46 tr/min, charge radiale max 4250 N, perçage entrée 14 x 30 mm, bride adaptateur 160 mm, moteur max 0,37 kW. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k29ams71-30.11"
+  },
+  {
+   "ref": "K29AMS80 i=19.99",
+   "marque": "SEW",
+   "serie": "SEW K29",
+   "ratio": 19.99,
+   "t2b": 130.0,
+   "notes": "Mamax 130 Nm mis en T2B (liste fournie). Sortie 70 tr/min, charge radiale max 3550 N, perçage entrée 19 x 40 mm, bride adaptateur 200 mm, moteur max 0,75 kW. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k29ams80-19.99"
+  },
+  {
+   "ref": "K29AMS80 i=22.08",
+   "marque": "SEW",
+   "serie": "SEW K29",
+   "ratio": 22.08,
+   "t2b": 105.0,
+   "notes": "Mamax 105 Nm mis en T2B (liste fournie). Sortie 63 tr/min, charge radiale max 3820 N, perçage entrée 19 x 40 mm, bride adaptateur 200 mm, moteur max 0,75 kW. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k29ams80-22.08"
+  },
+  {
+   "ref": "K29AMS80 i=23.19",
+   "marque": "SEW",
+   "serie": "SEW K29",
+   "ratio": 23.19,
+   "t2b": 130.0,
+   "notes": "Mamax 130 Nm mis en T2B (liste fournie). Sortie 60 tr/min, charge radiale max 3790 N, perçage entrée 19 x 40 mm, bride adaptateur 200 mm, moteur max 0,75 kW. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k29ams80-23.19"
+  },
+  {
+   "ref": "K29AMS80 i=24.91",
+   "marque": "SEW",
+   "serie": "SEW K29",
+   "ratio": 24.91,
+   "t2b": 109.0,
+   "notes": "Mamax 109 Nm mis en T2B (liste fournie). Sortie 56 tr/min, charge radiale max 3980 N, perçage entrée 19 x 40 mm, bride adaptateur 200 mm, moteur max 0,75 kW. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k29ams80-24.91"
+  },
+  {
+   "ref": "K29AMS80 i=30.11",
+   "marque": "SEW",
+   "serie": "SEW K29",
+   "ratio": 30.11,
+   "t2b": 115.0,
+   "notes": "Mamax 115 Nm mis en T2B (liste fournie). Sortie 46 tr/min, charge radiale max 4250 N, perçage entrée 19 x 40 mm, bride adaptateur 200 mm, moteur max 0,75 kW. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k29ams80-30.11"
+  },
+  {
+   "ref": "K29AMS90 i=19.99",
+   "marque": "SEW",
+   "serie": "SEW K29",
+   "ratio": 19.99,
+   "t2b": 130.0,
+   "notes": "Mamax 130 Nm mis en T2B (liste fournie). Sortie 70 tr/min, charge radiale max 3550 N, perçage entrée 24 x 50 mm, bride adaptateur 200 mm, moteur max 1,5 kW. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k29ams90-19.99"
+  },
+  {
+   "ref": "K29AMS90 i=22.08",
+   "marque": "SEW",
+   "serie": "SEW K29",
+   "ratio": 22.08,
+   "t2b": 105.0,
+   "notes": "Mamax 105 Nm mis en T2B (liste fournie). Sortie 63 tr/min, charge radiale max 3820 N, perçage entrée 24 x 50 mm, bride adaptateur 200 mm, moteur max 1,5 kW. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k29ams90-22.08"
+  },
+  {
+   "ref": "K29AMS90 i=24.91",
+   "marque": "SEW",
+   "serie": "SEW K29",
+   "ratio": 24.91,
+   "t2b": 109.0,
+   "notes": "Mamax 109 Nm mis en T2B (liste fournie). Sortie 56 tr/min, charge radiale max 3980 N, perçage entrée 24 x 50 mm, bride adaptateur 200 mm, moteur max 1,5 kW. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k29ams90-24.91"
+  },
+  {
+   "ref": "K29AMS90 i=30.11",
+   "marque": "SEW",
+   "serie": "SEW K29",
+   "ratio": 30.11,
+   "t2b": 115.0,
+   "notes": "Mamax 115 Nm mis en T2B (liste fournie). Sortie 46 tr/min, charge radiale max 4250 N, perçage entrée 24 x 50 mm, bride adaptateur 200 mm, moteur max 1,5 kW. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k29ams90-30.11"
+  },
+  {
+   "ref": "K37AMS63 i=20.19",
+   "marque": "SEW",
+   "serie": "SEW K37",
+   "ratio": 20.19,
+   "t2b": 135.0,
+   "notes": "Mamax 135 Nm mis en T2B (liste fournie). Sortie 69 tr/min, charge radiale max 3570 N, perçage entrée 11 x 23 mm, bride adaptateur 140 mm, moteur max 0,25 kW. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k37ams63-20.19"
+  },
+  {
+   "ref": "K37AMS63 i=23.36",
+   "marque": "SEW",
+   "serie": "SEW K37",
+   "ratio": 23.36,
+   "t2b": 156.0,
+   "notes": "Mamax 156 Nm mis en T2B (liste fournie). Sortie 60 tr/min, charge radiale max 3610 N, perçage entrée 11 x 23 mm, bride adaptateur 140 mm, moteur max 0,25 kW. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k37ams63-23.36"
+  },
+  {
+   "ref": "K37AMS63 i=24.99",
+   "marque": "SEW",
+   "serie": "SEW K37",
+   "ratio": 24.99,
+   "t2b": 167.0,
+   "notes": "Mamax 167 Nm mis en T2B (liste fournie). Sortie 56 tr/min, charge radiale max 3630 N, perçage entrée 11 x 23 mm, bride adaptateur 140 mm, moteur max 0,25 kW. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k37ams63-24.99"
+  },
+  {
+   "ref": "K37AMS63 i=28.83",
+   "marque": "SEW",
+   "serie": "SEW K37",
+   "ratio": 28.83,
+   "t2b": 193.0,
+   "notes": "Mamax 193 Nm mis en T2B (liste fournie). Sortie 49 tr/min, charge radiale max 3640 N, perçage entrée 11 x 23 mm, bride adaptateur 140 mm, moteur max 0,25 kW. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k37ams63-28.83"
+  },
+  {
+   "ref": "K37AMS63 i=29.96",
+   "marque": "SEW",
+   "serie": "SEW K37",
+   "ratio": 29.96,
+   "t2b": 198.0,
+   "notes": "Mamax 198 Nm mis en T2B (liste fournie). Sortie 47 tr/min, charge radiale max 3670 N, perçage entrée 11 x 23 mm, bride adaptateur 140 mm, moteur max 0,25 kW. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k37ams63-29.96"
+  },
+  {
+   "ref": "K37AMS71 i=20.19",
+   "marque": "SEW",
+   "serie": "SEW K37",
+   "ratio": 20.19,
+   "t2b": 135.0,
+   "notes": "Mamax 135 Nm mis en T2B (liste fournie). Sortie 69 tr/min, charge radiale max 3570 N, perçage entrée 14 x 30 mm, bride adaptateur 160 mm, moteur max 0,37 kW. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k37ams71-20.19"
+  },
+  {
+   "ref": "K37AMS71 i=23.36",
+   "marque": "SEW",
+   "serie": "SEW K37",
+   "ratio": 23.36,
+   "t2b": 156.0,
+   "notes": "Mamax 156 Nm mis en T2B (liste fournie). Sortie 60 tr/min, charge radiale max 3610 N, perçage entrée 14 x 30 mm, bride adaptateur 160 mm, moteur max 0,37 kW. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k37ams71-23.36"
+  },
+  {
+   "ref": "K37AMS71 i=24.99",
+   "marque": "SEW",
+   "serie": "SEW K37",
+   "ratio": 24.99,
+   "t2b": 167.0,
+   "notes": "Mamax 167 Nm mis en T2B (liste fournie). Sortie 56 tr/min, charge radiale max 3630 N, perçage entrée 14 x 30 mm, bride adaptateur 160 mm, moteur max 0,37 kW. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k37ams71-24.99"
+  },
+  {
+   "ref": "K37AMS71 i=28.83",
+   "marque": "SEW",
+   "serie": "SEW K37",
+   "ratio": 28.83,
+   "t2b": 193.0,
+   "notes": "Mamax 193 Nm mis en T2B (liste fournie). Sortie 49 tr/min, charge radiale max 3640 N, perçage entrée 14 x 30 mm, bride adaptateur 160 mm, moteur max 0,37 kW. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k37ams71-28.83"
+  },
+  {
+   "ref": "K37AMS71 i=29.96",
+   "marque": "SEW",
+   "serie": "SEW K37",
+   "ratio": 29.96,
+   "t2b": 198.0,
+   "notes": "Mamax 198 Nm mis en T2B (liste fournie). Sortie 47 tr/min, charge radiale max 3670 N, perçage entrée 14 x 30 mm, bride adaptateur 160 mm, moteur max 0,37 kW. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k37ams71-29.96"
+  },
+  {
+   "ref": "K37AMS80 i=20.19",
+   "marque": "SEW",
+   "serie": "SEW K37",
+   "ratio": 20.19,
+   "t2b": 185.0,
+   "notes": "Mamax 185 Nm mis en T2B (liste fournie). Sortie 69 tr/min, charge radiale max 3110 N, perçage entrée 19 x 40 mm, bride adaptateur 200 mm, moteur max 0,75 kW. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k37ams80-20.19"
+  },
+  {
+   "ref": "K37AMS80 i=23.36",
+   "marque": "SEW",
+   "serie": "SEW K37",
+   "ratio": 23.36,
+   "t2b": 230.0,
+   "notes": "Mamax 230 Nm mis en T2B (liste fournie). Sortie 60 tr/min, charge radiale max 2940 N, perçage entrée 19 x 40 mm, bride adaptateur 200 mm, moteur max 0,75 kW. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k37ams80-23.36"
+  },
+  {
+   "ref": "K37AMS80 i=24.99",
+   "marque": "SEW",
+   "serie": "SEW K37",
+   "ratio": 24.99,
+   "t2b": 230.0,
+   "notes": "Mamax 230 Nm mis en T2B (liste fournie). Sortie 56 tr/min, charge radiale max 3050 N, perçage entrée 19 x 40 mm, bride adaptateur 200 mm, moteur max 0,75 kW. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k37ams80-24.99"
+  },
+  {
+   "ref": "K37AMS90 i=20.19",
+   "marque": "SEW",
+   "serie": "SEW K37",
+   "ratio": 20.19,
+   "t2b": 185.0,
+   "notes": "Mamax 185 Nm mis en T2B (liste fournie). Sortie 69 tr/min, charge radiale max 3110 N, perçage entrée 24 x 50 mm, bride adaptateur 200 mm, moteur max 1,5 kW. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k37ams90-20.19"
+  },
+  {
+   "ref": "K37AMS90 i=23.36",
+   "marque": "SEW",
+   "serie": "SEW K37",
+   "ratio": 23.36,
+   "t2b": 230.0,
+   "notes": "Mamax 230 Nm mis en T2B (liste fournie). Sortie 60 tr/min, charge radiale max 2940 N, perçage entrée 24 x 50 mm, bride adaptateur 200 mm, moteur max 1,5 kW. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k37ams90-23.36"
+  },
+  {
+   "ref": "K37AMS90 i=24.99",
+   "marque": "SEW",
+   "serie": "SEW K37",
+   "ratio": 24.99,
+   "t2b": 230.0,
+   "notes": "Mamax 230 Nm mis en T2B (liste fournie). Sortie 56 tr/min, charge radiale max 3050 N, perçage entrée 24 x 50 mm, bride adaptateur 200 mm, moteur max 1,5 kW. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k37ams90-24.99"
+  },
+  {
+   "ref": "K39AMS63 i=19.62",
+   "marque": "SEW",
+   "serie": "SEW K39",
+   "ratio": 19.62,
+   "t2b": 121.0,
+   "notes": "Mamax 121 Nm mis en T2B (liste fournie). Sortie 71 tr/min, charge radiale max 6310 N, perçage entrée 11 x 23 mm, bride adaptateur 140 mm, moteur max 0,25 kW. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k39ams63-19.62"
+  },
+  {
+   "ref": "K39AMS63 i=23.04",
+   "marque": "SEW",
+   "serie": "SEW K39",
+   "ratio": 23.04,
+   "t2b": 143.0,
+   "notes": "Mamax 143 Nm mis en T2B (liste fournie). Sortie 61 tr/min, charge radiale max 6530 N, perçage entrée 11 x 23 mm, bride adaptateur 140 mm, moteur max 0,25 kW. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k39ams63-23.04"
+  },
+  {
+   "ref": "K39AMS63 i=24.4",
+   "marque": "SEW",
+   "serie": "SEW K39",
+   "ratio": 24.4,
+   "t2b": 152.0,
+   "notes": "Mamax 152 Nm mis en T2B (liste fournie). Sortie 57 tr/min, charge radiale max 6600 N, perçage entrée 11 x 23 mm, bride adaptateur 140 mm, moteur max 0,25 kW. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k39ams63-24.4"
+  },
+  {
+   "ref": "K39AMS63 i=27.73",
+   "marque": "SEW",
+   "serie": "SEW K39",
+   "ratio": 27.73,
+   "t2b": 173.0,
+   "notes": "Mamax 173 Nm mis en T2B (liste fournie). Sortie 50 tr/min, charge radiale max 6760 N, perçage entrée 11 x 23 mm, bride adaptateur 140 mm, moteur max 0,25 kW. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k39ams63-27.73"
+  },
+  {
+   "ref": "K39AMS63 i=30.72",
+   "marque": "SEW",
+   "serie": "SEW K39",
+   "ratio": 30.72,
+   "t2b": 193.0,
+   "notes": "Mamax 193 Nm mis en T2B (liste fournie). Sortie 46 tr/min, charge radiale max 6880 N, perçage entrée 11 x 23 mm, bride adaptateur 140 mm, moteur max 0,25 kW. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k39ams63-30.72"
+  },
+  {
+   "ref": "K39AMS71 i=19.62",
+   "marque": "SEW",
+   "serie": "SEW K39",
+   "ratio": 19.62,
+   "t2b": 121.0,
+   "notes": "Mamax 121 Nm mis en T2B (liste fournie). Sortie 71 tr/min, charge radiale max 6310 N, perçage entrée 14 x 30 mm, bride adaptateur 160 mm, moteur max 0,37 kW. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k39ams71-19.62"
+  },
+  {
+   "ref": "K39AMS71 i=23.04",
+   "marque": "SEW",
+   "serie": "SEW K39",
+   "ratio": 23.04,
+   "t2b": 143.0,
+   "notes": "Mamax 143 Nm mis en T2B (liste fournie). Sortie 61 tr/min, charge radiale max 6530 N, perçage entrée 14 x 30 mm, bride adaptateur 160 mm, moteur max 0,37 kW. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k39ams71-23.04"
+  },
+  {
+   "ref": "K39AMS71 i=24.4",
+   "marque": "SEW",
+   "serie": "SEW K39",
+   "ratio": 24.4,
+   "t2b": 152.0,
+   "notes": "Mamax 152 Nm mis en T2B (liste fournie). Sortie 57 tr/min, charge radiale max 6600 N, perçage entrée 14 x 30 mm, bride adaptateur 160 mm, moteur max 0,37 kW. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k39ams71-24.4"
+  },
+  {
+   "ref": "K39AMS71 i=27.73",
+   "marque": "SEW",
+   "serie": "SEW K39",
+   "ratio": 27.73,
+   "t2b": 173.0,
+   "notes": "Mamax 173 Nm mis en T2B (liste fournie). Sortie 50 tr/min, charge radiale max 6760 N, perçage entrée 14 x 30 mm, bride adaptateur 160 mm, moteur max 0,37 kW. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k39ams71-27.73"
+  },
+  {
+   "ref": "K39AMS71 i=30.72",
+   "marque": "SEW",
+   "serie": "SEW K39",
+   "ratio": 30.72,
+   "t2b": 193.0,
+   "notes": "Mamax 193 Nm mis en T2B (liste fournie). Sortie 46 tr/min, charge radiale max 6880 N, perçage entrée 14 x 30 mm, bride adaptateur 160 mm, moteur max 0,37 kW. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k39ams71-30.72"
+  },
+  {
+   "ref": "K47AMS63 i=19.58",
+   "marque": "SEW",
+   "serie": "SEW K47",
+   "ratio": 19.58,
+   "t2b": 131.0,
+   "notes": "Mamax 131 Nm mis en T2B (liste fournie). Sortie 72 tr/min, charge radiale max 6280 N, perçage entrée 11 x 23 mm, bride adaptateur 140 mm, moteur max 0,25 kW. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k47ams63-19.58"
+  },
+  {
+   "ref": "K47AMS63 i=21.81",
+   "marque": "SEW",
+   "serie": "SEW K47",
+   "ratio": 21.81,
+   "t2b": 146.0,
+   "notes": "Mamax 146 Nm mis en T2B (liste fournie). Sortie 64 tr/min, charge radiale max 6440 N, perçage entrée 11 x 23 mm, bride adaptateur 140 mm, moteur max 0,25 kW. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k47ams63-21.81"
+  },
+  {
+   "ref": "K47AMS63 i=24.06",
+   "marque": "SEW",
+   "serie": "SEW K47",
+   "ratio": 24.06,
+   "t2b": 161.0,
+   "notes": "Mamax 161 Nm mis en T2B (liste fournie). Sortie 58 tr/min, charge radiale max 6570 N, perçage entrée 11 x 23 mm, bride adaptateur 140 mm, moteur max 0,25 kW. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k47ams63-24.06"
+  },
+  {
+   "ref": "K47AMS63 i=25.91",
+   "marque": "SEW",
+   "serie": "SEW K47",
+   "ratio": 25.91,
+   "t2b": 173.0,
+   "notes": "Mamax 173 Nm mis en T2B (liste fournie). Sortie 54 tr/min, charge radiale max 6680 N, perçage entrée 11 x 23 mm, bride adaptateur 140 mm, moteur max 0,25 kW. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k47ams63-25.91"
+  },
+  {
+   "ref": "K47AMS63 i=29.32",
+   "marque": "SEW",
+   "serie": "SEW K47",
+   "ratio": 29.32,
+   "t2b": 196.0,
+   "notes": "Mamax 196 Nm mis en T2B (liste fournie). Sortie 48 tr/min, charge radiale max 6850 N, perçage entrée 11 x 23 mm, bride adaptateur 140 mm, moteur max 0,25 kW. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k47ams63-29.32"
+  },
+  {
+   "ref": "K47AMS63 i=31.3",
+   "marque": "SEW",
+   "serie": "SEW K47",
+   "ratio": 31.3,
+   "t2b": 205.0,
+   "notes": "Mamax 205 Nm mis en T2B (liste fournie). Sortie 45 tr/min, charge radiale max 6960 N, perçage entrée 11 x 23 mm, bride adaptateur 140 mm, moteur max 0,25 kW. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k47ams63-31.3"
+  },
+  {
+   "ref": "K47AMS71 i=19.58",
+   "marque": "SEW",
+   "serie": "SEW K47",
+   "ratio": 19.58,
+   "t2b": 131.0,
+   "notes": "Mamax 131 Nm mis en T2B (liste fournie). Sortie 72 tr/min, charge radiale max 6280 N, perçage entrée 14 x 30 mm, bride adaptateur 160 mm, moteur max 0,37 kW. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k47ams71-19.58"
+  },
+  {
+   "ref": "K47AMS71 i=21.81",
+   "marque": "SEW",
+   "serie": "SEW K47",
+   "ratio": 21.81,
+   "t2b": 146.0,
+   "notes": "Mamax 146 Nm mis en T2B (liste fournie). Sortie 64 tr/min, charge radiale max 6440 N, perçage entrée 14 x 30 mm, bride adaptateur 160 mm, moteur max 0,37 kW. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k47ams71-21.81"
+  },
+  {
+   "ref": "K47AMS71 i=24.06",
+   "marque": "SEW",
+   "serie": "SEW K47",
+   "ratio": 24.06,
+   "t2b": 161.0,
+   "notes": "Mamax 161 Nm mis en T2B (liste fournie). Sortie 58 tr/min, charge radiale max 6570 N, perçage entrée 14 x 30 mm, bride adaptateur 160 mm, moteur max 0,37 kW. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k47ams71-24.06"
+  },
+  {
+   "ref": "K47AMS71 i=25.91",
+   "marque": "SEW",
+   "serie": "SEW K47",
+   "ratio": 25.91,
+   "t2b": 173.0,
+   "notes": "Mamax 173 Nm mis en T2B (liste fournie). Sortie 54 tr/min, charge radiale max 6680 N, perçage entrée 14 x 30 mm, bride adaptateur 160 mm, moteur max 0,37 kW. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k47ams71-25.91"
+  },
+  {
+   "ref": "K47AMS71 i=29.32",
+   "marque": "SEW",
+   "serie": "SEW K47",
+   "ratio": 29.32,
+   "t2b": 196.0,
+   "notes": "Mamax 196 Nm mis en T2B (liste fournie). Sortie 48 tr/min, charge radiale max 6850 N, perçage entrée 14 x 30 mm, bride adaptateur 160 mm, moteur max 0,37 kW. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k47ams71-29.32"
+  },
+  {
+   "ref": "K49AMS63 i=20.03",
+   "marque": "SEW",
+   "serie": "SEW K49",
+   "ratio": 20.03,
+   "t2b": 122.0,
+   "notes": "Mamax 122 Nm mis en T2B (liste fournie). Sortie 70 tr/min, charge radiale max 7940 N, perçage entrée 11 x 23 mm, bride adaptateur 140 mm, moteur max 0,25 kW. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k49ams63-20.03"
+  },
+  {
+   "ref": "K49AMS63 i=22.83",
+   "marque": "SEW",
+   "serie": "SEW K49",
+   "ratio": 22.83,
+   "t2b": 141.0,
+   "notes": "Mamax 141 Nm mis en T2B (liste fournie). Sortie 61 tr/min, charge radiale max 8200 N, perçage entrée 11 x 23 mm, bride adaptateur 140 mm, moteur max 0,25 kW. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k49ams63-22.83"
+  },
+  {
+   "ref": "K49AMS63 i=25.34",
+   "marque": "SEW",
+   "serie": "SEW K49",
+   "ratio": 25.34,
+   "t2b": 157.0,
+   "notes": "Mamax 157 Nm mis en T2B (liste fournie). Sortie 55 tr/min, charge radiale max 8410 N, perçage entrée 11 x 23 mm, bride adaptateur 140 mm, moteur max 0,25 kW. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k49ams63-25.34"
+  },
+  {
+   "ref": "K49AMS63 i=28.95",
+   "marque": "SEW",
+   "serie": "SEW K49",
+   "ratio": 28.95,
+   "t2b": 181.0,
+   "notes": "Mamax 181 Nm mis en T2B (liste fournie). Sortie 48 tr/min, charge radiale max 8670 N, perçage entrée 11 x 23 mm, bride adaptateur 140 mm, moteur max 0,25 kW. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k49ams63-28.95"
+  },
+  {
+   "ref": "K49AMS63 i=30.55",
+   "marque": "SEW",
+   "serie": "SEW K49",
+   "ratio": 30.55,
+   "t2b": 191.0,
+   "notes": "Mamax 191 Nm mis en T2B (liste fournie). Sortie 46 tr/min, charge radiale max 8770 N, perçage entrée 11 x 23 mm, bride adaptateur 140 mm, moteur max 0,25 kW. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k49ams63-30.55"
+  },
+  {
+   "ref": "K49AMS71 i=20.03",
+   "marque": "SEW",
+   "serie": "SEW K49",
+   "ratio": 20.03,
+   "t2b": 122.0,
+   "notes": "Mamax 122 Nm mis en T2B (liste fournie). Sortie 70 tr/min, charge radiale max 7940 N, perçage entrée 14 x 30 mm, bride adaptateur 160 mm, moteur max 0,37 kW. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k49ams71-20.03"
+  },
+  {
+   "ref": "K49AMS71 i=22.83",
+   "marque": "SEW",
+   "serie": "SEW K49",
+   "ratio": 22.83,
+   "t2b": 141.0,
+   "notes": "Mamax 141 Nm mis en T2B (liste fournie). Sortie 61 tr/min, charge radiale max 8200 N, perçage entrée 14 x 30 mm, bride adaptateur 160 mm, moteur max 0,37 kW. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k49ams71-22.83"
+  },
+  {
+   "ref": "K49AMS71 i=25.34",
+   "marque": "SEW",
+   "serie": "SEW K49",
+   "ratio": 25.34,
+   "t2b": 157.0,
+   "notes": "Mamax 157 Nm mis en T2B (liste fournie). Sortie 55 tr/min, charge radiale max 8410 N, perçage entrée 14 x 30 mm, bride adaptateur 160 mm, moteur max 0,37 kW. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k49ams71-25.34"
+  },
+  {
+   "ref": "K49AMS71 i=28.95",
+   "marque": "SEW",
+   "serie": "SEW K49",
+   "ratio": 28.95,
+   "t2b": 181.0,
+   "notes": "Mamax 181 Nm mis en T2B (liste fournie). Sortie 48 tr/min, charge radiale max 8670 N, perçage entrée 14 x 30 mm, bride adaptateur 160 mm, moteur max 0,37 kW. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k49ams71-28.95"
+  },
+  {
+   "ref": "K49AMS71 i=30.55",
+   "marque": "SEW",
+   "serie": "SEW K49",
+   "ratio": 30.55,
+   "t2b": 191.0,
+   "notes": "Mamax 191 Nm mis en T2B (liste fournie). Sortie 46 tr/min, charge radiale max 8770 N, perçage entrée 14 x 30 mm, bride adaptateur 160 mm, moteur max 0,37 kW. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k49ams71-30.55"
+  },
+  {
+   "ref": "K57AMS63 i=19.34",
+   "marque": "SEW",
+   "serie": "SEW K57",
+   "ratio": 19.34,
+   "t2b": 129.0,
+   "notes": "Mamax 129 Nm mis en T2B (liste fournie). Sortie 72 tr/min, charge radiale max 8830 N, perçage entrée 11 x 23 mm, bride adaptateur 140 mm, moteur max 0,25 kW. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k57ams63-19.34"
+  },
+  {
+   "ref": "K57AMS63 i=22.71",
+   "marque": "SEW",
+   "serie": "SEW K57",
+   "ratio": 22.71,
+   "t2b": 152.0,
+   "notes": "Mamax 152 Nm mis en T2B (liste fournie). Sortie 62 tr/min, charge radiale max 9210 N, perçage entrée 11 x 23 mm, bride adaptateur 140 mm, moteur max 0,25 kW. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k57ams63-22.71"
+  },
+  {
+   "ref": "K57AMS63 i=24.05",
+   "marque": "SEW",
+   "serie": "SEW K57",
+   "ratio": 24.05,
+   "t2b": 161.0,
+   "notes": "Mamax 161 Nm mis en T2B (liste fournie). Sortie 58 tr/min, charge radiale max 9350 N, perçage entrée 11 x 23 mm, bride adaptateur 140 mm, moteur max 0,25 kW. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k57ams63-24.05"
+  },
+  {
+   "ref": "K57AMS63 i=27.34",
+   "marque": "SEW",
+   "serie": "SEW K57",
+   "ratio": 27.34,
+   "t2b": 183.0,
+   "notes": "Mamax 183 Nm mis en T2B (liste fournie). Sortie 51 tr/min, charge radiale max 9660 N, perçage entrée 11 x 23 mm, bride adaptateur 140 mm, moteur max 0,25 kW. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k57ams63-27.34"
+  },
+  {
+   "ref": "K57AMS63 i=30.28",
+   "marque": "SEW",
+   "serie": "SEW K57",
+   "ratio": 30.28,
+   "t2b": 200.0,
+   "notes": "Mamax 200 Nm mis en T2B (liste fournie). Sortie 46 tr/min, charge radiale max 9630 N, perçage entrée 11 x 23 mm, bride adaptateur 140 mm, moteur max 0,25 kW. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k57ams63-30.28"
+  },
+  {
+   "ref": "K57AMS71 i=19.34",
+   "marque": "SEW",
+   "serie": "SEW K57",
+   "ratio": 19.34,
+   "t2b": 129.0,
+   "notes": "Mamax 129 Nm mis en T2B (liste fournie). Sortie 72 tr/min, charge radiale max 8830 N, perçage entrée 14 x 30 mm, bride adaptateur 160 mm, moteur max 0,37 kW. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k57ams71-19.34"
+  },
+  {
+   "ref": "K57AMS71 i=22.71",
+   "marque": "SEW",
+   "serie": "SEW K57",
+   "ratio": 22.71,
+   "t2b": 152.0,
+   "notes": "Mamax 152 Nm mis en T2B (liste fournie). Sortie 62 tr/min, charge radiale max 9210 N, perçage entrée 14 x 30 mm, bride adaptateur 160 mm, moteur max 0,37 kW. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k57ams71-22.71"
+  },
+  {
+   "ref": "K57AMS71 i=24.05",
+   "marque": "SEW",
+   "serie": "SEW K57",
+   "ratio": 24.05,
+   "t2b": 161.0,
+   "notes": "Mamax 161 Nm mis en T2B (liste fournie). Sortie 58 tr/min, charge radiale max 9350 N, perçage entrée 14 x 30 mm, bride adaptateur 160 mm, moteur max 0,37 kW. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k57ams71-24.05"
+  },
+  {
+   "ref": "K57AMS71 i=27.34",
+   "marque": "SEW",
+   "serie": "SEW K57",
+   "ratio": 27.34,
+   "t2b": 183.0,
+   "notes": "Mamax 183 Nm mis en T2B (liste fournie). Sortie 51 tr/min, charge radiale max 9660 N, perçage entrée 14 x 30 mm, bride adaptateur 160 mm, moteur max 0,37 kW. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k57ams71-27.34"
+  },
+  {
+   "ref": "K57AMS71 i=30.28",
+   "marque": "SEW",
+   "serie": "SEW K57",
+   "ratio": 30.28,
+   "t2b": 200.0,
+   "notes": "Mamax 200 Nm mis en T2B (liste fournie). Sortie 46 tr/min, charge radiale max 9630 N, perçage entrée 14 x 30 mm, bride adaptateur 160 mm, moteur max 0,37 kW. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k57ams71-30.28"
+  },
+  {
+   "ref": "K67AMS63 i=19.3",
+   "marque": "SEW",
+   "serie": "SEW K67",
+   "ratio": 19.3,
+   "t2b": 129.0,
+   "notes": "Mamax 129 Nm mis en T2B (liste fournie). Sortie 73 tr/min, charge radiale max 13000 N, perçage entrée 11 x 23 mm, bride adaptateur 140 mm, moteur max 0,25 kW. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k67ams63-19.3"
+  },
+  {
+   "ref": "K67AMS63 i=22.66",
+   "marque": "SEW",
+   "serie": "SEW K67",
+   "ratio": 22.66,
+   "t2b": 151.0,
+   "notes": "Mamax 151 Nm mis en T2B (liste fournie). Sortie 62 tr/min, charge radiale max 13000 N, perçage entrée 11 x 23 mm, bride adaptateur 140 mm, moteur max 0,25 kW. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k67ams63-22.66"
+  },
+  {
+   "ref": "K67AMS63 i=24",
+   "marque": "SEW",
+   "serie": "SEW K67",
+   "ratio": 24.0,
+   "t2b": 160.0,
+   "notes": "Mamax 160 Nm mis en T2B (liste fournie). Sortie 58 tr/min, charge radiale max 13000 N, perçage entrée 11 x 23 mm, bride adaptateur 140 mm, moteur max 0,25 kW. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k67ams63-24"
+  },
+  {
+   "ref": "K67AMS63 i=27.28",
+   "marque": "SEW",
+   "serie": "SEW K67",
+   "ratio": 27.28,
+   "t2b": 182.0,
+   "notes": "Mamax 182 Nm mis en T2B (liste fournie). Sortie 51 tr/min, charge radiale max 13000 N, perçage entrée 11 x 23 mm, bride adaptateur 140 mm, moteur max 0,25 kW. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k67ams63-27.28"
+  },
+  {
+   "ref": "K67AMS63 i=30.22",
+   "marque": "SEW",
+   "serie": "SEW K67",
+   "ratio": 30.22,
+   "t2b": 200.0,
+   "notes": "Mamax 200 Nm mis en T2B (liste fournie). Sortie 46 tr/min, charge radiale max 13000 N, perçage entrée 11 x 23 mm, bride adaptateur 140 mm, moteur max 0,25 kW. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k67ams63-30.22"
+  },
+  {
+   "ref": "K67AMS71 i=19.3",
+   "marque": "SEW",
+   "serie": "SEW K67",
+   "ratio": 19.3,
+   "t2b": 129.0,
+   "notes": "Mamax 129 Nm mis en T2B (liste fournie). Sortie 73 tr/min, charge radiale max 13000 N, perçage entrée 14 x 30 mm, bride adaptateur 160 mm, moteur max 0,37 kW. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k67ams71-19.3"
+  },
+  {
+   "ref": "K67AMS71 i=22.66",
+   "marque": "SEW",
+   "serie": "SEW K67",
+   "ratio": 22.66,
+   "t2b": 151.0,
+   "notes": "Mamax 151 Nm mis en T2B (liste fournie). Sortie 62 tr/min, charge radiale max 13000 N, perçage entrée 14 x 30 mm, bride adaptateur 160 mm, moteur max 0,37 kW. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k67ams71-22.66"
+  },
+  {
+   "ref": "K67AMS71 i=24",
+   "marque": "SEW",
+   "serie": "SEW K67",
+   "ratio": 24.0,
+   "t2b": 160.0,
+   "notes": "Mamax 160 Nm mis en T2B (liste fournie). Sortie 58 tr/min, charge radiale max 13000 N, perçage entrée 14 x 30 mm, bride adaptateur 160 mm, moteur max 0,37 kW. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k67ams71-24"
+  },
+  {
+   "ref": "K67AMS71 i=27.28",
+   "marque": "SEW",
+   "serie": "SEW K67",
+   "ratio": 27.28,
+   "t2b": 182.0,
+   "notes": "Mamax 182 Nm mis en T2B (liste fournie). Sortie 51 tr/min, charge radiale max 13000 N, perçage entrée 14 x 30 mm, bride adaptateur 160 mm, moteur max 0,37 kW. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k67ams71-27.28"
+  },
+  {
+   "ref": "K67AMS71 i=30.22",
+   "marque": "SEW",
+   "serie": "SEW K67",
+   "ratio": 30.22,
+   "t2b": 200.0,
+   "notes": "Mamax 200 Nm mis en T2B (liste fournie). Sortie 46 tr/min, charge radiale max 13000 N, perçage entrée 14 x 30 mm, bride adaptateur 160 mm, moteur max 0,37 kW. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k67ams71-30.22"
+  },
+  {
+   "ref": "K77AMS63 i=20.25",
+   "marque": "SEW",
+   "serie": "SEW K77",
+   "ratio": 20.25,
+   "t2b": 128.0,
+   "notes": "Mamax 128 Nm mis en T2B (liste fournie). Sortie 69 tr/min, charge radiale max 20000 N, perçage entrée 11 x 23 mm, bride adaptateur 140 mm, moteur max 0,25 kW. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k77ams63-20.25"
+  },
+  {
+   "ref": "K77AMS63 i=23.08",
+   "marque": "SEW",
+   "serie": "SEW K77",
+   "ratio": 23.08,
+   "t2b": 147.0,
+   "notes": "Mamax 147 Nm mis en T2B (liste fournie). Sortie 61 tr/min, charge radiale max 20000 N, perçage entrée 11 x 23 mm, bride adaptateur 140 mm, moteur max 0,25 kW. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k77ams63-23.08"
+  },
+  {
+   "ref": "K77AMS63 i=25.62",
+   "marque": "SEW",
+   "serie": "SEW K77",
+   "ratio": 25.62,
+   "t2b": 164.0,
+   "notes": "Mamax 164 Nm mis en T2B (liste fournie). Sortie 55 tr/min, charge radiale max 20000 N, perçage entrée 11 x 23 mm, bride adaptateur 140 mm, moteur max 0,25 kW. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k77ams63-25.62"
+  },
+  {
+   "ref": "K77AMS63 i=29.27",
+   "marque": "SEW",
+   "serie": "SEW K77",
+   "ratio": 29.27,
+   "t2b": 188.0,
+   "notes": "Mamax 188 Nm mis en T2B (liste fournie). Sortie 48 tr/min, charge radiale max 20000 N, perçage entrée 11 x 23 mm, bride adaptateur 140 mm, moteur max 0,25 kW. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k77ams63-29.27"
+  },
+  {
+   "ref": "K77AMS63 i=30.89",
+   "marque": "SEW",
+   "serie": "SEW K77",
+   "ratio": 30.89,
+   "t2b": 199.0,
+   "notes": "Mamax 199 Nm mis en T2B (liste fournie). Sortie 45 tr/min, charge radiale max 20000 N, perçage entrée 11 x 23 mm, bride adaptateur 140 mm, moteur max 0,25 kW. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k77ams63-30.89"
+  },
+  {
+   "ref": "K77AMS71 i=20.25",
+   "marque": "SEW",
+   "serie": "SEW K77",
+   "ratio": 20.25,
+   "t2b": 128.0,
+   "notes": "Mamax 128 Nm mis en T2B (liste fournie). Sortie 69 tr/min, charge radiale max 20000 N, perçage entrée 14 x 30 mm, bride adaptateur 160 mm, moteur max 0,37 kW. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k77ams71-20.25"
+  },
+  {
+   "ref": "K77AMS71 i=23.08",
+   "marque": "SEW",
+   "serie": "SEW K77",
+   "ratio": 23.08,
+   "t2b": 147.0,
+   "notes": "Mamax 147 Nm mis en T2B (liste fournie). Sortie 61 tr/min, charge radiale max 20000 N, perçage entrée 14 x 30 mm, bride adaptateur 160 mm, moteur max 0,37 kW. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k77ams71-23.08"
+  },
+  {
+   "ref": "K77AMS71 i=25.62",
+   "marque": "SEW",
+   "serie": "SEW K77",
+   "ratio": 25.62,
+   "t2b": 164.0,
+   "notes": "Mamax 164 Nm mis en T2B (liste fournie). Sortie 55 tr/min, charge radiale max 20000 N, perçage entrée 14 x 30 mm, bride adaptateur 160 mm, moteur max 0,37 kW. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k77ams71-25.62"
+  },
+  {
+   "ref": "K77AMS71 i=29.27",
+   "marque": "SEW",
+   "serie": "SEW K77",
+   "ratio": 29.27,
+   "t2b": 188.0,
+   "notes": "Mamax 188 Nm mis en T2B (liste fournie). Sortie 48 tr/min, charge radiale max 20000 N, perçage entrée 14 x 30 mm, bride adaptateur 160 mm, moteur max 0,37 kW. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k77ams71-29.27"
+  },
+  {
+   "ref": "K77AMS71 i=30.89",
+   "marque": "SEW",
+   "serie": "SEW K77",
+   "ratio": 30.89,
+   "t2b": 199.0,
+   "notes": "Mamax 199 Nm mis en T2B (liste fournie). Sortie 45 tr/min, charge radiale max 20000 N, perçage entrée 14 x 30 mm, bride adaptateur 160 mm, moteur max 0,37 kW. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k77ams71-30.89"
+  },
+  {
+   "ref": "K47AMS71 i=31.3",
+   "marque": "SEW",
+   "serie": "SEW K47",
+   "ratio": 31.3,
+   "t2b": 205,
+   "notes": "Mamax 205 Nm mis en T2B (liste fournie). Sortie 45 tr/min, charge radiale max 6960 N, perçage entrée 14 x 30 mm, bride adaptateur 160 mm, moteur max 0,37 kW. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k47ams71-31.3"
+  },
+  {
+   "ref": "K37AMS80 i=29.96",
+   "marque": "SEW",
+   "serie": "SEW K37",
+   "ratio": 29.96,
+   "t2b": 220,
+   "notes": "Mamax 220 Nm mis en T2B (liste fournie). Sortie 47 tr/min, charge radiale max 3470 N, perçage entrée 19 x 40 mm, bride adaptateur 200 mm, moteur max 0,75 kW. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k37ams80-29.96"
+  },
+  {
+   "ref": "K37AMS90 i=29.96",
+   "marque": "SEW",
+   "serie": "SEW K37",
+   "ratio": 29.96,
+   "t2b": 220,
+   "notes": "Mamax 220 Nm mis en T2B (liste fournie). Sortie 47 tr/min, charge radiale max 3470 N, perçage entrée 24 x 50 mm, bride adaptateur 200 mm, moteur max 1,5 kW. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k37ams90-29.96"
+  },
+  {
+   "ref": "K37AMS80 i=28.83",
+   "marque": "SEW",
+   "serie": "SEW K37",
+   "ratio": 28.83,
+   "t2b": 230,
+   "notes": "Mamax 230 Nm mis en T2B (liste fournie). Sortie 49 tr/min, charge radiale max 3310 N, perçage entrée 19 x 40 mm, bride adaptateur 200 mm, moteur max 0,75 kW. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k37ams80-28.83"
+  },
+  {
+   "ref": "K67AQSH80/5 i=19.3",
+   "marque": "SEW",
+   "serie": "SEW K67",
+   "ratio": 19.3,
+   "t2b": 245.0,
+   "notes": "Mamax 245 Nm mis en T2B (liste fournie, adaptateur AQSH). Sortie 73 tr/min, charge radiale max 13000 N, alésage entrée 11,14 mm, centrage adaptateur B5 60 mm, cercle de perçage E5 90 mm, profondeur max 31 mm. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k67aqsh80-5-19.3"
+  },
+  {
+   "ref": "K67AQSH80/4 i=19.3",
+   "marque": "SEW",
+   "serie": "SEW K67",
+   "ratio": 19.3,
+   "t2b": 245.0,
+   "notes": "Mamax 245 Nm mis en T2B (liste fournie, adaptateur AQSH). Sortie 73 tr/min, charge radiale max 13000 N, alésage entrée 11,14 mm, centrage adaptateur B5 50 mm, cercle de perçage E5 70 mm, profondeur max 31 mm. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k67aqsh80-4-19.3"
+  },
+  {
+   "ref": "K67AQSH80/3 i=19.3",
+   "marque": "SEW",
+   "serie": "SEW K67",
+   "ratio": 19.3,
+   "t2b": 245.0,
+   "notes": "Mamax 245 Nm mis en T2B (liste fournie, adaptateur AQSH). Sortie 73 tr/min, charge radiale max 13000 N, alésage entrée 11,14 mm, centrage adaptateur B5 50 mm, cercle de perçage E5 95 mm, profondeur max 31 mm. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k67aqsh80-3-19.3"
+  },
+  {
+   "ref": "K67AQSH80/1 i=19.3",
+   "marque": "SEW",
+   "serie": "SEW K67",
+   "ratio": 19.3,
+   "t2b": 245.0,
+   "notes": "Mamax 245 Nm mis en T2B (liste fournie, adaptateur AQSH). Sortie 73 tr/min, charge radiale max 13000 N, alésage entrée 11,14 mm, centrage adaptateur B5 60 mm, cercle de perçage E5 75 mm, profondeur max 31 mm. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k67aqsh80-1-19.3"
+  },
+  {
+   "ref": "K57AQSH80/5 i=19.34",
+   "marque": "SEW",
+   "serie": "SEW K57",
+   "ratio": 19.34,
+   "t2b": 245.0,
+   "notes": "Mamax 245 Nm mis en T2B (liste fournie, adaptateur AQSH). Sortie 72 tr/min, charge radiale max 8070 N, alésage entrée 11,14 mm, centrage adaptateur B5 60 mm, cercle de perçage E5 90 mm, profondeur max 31 mm. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k57aqsh80-5-19.34"
+  },
+  {
+   "ref": "K57AQSH80/4 i=19.34",
+   "marque": "SEW",
+   "serie": "SEW K57",
+   "ratio": 19.34,
+   "t2b": 245.0,
+   "notes": "Mamax 245 Nm mis en T2B (liste fournie, adaptateur AQSH). Sortie 72 tr/min, charge radiale max 8070 N, alésage entrée 11,14 mm, centrage adaptateur B5 50 mm, cercle de perçage E5 70 mm, profondeur max 31 mm. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k57aqsh80-4-19.34"
+  },
+  {
+   "ref": "K57AQSH80/3 i=19.34",
+   "marque": "SEW",
+   "serie": "SEW K57",
+   "ratio": 19.34,
+   "t2b": 245.0,
+   "notes": "Mamax 245 Nm mis en T2B (liste fournie, adaptateur AQSH). Sortie 72 tr/min, charge radiale max 8070 N, alésage entrée 11,14 mm, centrage adaptateur B5 50 mm, cercle de perçage E5 95 mm, profondeur max 31 mm. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k57aqsh80-3-19.34"
+  },
+  {
+   "ref": "K57AQSH80/1 i=19.34",
+   "marque": "SEW",
+   "serie": "SEW K57",
+   "ratio": 19.34,
+   "t2b": 245.0,
+   "notes": "Mamax 245 Nm mis en T2B (liste fournie, adaptateur AQSH). Sortie 72 tr/min, charge radiale max 8070 N, alésage entrée 11,14 mm, centrage adaptateur B5 60 mm, cercle de perçage E5 75 mm, profondeur max 31 mm. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k57aqsh80-1-19.34"
+  },
+  {
+   "ref": "K47AQSH80/5 i=21.81",
+   "marque": "SEW",
+   "serie": "SEW K47",
+   "ratio": 21.81,
+   "t2b": 215.0,
+   "notes": "Mamax 215 Nm mis en T2B (liste fournie, adaptateur AQSH). Sortie 64 tr/min, charge radiale max 5930 N, alésage entrée 11,14 mm, centrage adaptateur B5 60 mm, cercle de perçage E5 90 mm, profondeur max 31 mm. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k47aqsh80-5-21.81"
+  },
+  {
+   "ref": "K47AQSH80/5 i=19.58",
+   "marque": "SEW",
+   "serie": "SEW K47",
+   "ratio": 19.58,
+   "t2b": 210.0,
+   "notes": "Mamax 210 Nm mis en T2B (liste fournie, adaptateur AQSH). Sortie 72 tr/min, charge radiale max 5700 N, alésage entrée 11,14 mm, centrage adaptateur B5 60 mm, cercle de perçage E5 90 mm, profondeur max 31 mm. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k47aqsh80-5-19.58"
+  },
+  {
+   "ref": "K47AQSH80/5 i=24.06",
+   "marque": "SEW",
+   "serie": "SEW K47",
+   "ratio": 24.06,
+   "t2b": 220.0,
+   "notes": "Mamax 220 Nm mis en T2B (liste fournie, adaptateur AQSH). Sortie 58 tr/min, charge radiale max 6140 N, alésage entrée 11,14 mm, centrage adaptateur B5 60 mm, cercle de perçage E5 90 mm, profondeur max 31 mm. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k47aqsh80-5-24.06"
+  },
+  {
+   "ref": "K47AQSH80/5 i=25.91",
+   "marque": "SEW",
+   "serie": "SEW K47",
+   "ratio": 25.91,
+   "t2b": 230.0,
+   "notes": "Mamax 230 Nm mis en T2B (liste fournie, adaptateur AQSH). Sortie 54 tr/min, charge radiale max 6260 N, alésage entrée 11,14 mm, centrage adaptateur B5 60 mm, cercle de perçage E5 90 mm, profondeur max 31 mm. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k47aqsh80-5-25.91"
+  },
+  {
+   "ref": "K47AQSH80/5 i=29.32",
+   "marque": "SEW",
+   "serie": "SEW K47",
+   "ratio": 29.32,
+   "t2b": 235.0,
+   "notes": "Mamax 235 Nm mis en T2B (liste fournie, adaptateur AQSH). Sortie 48 tr/min, charge radiale max 6560 N, alésage entrée 11,14 mm, centrage adaptateur B5 60 mm, cercle de perçage E5 90 mm, profondeur max 31 mm. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k47aqsh80-5-29.32"
+  },
+  {
+   "ref": "K47AQSH80/5 i=31.3",
+   "marque": "SEW",
+   "serie": "SEW K47",
+   "ratio": 31.3,
+   "t2b": 240.0,
+   "notes": "Mamax 240 Nm mis en T2B (liste fournie, adaptateur AQSH). Sortie 45 tr/min, charge radiale max 6700 N, alésage entrée 11,14 mm, centrage adaptateur B5 60 mm, cercle de perçage E5 90 mm, profondeur max 31 mm. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k47aqsh80-5-31.3"
+  },
+  {
+   "ref": "K47AQSH80/4 i=21.81",
+   "marque": "SEW",
+   "serie": "SEW K47",
+   "ratio": 21.81,
+   "t2b": 215.0,
+   "notes": "Mamax 215 Nm mis en T2B (liste fournie, adaptateur AQSH). Sortie 64 tr/min, charge radiale max 5930 N, alésage entrée 11,14 mm, centrage adaptateur B5 50 mm, cercle de perçage E5 70 mm, profondeur max 31 mm. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k47aqsh80-4-21.81"
+  },
+  {
+   "ref": "K47AQSH80/4 i=19.58",
+   "marque": "SEW",
+   "serie": "SEW K47",
+   "ratio": 19.58,
+   "t2b": 210.0,
+   "notes": "Mamax 210 Nm mis en T2B (liste fournie, adaptateur AQSH). Sortie 72 tr/min, charge radiale max 5700 N, alésage entrée 11,14 mm, centrage adaptateur B5 50 mm, cercle de perçage E5 70 mm, profondeur max 31 mm. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k47aqsh80-4-19.58"
+  },
+  {
+   "ref": "K47AQSH80/4 i=24.06",
+   "marque": "SEW",
+   "serie": "SEW K47",
+   "ratio": 24.06,
+   "t2b": 220.0,
+   "notes": "Mamax 220 Nm mis en T2B (liste fournie, adaptateur AQSH). Sortie 58 tr/min, charge radiale max 6140 N, alésage entrée 11,14 mm, centrage adaptateur B5 50 mm, cercle de perçage E5 70 mm, profondeur max 31 mm. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k47aqsh80-4-24.06"
+  },
+  {
+   "ref": "K47AQSH80/4 i=25.91",
+   "marque": "SEW",
+   "serie": "SEW K47",
+   "ratio": 25.91,
+   "t2b": 230.0,
+   "notes": "Mamax 230 Nm mis en T2B (liste fournie, adaptateur AQSH). Sortie 54 tr/min, charge radiale max 6260 N, alésage entrée 11,14 mm, centrage adaptateur B5 50 mm, cercle de perçage E5 70 mm, profondeur max 31 mm. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k47aqsh80-4-25.91"
+  },
+  {
+   "ref": "K47AQSH80/4 i=29.32",
+   "marque": "SEW",
+   "serie": "SEW K47",
+   "ratio": 29.32,
+   "t2b": 235.0,
+   "notes": "Mamax 235 Nm mis en T2B (liste fournie, adaptateur AQSH). Sortie 48 tr/min, charge radiale max 6560 N, alésage entrée 11,14 mm, centrage adaptateur B5 50 mm, cercle de perçage E5 70 mm, profondeur max 31 mm. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k47aqsh80-4-29.32"
+  },
+  {
+   "ref": "K47AQSH80/4 i=31.3",
+   "marque": "SEW",
+   "serie": "SEW K47",
+   "ratio": 31.3,
+   "t2b": 240.0,
+   "notes": "Mamax 240 Nm mis en T2B (liste fournie, adaptateur AQSH). Sortie 45 tr/min, charge radiale max 6700 N, alésage entrée 11,14 mm, centrage adaptateur B5 50 mm, cercle de perçage E5 70 mm, profondeur max 31 mm. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k47aqsh80-4-31.3"
+  },
+  {
+   "ref": "K47AQSH80/3 i=21.81",
+   "marque": "SEW",
+   "serie": "SEW K47",
+   "ratio": 21.81,
+   "t2b": 215.0,
+   "notes": "Mamax 215 Nm mis en T2B (liste fournie, adaptateur AQSH). Sortie 64 tr/min, charge radiale max 5930 N, alésage entrée 11,14 mm, centrage adaptateur B5 50 mm, cercle de perçage E5 95 mm, profondeur max 31 mm. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k47aqsh80-3-21.81"
+  },
+  {
+   "ref": "K47AQSH80/3 i=19.58",
+   "marque": "SEW",
+   "serie": "SEW K47",
+   "ratio": 19.58,
+   "t2b": 210.0,
+   "notes": "Mamax 210 Nm mis en T2B (liste fournie, adaptateur AQSH). Sortie 72 tr/min, charge radiale max 5700 N, alésage entrée 11,14 mm, centrage adaptateur B5 50 mm, cercle de perçage E5 95 mm, profondeur max 31 mm. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k47aqsh80-3-19.58"
+  },
+  {
+   "ref": "K47AQSH80/3 i=24.06",
+   "marque": "SEW",
+   "serie": "SEW K47",
+   "ratio": 24.06,
+   "t2b": 220.0,
+   "notes": "Mamax 220 Nm mis en T2B (liste fournie, adaptateur AQSH). Sortie 58 tr/min, charge radiale max 6140 N, alésage entrée 11,14 mm, centrage adaptateur B5 50 mm, cercle de perçage E5 95 mm, profondeur max 31 mm. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k47aqsh80-3-24.06"
+  },
+  {
+   "ref": "K47AQSH80/3 i=25.91",
+   "marque": "SEW",
+   "serie": "SEW K47",
+   "ratio": 25.91,
+   "t2b": 230.0,
+   "notes": "Mamax 230 Nm mis en T2B (liste fournie, adaptateur AQSH). Sortie 54 tr/min, charge radiale max 6260 N, alésage entrée 11,14 mm, centrage adaptateur B5 50 mm, cercle de perçage E5 95 mm, profondeur max 31 mm. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k47aqsh80-3-25.91"
+  },
+  {
+   "ref": "K47AQSH80/3 i=29.32",
+   "marque": "SEW",
+   "serie": "SEW K47",
+   "ratio": 29.32,
+   "t2b": 235.0,
+   "notes": "Mamax 235 Nm mis en T2B (liste fournie, adaptateur AQSH). Sortie 48 tr/min, charge radiale max 6560 N, alésage entrée 11,14 mm, centrage adaptateur B5 50 mm, cercle de perçage E5 95 mm, profondeur max 31 mm. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k47aqsh80-3-29.32"
+  },
+  {
+   "ref": "K47AQSH80/3 i=31.3",
+   "marque": "SEW",
+   "serie": "SEW K47",
+   "ratio": 31.3,
+   "t2b": 240.0,
+   "notes": "Mamax 240 Nm mis en T2B (liste fournie, adaptateur AQSH). Sortie 45 tr/min, charge radiale max 6700 N, alésage entrée 11,14 mm, centrage adaptateur B5 50 mm, cercle de perçage E5 95 mm, profondeur max 31 mm. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k47aqsh80-3-31.3"
+  },
+  {
+   "ref": "K47AQSH80/1 i=21.81",
+   "marque": "SEW",
+   "serie": "SEW K47",
+   "ratio": 21.81,
+   "t2b": 215.0,
+   "notes": "Mamax 215 Nm mis en T2B (liste fournie, adaptateur AQSH). Sortie 64 tr/min, charge radiale max 5930 N, alésage entrée 11,14 mm, centrage adaptateur B5 60 mm, cercle de perçage E5 75 mm, profondeur max 31 mm. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k47aqsh80-1-21.81"
+  },
+  {
+   "ref": "K47AQSH80/1 i=19.58",
+   "marque": "SEW",
+   "serie": "SEW K47",
+   "ratio": 19.58,
+   "t2b": 210.0,
+   "notes": "Mamax 210 Nm mis en T2B (liste fournie, adaptateur AQSH). Sortie 72 tr/min, charge radiale max 5700 N, alésage entrée 11,14 mm, centrage adaptateur B5 60 mm, cercle de perçage E5 75 mm, profondeur max 31 mm. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k47aqsh80-1-19.58"
+  },
+  {
+   "ref": "K47AQSH80/1 i=24.06",
+   "marque": "SEW",
+   "serie": "SEW K47",
+   "ratio": 24.06,
+   "t2b": 220.0,
+   "notes": "Mamax 220 Nm mis en T2B (liste fournie, adaptateur AQSH). Sortie 58 tr/min, charge radiale max 6140 N, alésage entrée 11,14 mm, centrage adaptateur B5 60 mm, cercle de perçage E5 75 mm, profondeur max 31 mm. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k47aqsh80-1-24.06"
+  },
+  {
+   "ref": "K47AQSH80/1 i=25.91",
+   "marque": "SEW",
+   "serie": "SEW K47",
+   "ratio": 25.91,
+   "t2b": 230.0,
+   "notes": "Mamax 230 Nm mis en T2B (liste fournie, adaptateur AQSH). Sortie 54 tr/min, charge radiale max 6260 N, alésage entrée 11,14 mm, centrage adaptateur B5 60 mm, cercle de perçage E5 75 mm, profondeur max 31 mm. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k47aqsh80-1-25.91"
+  },
+  {
+   "ref": "K47AQSH80/1 i=29.32",
+   "marque": "SEW",
+   "serie": "SEW K47",
+   "ratio": 29.32,
+   "t2b": 235.0,
+   "notes": "Mamax 235 Nm mis en T2B (liste fournie, adaptateur AQSH). Sortie 48 tr/min, charge radiale max 6560 N, alésage entrée 11,14 mm, centrage adaptateur B5 60 mm, cercle de perçage E5 75 mm, profondeur max 31 mm. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k47aqsh80-1-29.32"
+  },
+  {
+   "ref": "K47AQSH80/1 i=31.3",
+   "marque": "SEW",
+   "serie": "SEW K47",
+   "ratio": 31.3,
+   "t2b": 240.0,
+   "notes": "Mamax 240 Nm mis en T2B (liste fournie, adaptateur AQSH). Sortie 45 tr/min, charge radiale max 6700 N, alésage entrée 11,14 mm, centrage adaptateur B5 60 mm, cercle de perçage E5 75 mm, profondeur max 31 mm. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k47aqsh80-1-31.3"
+  },
+  {
+   "ref": "K39AQSH80/5 i=19.62",
+   "marque": "SEW",
+   "serie": "SEW K39",
+   "ratio": 19.62,
+   "t2b": 230.0,
+   "notes": "Mamax 230 Nm mis en T2B (liste fournie, adaptateur AQSH). Sortie 71 tr/min, charge radiale max 5370 N, alésage entrée 11,14 mm, centrage adaptateur B5 60 mm, cercle de perçage E5 90 mm, profondeur max 31 mm. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k39aqsh80-5-19.62"
+  },
+  {
+   "ref": "K39AQSH80/5 i=23.04",
+   "marque": "SEW",
+   "serie": "SEW K39",
+   "ratio": 23.04,
+   "t2b": 245.0,
+   "notes": "Mamax 245 Nm mis en T2B (liste fournie, adaptateur AQSH). Sortie 61 tr/min, charge radiale max 5650 N, alésage entrée 11,14 mm, centrage adaptateur B5 60 mm, cercle de perçage E5 90 mm, profondeur max 31 mm. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k39aqsh80-5-23.04"
+  },
+  {
+   "ref": "K39AQSH80/5 i=24.4",
+   "marque": "SEW",
+   "serie": "SEW K39",
+   "ratio": 24.4,
+   "t2b": 250.0,
+   "notes": "Mamax 250 Nm mis en T2B (liste fournie, adaptateur AQSH). Sortie 57 tr/min, charge radiale max 5760 N, alésage entrée 11,14 mm, centrage adaptateur B5 60 mm, cercle de perçage E5 90 mm, profondeur max 31 mm. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k39aqsh80-5-24.4"
+  },
+  {
+   "ref": "K39AQSH80/5 i=27.73",
+   "marque": "SEW",
+   "serie": "SEW K39",
+   "ratio": 27.73,
+   "t2b": 260.0,
+   "notes": "Mamax 260 Nm mis en T2B (liste fournie, adaptateur AQSH). Sortie 50 tr/min, charge radiale max 6020 N, alésage entrée 11,14 mm, centrage adaptateur B5 60 mm, cercle de perçage E5 90 mm, profondeur max 31 mm. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k39aqsh80-5-27.73"
+  },
+  {
+   "ref": "K39AQSH80/4 i=19.62",
+   "marque": "SEW",
+   "serie": "SEW K39",
+   "ratio": 19.62,
+   "t2b": 230.0,
+   "notes": "Mamax 230 Nm mis en T2B (liste fournie, adaptateur AQSH). Sortie 71 tr/min, charge radiale max 5370 N, alésage entrée 11,14 mm, centrage adaptateur B5 50 mm, cercle de perçage E5 70 mm, profondeur max 31 mm. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k39aqsh80-4-19.62"
+  },
+  {
+   "ref": "K39AQSH80/4 i=23.04",
+   "marque": "SEW",
+   "serie": "SEW K39",
+   "ratio": 23.04,
+   "t2b": 245.0,
+   "notes": "Mamax 245 Nm mis en T2B (liste fournie, adaptateur AQSH). Sortie 61 tr/min, charge radiale max 5650 N, alésage entrée 11,14 mm, centrage adaptateur B5 50 mm, cercle de perçage E5 70 mm, profondeur max 31 mm. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k39aqsh80-4-23.04"
+  },
+  {
+   "ref": "K39AQSH80/4 i=24.4",
+   "marque": "SEW",
+   "serie": "SEW K39",
+   "ratio": 24.4,
+   "t2b": 250.0,
+   "notes": "Mamax 250 Nm mis en T2B (liste fournie, adaptateur AQSH). Sortie 57 tr/min, charge radiale max 5760 N, alésage entrée 11,14 mm, centrage adaptateur B5 50 mm, cercle de perçage E5 70 mm, profondeur max 31 mm. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k39aqsh80-4-24.4"
+  },
+  {
+   "ref": "K39AQSH80/4 i=27.73",
+   "marque": "SEW",
+   "serie": "SEW K39",
+   "ratio": 27.73,
+   "t2b": 260.0,
+   "notes": "Mamax 260 Nm mis en T2B (liste fournie, adaptateur AQSH). Sortie 50 tr/min, charge radiale max 6020 N, alésage entrée 11,14 mm, centrage adaptateur B5 50 mm, cercle de perçage E5 70 mm, profondeur max 31 mm. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k39aqsh80-4-27.73"
+  },
+  {
+   "ref": "K39AQSH80/3 i=19.62",
+   "marque": "SEW",
+   "serie": "SEW K39",
+   "ratio": 19.62,
+   "t2b": 230.0,
+   "notes": "Mamax 230 Nm mis en T2B (liste fournie, adaptateur AQSH). Sortie 71 tr/min, charge radiale max 5370 N, alésage entrée 11,14 mm, centrage adaptateur B5 50 mm, cercle de perçage E5 95 mm, profondeur max 31 mm. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k39aqsh80-3-19.62"
+  },
+  {
+   "ref": "K39AQSH80/3 i=23.04",
+   "marque": "SEW",
+   "serie": "SEW K39",
+   "ratio": 23.04,
+   "t2b": 245.0,
+   "notes": "Mamax 245 Nm mis en T2B (liste fournie, adaptateur AQSH). Sortie 61 tr/min, charge radiale max 5650 N, alésage entrée 11,14 mm, centrage adaptateur B5 50 mm, cercle de perçage E5 95 mm, profondeur max 31 mm. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k39aqsh80-3-23.04"
+  },
+  {
+   "ref": "K39AQSH80/3 i=24.4",
+   "marque": "SEW",
+   "serie": "SEW K39",
+   "ratio": 24.4,
+   "t2b": 250.0,
+   "notes": "Mamax 250 Nm mis en T2B (liste fournie, adaptateur AQSH). Sortie 57 tr/min, charge radiale max 5760 N, alésage entrée 11,14 mm, centrage adaptateur B5 50 mm, cercle de perçage E5 95 mm, profondeur max 31 mm. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k39aqsh80-3-24.4"
+  },
+  {
+   "ref": "K39AQSH80/3 i=27.73",
+   "marque": "SEW",
+   "serie": "SEW K39",
+   "ratio": 27.73,
+   "t2b": 260.0,
+   "notes": "Mamax 260 Nm mis en T2B (liste fournie, adaptateur AQSH). Sortie 50 tr/min, charge radiale max 6020 N, alésage entrée 11,14 mm, centrage adaptateur B5 50 mm, cercle de perçage E5 95 mm, profondeur max 31 mm. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k39aqsh80-3-27.73"
+  },
+  {
+   "ref": "K39AQSH80/1 i=19.62",
+   "marque": "SEW",
+   "serie": "SEW K39",
+   "ratio": 19.62,
+   "t2b": 230.0,
+   "notes": "Mamax 230 Nm mis en T2B (liste fournie, adaptateur AQSH). Sortie 71 tr/min, charge radiale max 5370 N, alésage entrée 11,14 mm, centrage adaptateur B5 60 mm, cercle de perçage E5 75 mm, profondeur max 31 mm. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k39aqsh80-1-19.62"
+  },
+  {
+   "ref": "K39AQSH80/1 i=23.04",
+   "marque": "SEW",
+   "serie": "SEW K39",
+   "ratio": 23.04,
+   "t2b": 245.0,
+   "notes": "Mamax 245 Nm mis en T2B (liste fournie, adaptateur AQSH). Sortie 61 tr/min, charge radiale max 5650 N, alésage entrée 11,14 mm, centrage adaptateur B5 60 mm, cercle de perçage E5 75 mm, profondeur max 31 mm. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k39aqsh80-1-23.04"
+  },
+  {
+   "ref": "K39AQSH80/1 i=24.4",
+   "marque": "SEW",
+   "serie": "SEW K39",
+   "ratio": 24.4,
+   "t2b": 250.0,
+   "notes": "Mamax 250 Nm mis en T2B (liste fournie, adaptateur AQSH). Sortie 57 tr/min, charge radiale max 5760 N, alésage entrée 11,14 mm, centrage adaptateur B5 60 mm, cercle de perçage E5 75 mm, profondeur max 31 mm. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k39aqsh80-1-24.4"
+  },
+  {
+   "ref": "K39AQSH80/1 i=27.73",
+   "marque": "SEW",
+   "serie": "SEW K39",
+   "ratio": 27.73,
+   "t2b": 260.0,
+   "notes": "Mamax 260 Nm mis en T2B (liste fournie, adaptateur AQSH). Sortie 50 tr/min, charge radiale max 6020 N, alésage entrée 11,14 mm, centrage adaptateur B5 60 mm, cercle de perçage E5 75 mm, profondeur max 31 mm. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k39aqsh80-1-27.73"
+  },
+  {
+   "ref": "K37AQSH80/5 i=20.19",
+   "marque": "SEW",
+   "serie": "SEW K37",
+   "ratio": 20.19,
+   "t2b": 174.0,
+   "notes": "Mamax 174 Nm mis en T2B (liste fournie, adaptateur AQSH). Sortie 69 tr/min, charge radiale max 3210 N, alésage entrée 11,14 mm, centrage adaptateur B5 60 mm, cercle de perçage E5 90 mm, profondeur max 31 mm. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k37aqsh80-5-20.19"
+  },
+  {
+   "ref": "K37AQSH80/5 i=23.36",
+   "marque": "SEW",
+   "serie": "SEW K37",
+   "ratio": 23.36,
+   "t2b": 184.0,
+   "notes": "Mamax 184 Nm mis en T2B (liste fournie, adaptateur AQSH). Sortie 60 tr/min, charge radiale max 3360 N, alésage entrée 11,14 mm, centrage adaptateur B5 60 mm, cercle de perçage E5 90 mm, profondeur max 31 mm. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k37aqsh80-5-23.36"
+  },
+  {
+   "ref": "K37AQSH80/5 i=24.99",
+   "marque": "SEW",
+   "serie": "SEW K37",
+   "ratio": 24.99,
+   "t2b": 187.0,
+   "notes": "Mamax 187 Nm mis en T2B (liste fournie, adaptateur AQSH). Sortie 56 tr/min, charge radiale max 3450 N, alésage entrée 11,14 mm, centrage adaptateur B5 60 mm, cercle de perçage E5 90 mm, profondeur max 31 mm. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k37aqsh80-5-24.99"
+  },
+  {
+   "ref": "K37AQSH80/5 i=28.83",
+   "marque": "SEW",
+   "serie": "SEW K37",
+   "ratio": 28.83,
+   "t2b": 194.0,
+   "notes": "Mamax 194 Nm mis en T2B (liste fournie, adaptateur AQSH). Sortie 49 tr/min, charge radiale max 3630 N, alésage entrée 11,14 mm, centrage adaptateur B5 60 mm, cercle de perçage E5 90 mm, profondeur max 31 mm. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k37aqsh80-5-28.83"
+  },
+  {
+   "ref": "K37AQSH80/5 i=29.96",
+   "marque": "SEW",
+   "serie": "SEW K37",
+   "ratio": 29.96,
+   "t2b": 220.0,
+   "notes": "Mamax 220 Nm mis en T2B (liste fournie, adaptateur AQSH). Sortie 47 tr/min, charge radiale max 3470 N, alésage entrée 11,14 mm, centrage adaptateur B5 60 mm, cercle de perçage E5 90 mm, profondeur max 31 mm. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k37aqsh80-5-29.96"
+  },
+  {
+   "ref": "K37AQSH80/4 i=20.19",
+   "marque": "SEW",
+   "serie": "SEW K37",
+   "ratio": 20.19,
+   "t2b": 174.0,
+   "notes": "Mamax 174 Nm mis en T2B (liste fournie, adaptateur AQSH). Sortie 69 tr/min, charge radiale max 3210 N, alésage entrée 11,14 mm, centrage adaptateur B5 50 mm, cercle de perçage E5 70 mm, profondeur max 31 mm. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k37aqsh80-4-20.19"
+  },
+  {
+   "ref": "K37AQSH80/4 i=23.36",
+   "marque": "SEW",
+   "serie": "SEW K37",
+   "ratio": 23.36,
+   "t2b": 184.0,
+   "notes": "Mamax 184 Nm mis en T2B (liste fournie, adaptateur AQSH). Sortie 60 tr/min, charge radiale max 3360 N, alésage entrée 11,14 mm, centrage adaptateur B5 50 mm, cercle de perçage E5 70 mm, profondeur max 31 mm. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k37aqsh80-4-23.36"
+  },
+  {
+   "ref": "K37AQSH80/4 i=24.99",
+   "marque": "SEW",
+   "serie": "SEW K37",
+   "ratio": 24.99,
+   "t2b": 187.0,
+   "notes": "Mamax 187 Nm mis en T2B (liste fournie, adaptateur AQSH). Sortie 56 tr/min, charge radiale max 3450 N, alésage entrée 11,14 mm, centrage adaptateur B5 50 mm, cercle de perçage E5 70 mm, profondeur max 31 mm. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k37aqsh80-4-24.99"
+  },
+  {
+   "ref": "K37AQSH80/4 i=28.83",
+   "marque": "SEW",
+   "serie": "SEW K37",
+   "ratio": 28.83,
+   "t2b": 194.0,
+   "notes": "Mamax 194 Nm mis en T2B (liste fournie, adaptateur AQSH). Sortie 49 tr/min, charge radiale max 3630 N, alésage entrée 11,14 mm, centrage adaptateur B5 50 mm, cercle de perçage E5 70 mm, profondeur max 31 mm. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k37aqsh80-4-28.83"
+  },
+  {
+   "ref": "K37AQSH80/4 i=29.96",
+   "marque": "SEW",
+   "serie": "SEW K37",
+   "ratio": 29.96,
+   "t2b": 220.0,
+   "notes": "Mamax 220 Nm mis en T2B (liste fournie, adaptateur AQSH). Sortie 47 tr/min, charge radiale max 3470 N, alésage entrée 11,14 mm, centrage adaptateur B5 50 mm, cercle de perçage E5 70 mm, profondeur max 31 mm. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k37aqsh80-4-29.96"
+  },
+  {
+   "ref": "K37AQSH80/3 i=20.19",
+   "marque": "SEW",
+   "serie": "SEW K37",
+   "ratio": 20.19,
+   "t2b": 174.0,
+   "notes": "Mamax 174 Nm mis en T2B (liste fournie, adaptateur AQSH). Sortie 69 tr/min, charge radiale max 3210 N, alésage entrée 11,14 mm, centrage adaptateur B5 50 mm, cercle de perçage E5 95 mm, profondeur max 31 mm. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k37aqsh80-3-20.19"
+  },
+  {
+   "ref": "K37AQSH80/3 i=23.36",
+   "marque": "SEW",
+   "serie": "SEW K37",
+   "ratio": 23.36,
+   "t2b": 184.0,
+   "notes": "Mamax 184 Nm mis en T2B (liste fournie, adaptateur AQSH). Sortie 60 tr/min, charge radiale max 3360 N, alésage entrée 11,14 mm, centrage adaptateur B5 50 mm, cercle de perçage E5 95 mm, profondeur max 31 mm. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k37aqsh80-3-23.36"
+  },
+  {
+   "ref": "K37AQSH80/3 i=24.99",
+   "marque": "SEW",
+   "serie": "SEW K37",
+   "ratio": 24.99,
+   "t2b": 187.0,
+   "notes": "Mamax 187 Nm mis en T2B (liste fournie, adaptateur AQSH). Sortie 56 tr/min, charge radiale max 3450 N, alésage entrée 11,14 mm, centrage adaptateur B5 50 mm, cercle de perçage E5 95 mm, profondeur max 31 mm. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k37aqsh80-3-24.99"
+  },
+  {
+   "ref": "K37AQSH80/3 i=28.83",
+   "marque": "SEW",
+   "serie": "SEW K37",
+   "ratio": 28.83,
+   "t2b": 194.0,
+   "notes": "Mamax 194 Nm mis en T2B (liste fournie, adaptateur AQSH). Sortie 49 tr/min, charge radiale max 3630 N, alésage entrée 11,14 mm, centrage adaptateur B5 50 mm, cercle de perçage E5 95 mm, profondeur max 31 mm. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k37aqsh80-3-28.83"
+  },
+  {
+   "ref": "K37AQSH80/3 i=29.96",
+   "marque": "SEW",
+   "serie": "SEW K37",
+   "ratio": 29.96,
+   "t2b": 220.0,
+   "notes": "Mamax 220 Nm mis en T2B (liste fournie, adaptateur AQSH). Sortie 47 tr/min, charge radiale max 3470 N, alésage entrée 11,14 mm, centrage adaptateur B5 50 mm, cercle de perçage E5 95 mm, profondeur max 31 mm. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k37aqsh80-3-29.96"
+  },
+  {
+   "ref": "K37AQSH80/1 i=20.19",
+   "marque": "SEW",
+   "serie": "SEW K37",
+   "ratio": 20.19,
+   "t2b": 174.0,
+   "notes": "Mamax 174 Nm mis en T2B (liste fournie, adaptateur AQSH). Sortie 69 tr/min, charge radiale max 3210 N, alésage entrée 11,14 mm, centrage adaptateur B5 60 mm, cercle de perçage E5 75 mm, profondeur max 31 mm. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k37aqsh80-1-20.19"
+  },
+  {
+   "ref": "K37AQSH80/1 i=23.36",
+   "marque": "SEW",
+   "serie": "SEW K37",
+   "ratio": 23.36,
+   "t2b": 184.0,
+   "notes": "Mamax 184 Nm mis en T2B (liste fournie, adaptateur AQSH). Sortie 60 tr/min, charge radiale max 3360 N, alésage entrée 11,14 mm, centrage adaptateur B5 60 mm, cercle de perçage E5 75 mm, profondeur max 31 mm. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k37aqsh80-1-23.36"
+  },
+  {
+   "ref": "K37AQSH80/1 i=24.99",
+   "marque": "SEW",
+   "serie": "SEW K37",
+   "ratio": 24.99,
+   "t2b": 187.0,
+   "notes": "Mamax 187 Nm mis en T2B (liste fournie, adaptateur AQSH). Sortie 56 tr/min, charge radiale max 3450 N, alésage entrée 11,14 mm, centrage adaptateur B5 60 mm, cercle de perçage E5 75 mm, profondeur max 31 mm. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k37aqsh80-1-24.99"
+  },
+  {
+   "ref": "K37AQSH80/1 i=28.83",
+   "marque": "SEW",
+   "serie": "SEW K37",
+   "ratio": 28.83,
+   "t2b": 194.0,
+   "notes": "Mamax 194 Nm mis en T2B (liste fournie, adaptateur AQSH). Sortie 49 tr/min, charge radiale max 3630 N, alésage entrée 11,14 mm, centrage adaptateur B5 60 mm, cercle de perçage E5 75 mm, profondeur max 31 mm. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k37aqsh80-1-28.83"
+  },
+  {
+   "ref": "K37AQSH80/1 i=29.96",
+   "marque": "SEW",
+   "serie": "SEW K37",
+   "ratio": 29.96,
+   "t2b": 220.0,
+   "notes": "Mamax 220 Nm mis en T2B (liste fournie, adaptateur AQSH). Sortie 47 tr/min, charge radiale max 3470 N, alésage entrée 11,14 mm, centrage adaptateur B5 60 mm, cercle de perçage E5 75 mm, profondeur max 31 mm. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k37aqsh80-1-29.96"
+  },
+  {
+   "ref": "K37AQSH50/2 i=20.19",
+   "marque": "SEW",
+   "serie": "SEW K37",
+   "ratio": 20.19,
+   "t2b": 135.0,
+   "notes": "Mamax 135 Nm mis en T2B (liste fournie, adaptateur AQSH). Sortie 69 tr/min, charge radiale max 3570 N, alésage entrée 8,9 mm, centrage adaptateur B5 40 mm, cercle de perçage E5 63 mm, profondeur max 25 mm. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k37aqsh50-2-20.19"
+  },
+  {
+   "ref": "K37AQSH50/2 i=23.36",
+   "marque": "SEW",
+   "serie": "SEW K37",
+   "ratio": 23.36,
+   "t2b": 156.0,
+   "notes": "Mamax 156 Nm mis en T2B (liste fournie, adaptateur AQSH). Sortie 60 tr/min, charge radiale max 3610 N, alésage entrée 8,9 mm, centrage adaptateur B5 40 mm, cercle de perçage E5 63 mm, profondeur max 25 mm. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k37aqsh50-2-23.36"
+  },
+  {
+   "ref": "K37AQSH50/2 i=24.99",
+   "marque": "SEW",
+   "serie": "SEW K37",
+   "ratio": 24.99,
+   "t2b": 167.0,
+   "notes": "Mamax 167 Nm mis en T2B (liste fournie, adaptateur AQSH). Sortie 56 tr/min, charge radiale max 3630 N, alésage entrée 8,9 mm, centrage adaptateur B5 40 mm, cercle de perçage E5 63 mm, profondeur max 25 mm. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k37aqsh50-2-24.99"
+  },
+  {
+   "ref": "K37AQSH50/2 i=28.83",
+   "marque": "SEW",
+   "serie": "SEW K37",
+   "ratio": 28.83,
+   "t2b": 193.0,
+   "notes": "Mamax 193 Nm mis en T2B (liste fournie, adaptateur AQSH). Sortie 49 tr/min, charge radiale max 3640 N, alésage entrée 8,9 mm, centrage adaptateur B5 40 mm, cercle de perçage E5 63 mm, profondeur max 25 mm. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k37aqsh50-2-28.83"
+  },
+  {
+   "ref": "K37AQSH50/2 i=29.96",
+   "marque": "SEW",
+   "serie": "SEW K37",
+   "ratio": 29.96,
+   "t2b": 198.0,
+   "notes": "Mamax 198 Nm mis en T2B (liste fournie, adaptateur AQSH). Sortie 47 tr/min, charge radiale max 3670 N, alésage entrée 8,9 mm, centrage adaptateur B5 40 mm, cercle de perçage E5 63 mm, profondeur max 25 mm. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k37aqsh50-2-29.96"
+  },
+  {
+   "ref": "K37AQSH50/1 i=20.19",
+   "marque": "SEW",
+   "serie": "SEW K37",
+   "ratio": 20.19,
+   "t2b": 135.0,
+   "notes": "Mamax 135 Nm mis en T2B (liste fournie, adaptateur AQSH). Sortie 69 tr/min, charge radiale max 3570 N, alésage entrée 8,9 mm, centrage adaptateur B5 30 mm, cercle de perçage E5 46 mm, profondeur max 25 mm. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k37aqsh50-1-20.19"
+  },
+  {
+   "ref": "K37AQSH50/1 i=23.36",
+   "marque": "SEW",
+   "serie": "SEW K37",
+   "ratio": 23.36,
+   "t2b": 156.0,
+   "notes": "Mamax 156 Nm mis en T2B (liste fournie, adaptateur AQSH). Sortie 60 tr/min, charge radiale max 3610 N, alésage entrée 8,9 mm, centrage adaptateur B5 30 mm, cercle de perçage E5 46 mm, profondeur max 25 mm. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k37aqsh50-1-23.36"
+  },
+  {
+   "ref": "K37AQSH50/1 i=24.99",
+   "marque": "SEW",
+   "serie": "SEW K37",
+   "ratio": 24.99,
+   "t2b": 167.0,
+   "notes": "Mamax 167 Nm mis en T2B (liste fournie, adaptateur AQSH). Sortie 56 tr/min, charge radiale max 3630 N, alésage entrée 8,9 mm, centrage adaptateur B5 30 mm, cercle de perçage E5 46 mm, profondeur max 25 mm. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k37aqsh50-1-24.99"
+  },
+  {
+   "ref": "K37AQSH50/1 i=28.83",
+   "marque": "SEW",
+   "serie": "SEW K37",
+   "ratio": 28.83,
+   "t2b": 193.0,
+   "notes": "Mamax 193 Nm mis en T2B (liste fournie, adaptateur AQSH). Sortie 49 tr/min, charge radiale max 3640 N, alésage entrée 8,9 mm, centrage adaptateur B5 30 mm, cercle de perçage E5 46 mm, profondeur max 25 mm. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k37aqsh50-1-28.83"
+  },
+  {
+   "ref": "K37AQSH50/1 i=29.96",
+   "marque": "SEW",
+   "serie": "SEW K37",
+   "ratio": 29.96,
+   "t2b": 198.0,
+   "notes": "Mamax 198 Nm mis en T2B (liste fournie, adaptateur AQSH). Sortie 47 tr/min, charge radiale max 3670 N, alésage entrée 8,9 mm, centrage adaptateur B5 30 mm, cercle de perçage E5 46 mm, profondeur max 25 mm. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k37aqsh50-1-29.96"
+  },
+  {
+   "ref": "K37AQSH140/5 i=20.19",
+   "marque": "SEW",
+   "serie": "SEW K37",
+   "ratio": 20.19,
+   "t2b": 185.0,
+   "notes": "Mamax 185 Nm mis en T2B (liste fournie, adaptateur AQSH). Sortie 69 tr/min, charge radiale max 3110 N, alésage entrée 24,28,32 mm, centrage adaptateur B5 180 mm, cercle de perçage E5 215 mm, profondeur max 60 mm. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k37aqsh140-5-20.19"
+  },
+  {
+   "ref": "K37AQSH140/5 i=29.96",
+   "marque": "SEW",
+   "serie": "SEW K37",
+   "ratio": 29.96,
+   "t2b": 220.0,
+   "notes": "Mamax 220 Nm mis en T2B (liste fournie, adaptateur AQSH). Sortie 47 tr/min, charge radiale max 3470 N, alésage entrée 24,28,32 mm, centrage adaptateur B5 180 mm, cercle de perçage E5 215 mm, profondeur max 60 mm. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k37aqsh140-5-29.96"
+  },
+  {
+   "ref": "K37AQSH140/3 i=20.19",
+   "marque": "SEW",
+   "serie": "SEW K37",
+   "ratio": 20.19,
+   "t2b": 185.0,
+   "notes": "Mamax 185 Nm mis en T2B (liste fournie, adaptateur AQSH). Sortie 69 tr/min, charge radiale max 3110 N, alésage entrée 24,28,32 mm, centrage adaptateur B5 130 mm, cercle de perçage E5 165 mm, profondeur max 60 mm. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k37aqsh140-3-20.19"
+  },
+  {
+   "ref": "K37AQSH140/3 i=29.96",
+   "marque": "SEW",
+   "serie": "SEW K37",
+   "ratio": 29.96,
+   "t2b": 220.0,
+   "notes": "Mamax 220 Nm mis en T2B (liste fournie, adaptateur AQSH). Sortie 47 tr/min, charge radiale max 3470 N, alésage entrée 24,28,32 mm, centrage adaptateur B5 130 mm, cercle de perçage E5 165 mm, profondeur max 60 mm. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k37aqsh140-3-29.96"
+  },
+  {
+   "ref": "K37AQSH140/1 i=20.19",
+   "marque": "SEW",
+   "serie": "SEW K37",
+   "ratio": 20.19,
+   "t2b": 185.0,
+   "notes": "Mamax 185 Nm mis en T2B (liste fournie, adaptateur AQSH). Sortie 69 tr/min, charge radiale max 3110 N, alésage entrée 24,28,32 mm, centrage adaptateur B5 110 mm, cercle de perçage E5 165 mm, profondeur max 60 mm. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k37aqsh140-1-20.19"
+  },
+  {
+   "ref": "K37AQSH140/1 i=29.96",
+   "marque": "SEW",
+   "serie": "SEW K37",
+   "ratio": 29.96,
+   "t2b": 220.0,
+   "notes": "Mamax 220 Nm mis en T2B (liste fournie, adaptateur AQSH). Sortie 47 tr/min, charge radiale max 3470 N, alésage entrée 24,28,32 mm, centrage adaptateur B5 110 mm, cercle de perçage E5 165 mm, profondeur max 60 mm. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k37aqsh140-1-29.96"
+  },
+  {
+   "ref": "K37AQSH115/5 i=20.19",
+   "marque": "SEW",
+   "serie": "SEW K37",
+   "ratio": 20.19,
+   "t2b": 185.0,
+   "notes": "Mamax 185 Nm mis en T2B (liste fournie, adaptateur AQSH). Sortie 69 tr/min, charge radiale max 3110 N, alésage entrée 19,22,24 mm, centrage adaptateur B5 95 mm, cercle de perçage E5 115 mm, profondeur max 50 mm. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k37aqsh115-5-20.19"
+  },
+  {
+   "ref": "K37AQSH115/5 i=23.36",
+   "marque": "SEW",
+   "serie": "SEW K37",
+   "ratio": 23.36,
+   "t2b": 230.0,
+   "notes": "Mamax 230 Nm mis en T2B (liste fournie, adaptateur AQSH). Sortie 60 tr/min, charge radiale max 2940 N, alésage entrée 19,22,24 mm, centrage adaptateur B5 95 mm, cercle de perçage E5 115 mm, profondeur max 50 mm. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k37aqsh115-5-23.36"
+  },
+  {
+   "ref": "K37AQSH115/5 i=24.99",
+   "marque": "SEW",
+   "serie": "SEW K37",
+   "ratio": 24.99,
+   "t2b": 230.0,
+   "notes": "Mamax 230 Nm mis en T2B (liste fournie, adaptateur AQSH). Sortie 56 tr/min, charge radiale max 3050 N, alésage entrée 19,22,24 mm, centrage adaptateur B5 95 mm, cercle de perçage E5 115 mm, profondeur max 50 mm. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k37aqsh115-5-24.99"
+  },
+  {
+   "ref": "K37AQSH115/5 i=29.96",
+   "marque": "SEW",
+   "serie": "SEW K37",
+   "ratio": 29.96,
+   "t2b": 220.0,
+   "notes": "Mamax 220 Nm mis en T2B (liste fournie, adaptateur AQSH). Sortie 47 tr/min, charge radiale max 3470 N, alésage entrée 19,22,24 mm, centrage adaptateur B5 95 mm, cercle de perçage E5 115 mm, profondeur max 50 mm. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k37aqsh115-5-29.96"
+  },
+  {
+   "ref": "K37AQSH115/5 i=28.83",
+   "marque": "SEW",
+   "serie": "SEW K37",
+   "ratio": 28.83,
+   "t2b": 230.0,
+   "notes": "Mamax 230 Nm mis en T2B (liste fournie, adaptateur AQSH). Sortie 49 tr/min, charge radiale max 3310 N, alésage entrée 19,22,24 mm, centrage adaptateur B5 95 mm, cercle de perçage E5 115 mm, profondeur max 50 mm. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k37aqsh115-5-28.83"
+  },
+  {
+   "ref": "K37AQSH115/4 i=20.19",
+   "marque": "SEW",
+   "serie": "SEW K37",
+   "ratio": 20.19,
+   "t2b": 185.0,
+   "notes": "Mamax 185 Nm mis en T2B (liste fournie, adaptateur AQSH). Sortie 69 tr/min, charge radiale max 3110 N, alésage entrée 19,22,24 mm, centrage adaptateur B5 110 mm, cercle de perçage E5 145 mm, profondeur max 58 mm. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k37aqsh115-4-20.19"
+  },
+  {
+   "ref": "K37AQSH115/4 i=23.36",
+   "marque": "SEW",
+   "serie": "SEW K37",
+   "ratio": 23.36,
+   "t2b": 230.0,
+   "notes": "Mamax 230 Nm mis en T2B (liste fournie, adaptateur AQSH). Sortie 60 tr/min, charge radiale max 2940 N, alésage entrée 19,22,24 mm, centrage adaptateur B5 110 mm, cercle de perçage E5 145 mm, profondeur max 58 mm. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k37aqsh115-4-23.36"
+  },
+  {
+   "ref": "K37AQSH115/4 i=24.99",
+   "marque": "SEW",
+   "serie": "SEW K37",
+   "ratio": 24.99,
+   "t2b": 230.0,
+   "notes": "Mamax 230 Nm mis en T2B (liste fournie, adaptateur AQSH). Sortie 56 tr/min, charge radiale max 3050 N, alésage entrée 19,22,24 mm, centrage adaptateur B5 110 mm, cercle de perçage E5 145 mm, profondeur max 58 mm. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k37aqsh115-4-24.99"
+  },
+  {
+   "ref": "K37AQSH115/4 i=29.96",
+   "marque": "SEW",
+   "serie": "SEW K37",
+   "ratio": 29.96,
+   "t2b": 220.0,
+   "notes": "Mamax 220 Nm mis en T2B (liste fournie, adaptateur AQSH). Sortie 47 tr/min, charge radiale max 3470 N, alésage entrée 19,22,24 mm, centrage adaptateur B5 110 mm, cercle de perçage E5 145 mm, profondeur max 58 mm. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k37aqsh115-4-29.96"
+  },
+  {
+   "ref": "K37AQSH115/4 i=28.83",
+   "marque": "SEW",
+   "serie": "SEW K37",
+   "ratio": 28.83,
+   "t2b": 230.0,
+   "notes": "Mamax 230 Nm mis en T2B (liste fournie, adaptateur AQSH). Sortie 49 tr/min, charge radiale max 3310 N, alésage entrée 19,22,24 mm, centrage adaptateur B5 110 mm, cercle de perçage E5 145 mm, profondeur max 58 mm. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k37aqsh115-4-28.83"
+  },
+  {
+   "ref": "K37AQSH115/3 i=20.19",
+   "marque": "SEW",
+   "serie": "SEW K37",
+   "ratio": 20.19,
+   "t2b": 185.0,
+   "notes": "Mamax 185 Nm mis en T2B (liste fournie, adaptateur AQSH). Sortie 69 tr/min, charge radiale max 3110 N, alésage entrée 19,22,24 mm, centrage adaptateur B5 110 mm, cercle de perçage E5 130 mm, profondeur max 50 mm. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k37aqsh115-3-20.19"
+  },
+  {
+   "ref": "K37AQSH115/3 i=23.36",
+   "marque": "SEW",
+   "serie": "SEW K37",
+   "ratio": 23.36,
+   "t2b": 230.0,
+   "notes": "Mamax 230 Nm mis en T2B (liste fournie, adaptateur AQSH). Sortie 60 tr/min, charge radiale max 2940 N, alésage entrée 19,22,24 mm, centrage adaptateur B5 110 mm, cercle de perçage E5 130 mm, profondeur max 50 mm. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k37aqsh115-3-23.36"
+  },
+  {
+   "ref": "K37AQSH115/3 i=24.99",
+   "marque": "SEW",
+   "serie": "SEW K37",
+   "ratio": 24.99,
+   "t2b": 230.0,
+   "notes": "Mamax 230 Nm mis en T2B (liste fournie, adaptateur AQSH). Sortie 56 tr/min, charge radiale max 3050 N, alésage entrée 19,22,24 mm, centrage adaptateur B5 110 mm, cercle de perçage E5 130 mm, profondeur max 50 mm. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k37aqsh115-3-24.99"
+  },
+  {
+   "ref": "K37AQSH115/3 i=29.96",
+   "marque": "SEW",
+   "serie": "SEW K37",
+   "ratio": 29.96,
+   "t2b": 220.0,
+   "notes": "Mamax 220 Nm mis en T2B (liste fournie, adaptateur AQSH). Sortie 47 tr/min, charge radiale max 3470 N, alésage entrée 19,22,24 mm, centrage adaptateur B5 110 mm, cercle de perçage E5 130 mm, profondeur max 50 mm. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k37aqsh115-3-29.96"
+  },
+  {
+   "ref": "K37AQSH115/3 i=28.83",
+   "marque": "SEW",
+   "serie": "SEW K37",
+   "ratio": 28.83,
+   "t2b": 230.0,
+   "notes": "Mamax 230 Nm mis en T2B (liste fournie, adaptateur AQSH). Sortie 49 tr/min, charge radiale max 3310 N, alésage entrée 19,22,24 mm, centrage adaptateur B5 110 mm, cercle de perçage E5 130 mm, profondeur max 50 mm. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k37aqsh115-3-28.83"
+  },
+  {
+   "ref": "K37AQSH115/1 i=20.19",
+   "marque": "SEW",
+   "serie": "SEW K37",
+   "ratio": 20.19,
+   "t2b": 185.0,
+   "notes": "Mamax 185 Nm mis en T2B (liste fournie, adaptateur AQSH). Sortie 69 tr/min, charge radiale max 3110 N, alésage entrée 19,22,24 mm, centrage adaptateur B5 95 mm, cercle de perçage E5 130 mm, profondeur max 50 mm. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k37aqsh115-1-20.19"
+  },
+  {
+   "ref": "K19 i=27.16",
+   "marque": "SEW",
+   "serie": "SEW K19",
+   "ratio": 27.16,
+   "t2b": 60.0,
+   "notes": "Mamax 60 Nm mis en T2B (liste fournie). Sortie 52 tr/min, charge radiale max 4090 N. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k19-27.16"
+  },
+  {
+   "ref": "K19 i=29.29",
+   "marque": "SEW",
+   "serie": "SEW K19",
+   "ratio": 29.29,
+   "t2b": 61.0,
+   "notes": "Mamax 61 Nm mis en T2B (liste fournie). Sortie 48 tr/min, charge radiale max 4200 N. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k19-29.29"
+  },
+  {
+   "ref": "K19 i=9.58",
+   "marque": "SEW",
+   "serie": "SEW K19",
+   "ratio": 9.58,
+   "t2b": 63.0,
+   "notes": "Mamax 63 Nm mis en T2B (liste fournie). Sortie 146 tr/min, charge radiale max 2910 N. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k19-9.58"
+  },
+  {
+   "ref": "K19 i=34.29",
+   "marque": "SEW",
+   "serie": "SEW K19",
+   "ratio": 34.29,
+   "t2b": 64.0,
+   "notes": "Mamax 64 Nm mis en T2B (liste fournie). Sortie 41 tr/min, charge radiale max 4370 N. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k19-34.29"
+  },
+  {
+   "ref": "K19 i=40.63",
+   "marque": "SEW",
+   "serie": "SEW K19",
+   "ratio": 40.63,
+   "t2b": 67.0,
+   "notes": "Mamax 67 Nm mis en T2B (liste fournie). Sortie 34 tr/min, charge radiale max 4350 N. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k19-40.63"
+  },
+  {
+   "ref": "K19 i=44.48",
+   "marque": "SEW",
+   "serie": "SEW K19",
+   "ratio": 44.48,
+   "t2b": 69.0,
+   "notes": "Mamax 69 Nm mis en T2B (liste fournie). Sortie 31 tr/min, charge radiale max 4340 N. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k19-44.48"
+  },
+  {
+   "ref": "K19 i=49.69",
+   "marque": "SEW",
+   "serie": "SEW K19",
+   "ratio": 49.69,
+   "t2b": 70.0,
+   "notes": "Mamax 70 Nm mis en T2B (liste fournie). Sortie 28 tr/min, charge radiale max 4330 N. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k19-49.69"
+  },
+  {
+   "ref": "K19 i=53.88",
+   "marque": "SEW",
+   "serie": "SEW K19",
+   "ratio": 53.88,
+   "t2b": 70.0,
+   "notes": "Mamax 70 Nm mis en T2B (liste fournie). Sortie 26 tr/min, charge radiale max 4330 N. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k19-53.88"
+  },
+  {
+   "ref": "K19 i=58.68",
+   "marque": "SEW",
+   "serie": "SEW K19",
+   "ratio": 58.68,
+   "t2b": 70.0,
+   "notes": "Mamax 70 Nm mis en T2B (liste fournie). Sortie 24 tr/min, charge radiale max 4330 N. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k19-58.68"
+  },
+  {
+   "ref": "K19 i=10.32",
+   "marque": "SEW",
+   "serie": "SEW K19",
+   "ratio": 10.32,
+   "t2b": 76.0,
+   "notes": "Mamax 76 Nm mis en T2B (liste fournie). Sortie 136 tr/min, charge radiale max 2720 N. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k19-10.32"
+  },
+  {
+   "ref": "K19 i=11.84",
+   "marque": "SEW",
+   "serie": "SEW K19",
+   "ratio": 11.84,
+   "t2b": 79.0,
+   "notes": "Mamax 79 Nm mis en T2B (liste fournie). Sortie 118 tr/min, charge radiale max 2850 N. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k19-11.84"
+  },
+  {
+   "ref": "K19 i=4.5",
+   "marque": "SEW",
+   "serie": "SEW K19",
+   "ratio": 4.5,
+   "t2b": 80.0,
+   "notes": "Mamax 80 Nm mis en T2B (liste fournie). Sortie 311 tr/min, charge radiale max 2010 N. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k19-4.5"
+  },
+  {
+   "ref": "K19 i=5.16",
+   "marque": "SEW",
+   "serie": "SEW K19",
+   "ratio": 5.16,
+   "t2b": 80.0,
+   "notes": "Mamax 80 Nm mis en T2B (liste fournie). Sortie 271 tr/min, charge radiale max 2140 N. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k19-5.16"
+  },
+  {
+   "ref": "K19 i=5.54",
+   "marque": "SEW",
+   "serie": "SEW K19",
+   "ratio": 5.54,
+   "t2b": 80.0,
+   "notes": "Mamax 80 Nm mis en T2B (liste fournie). Sortie 253 tr/min, charge radiale max 2200 N. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k19-5.54"
+  },
+  {
+   "ref": "K19 i=6.41",
+   "marque": "SEW",
+   "serie": "SEW K19",
+   "ratio": 6.41,
+   "t2b": 80.0,
+   "notes": "Mamax 80 Nm mis en T2B (liste fournie). Sortie 218 tr/min, charge radiale max 2350 N. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k19-6.41"
+  },
+  {
+   "ref": "K19 i=6.91",
+   "marque": "SEW",
+   "serie": "SEW K19",
+   "ratio": 6.91,
+   "t2b": 80.0,
+   "notes": "Mamax 80 Nm mis en T2B (liste fournie). Sortie 203 tr/min, charge radiale max 2420 N. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k19-6.91"
+  },
+  {
+   "ref": "K19 i=8.09",
+   "marque": "SEW",
+   "serie": "SEW K19",
+   "ratio": 8.09,
+   "t2b": 80.0,
+   "notes": "Mamax 80 Nm mis en T2B (liste fournie). Sortie 173 tr/min, charge radiale max 2590 N. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k19-8.09"
+  },
+  {
+   "ref": "K19 i=12.7",
+   "marque": "SEW",
+   "serie": "SEW K19",
+   "ratio": 12.7,
+   "t2b": 80.0,
+   "notes": "Mamax 80 Nm mis en T2B (liste fournie). Sortie 110 tr/min, charge radiale max 2930 N. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k19-12.7"
+  },
+  {
+   "ref": "K19 i=14.69",
+   "marque": "SEW",
+   "serie": "SEW K19",
+   "ratio": 14.69,
+   "t2b": 80.0,
+   "notes": "Mamax 80 Nm mis en T2B (liste fournie). Sortie 95 tr/min, charge radiale max 3110 N. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k19-14.69"
+  },
+  {
+   "ref": "K19 i=15.84",
+   "marque": "SEW",
+   "serie": "SEW K19",
+   "ratio": 15.84,
+   "t2b": 80.0,
+   "notes": "Mamax 80 Nm mis en T2B (liste fournie). Sortie 88 tr/min, charge radiale max 3210 N. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k19-15.84"
+  },
+  {
+   "ref": "K19 i=18.55",
+   "marque": "SEW",
+   "serie": "SEW K19",
+   "ratio": 18.55,
+   "t2b": 80.0,
+   "notes": "Mamax 80 Nm mis en T2B (liste fournie). Sortie 75 tr/min, charge radiale max 3430 N. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k19-18.55"
+  },
+  {
+   "ref": "K19 i=21.98",
+   "marque": "SEW",
+   "serie": "SEW K19",
+   "ratio": 21.98,
+   "t2b": 80.0,
+   "notes": "Mamax 80 Nm mis en T2B (liste fournie). Sortie 64 tr/min, charge radiale max 3680 N. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k19-21.98"
+  },
+  {
+   "ref": "K19 i=24.06",
+   "marque": "SEW",
+   "serie": "SEW K19",
+   "ratio": 24.06,
+   "t2b": 80.0,
+   "notes": "Mamax 80 Nm mis en T2B (liste fournie). Sortie 58 tr/min, charge radiale max 3820 N. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k19-24.06"
+  },
+  {
+   "ref": "K19 i=26.88",
+   "marque": "SEW",
+   "serie": "SEW K19",
+   "ratio": 26.88,
+   "t2b": 80.0,
+   "notes": "Mamax 80 Nm mis en T2B (liste fournie). Sortie 52 tr/min, charge radiale max 3990 N. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k19-26.88"
+  },
+  {
+   "ref": "K19 i=29.14",
+   "marque": "SEW",
+   "serie": "SEW K19",
+   "ratio": 29.14,
+   "t2b": 80.0,
+   "notes": "Mamax 80 Nm mis en T2B (liste fournie). Sortie 48 tr/min, charge radiale max 4120 N. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k19-29.14"
+  },
+  {
+   "ref": "K19 i=31.74",
+   "marque": "SEW",
+   "serie": "SEW K19",
+   "ratio": 31.74,
+   "t2b": 80.0,
+   "notes": "Mamax 80 Nm mis en T2B (liste fournie). Sortie 44 tr/min, charge radiale max 4260 N. J_Gear et rendement non fournis : à renseigner.",
+   "id": "sew-k19-31.74"
+  },
+  {
+   "ref": "PLFE 055 i=3",
+   "marque": "Neugart",
+   "serie": "Neugart PLFE 055",
+   "ratio": 3,
+   "t2n": 3.5,
+   "t2b": 11,
+   "t2not": 22,
+   "rendement": 98,
+   "notes": "Neugart PLFE (catalogue 2026/05). T2N = couple continu T2D, T2B = couple de cycle T2Z, T2Not = couple d'arrêt d'urgence T2Stop (admis 1000 fois). T2max occasionnel 11 Nm. 1 étage, jeu standard < 15 arcmin. Inertie d'entrée J1 : 0,025 - 0,070 kg·cm² selon le rapport et le diamètre de serrage (valeur exacte dans le Tec Data Finder Neugart) : J_Gear = 0,048 kg·cm² : ESTIMATION au milieu de la plage (0,025 - 0,070), la valeur exacte dépend du rapport et du serrage (Tec Data Finder Neugart).",
+   "id": "plfe055-3",
+   "jGear": 0.048
+  },
+  {
+   "ref": "PLFE 064 i=3",
+   "marque": "Neugart",
+   "serie": "Neugart PLFE 064",
+   "ratio": 3,
+   "t2n": 23,
+   "t2b": 28,
+   "t2not": 60,
+   "rendement": 98,
+   "notes": "Neugart PLFE (catalogue 2026/05). T2N = couple continu T2D, T2B = couple de cycle T2Z, T2Not = couple d'arrêt d'urgence T2Stop (admis 1000 fois). T2max occasionnel 44 Nm. 1 étage, jeu standard < 10 arcmin. Inertie d'entrée J1 : 0,093 - 0,231 kg·cm² selon le rapport et le diamètre de serrage (valeur exacte dans le Tec Data Finder Neugart) : J_Gear = 0,162 kg·cm² : ESTIMATION au milieu de la plage (0,093 - 0,231), la valeur exacte dépend du rapport et du serrage (Tec Data Finder Neugart).",
+   "id": "plfe064-3",
+   "jGear": 0.162
+  },
+  {
+   "ref": "PLFE 090 i=3",
+   "marque": "Neugart",
+   "serie": "Neugart PLFE 090",
+   "ratio": 3,
+   "t2n": 42,
+   "t2b": 85,
+   "t2not": 150,
+   "rendement": 98,
+   "notes": "Neugart PLFE (catalogue 2026/05). T2N = couple continu T2D, T2B = couple de cycle T2Z, T2Not = couple d'arrêt d'urgence T2Stop (admis 1000 fois). T2max occasionnel 105 Nm. 1 étage, jeu standard < 7 arcmin. Inertie d'entrée J1 : 0,406 - 1,164 kg·cm² selon le rapport et le diamètre de serrage (valeur exacte dans le Tec Data Finder Neugart) : J_Gear = 0,785 kg·cm² : ESTIMATION au milieu de la plage (0,406 - 1,164), la valeur exacte dépend du rapport et du serrage (Tec Data Finder Neugart).",
+   "id": "plfe090-3",
+   "jGear": 0.785
+  },
+  {
+   "ref": "PLFE 110 i=3",
+   "marque": "Neugart",
+   "serie": "Neugart PLFE 110",
+   "ratio": 3,
+   "t2n": 97,
+   "t2b": 115,
+   "t2not": 375,
+   "rendement": 98,
+   "notes": "Neugart PLFE (catalogue 2026/05). T2N = couple continu T2D, T2B = couple de cycle T2Z, T2Not = couple d'arrêt d'urgence T2Stop (admis 1000 fois). T2max occasionnel 184 Nm. 1 étage, jeu standard < 7 arcmin. Inertie d'entrée J1 : 1,484 - 3,430 kg·cm² selon le rapport et le diamètre de serrage (valeur exacte dans le Tec Data Finder Neugart) : J_Gear = 2,457 kg·cm² : ESTIMATION au milieu de la plage (1,484 - 3,430), la valeur exacte dépend du rapport et du serrage (Tec Data Finder Neugart).",
+   "id": "plfe110-3",
+   "jGear": 2.457
+  },
+  {
+   "ref": "PLFE 055 i=4",
+   "marque": "Neugart",
+   "serie": "Neugart PLFE 055",
+   "ratio": 4,
+   "t2n": 12.5,
+   "t2b": 15,
+   "t2not": 30,
+   "rendement": 98,
+   "notes": "Neugart PLFE (catalogue 2026/05). T2N = couple continu T2D, T2B = couple de cycle T2Z, T2Not = couple d'arrêt d'urgence T2Stop (admis 1000 fois). T2max occasionnel 24 Nm. 1 étage, jeu standard < 15 arcmin. Inertie d'entrée J1 : 0,025 - 0,070 kg·cm² selon le rapport et le diamètre de serrage (valeur exacte dans le Tec Data Finder Neugart) : J_Gear = 0,048 kg·cm² : ESTIMATION au milieu de la plage (0,025 - 0,070), la valeur exacte dépend du rapport et du serrage (Tec Data Finder Neugart).",
+   "id": "plfe055-4",
+   "jGear": 0.048
+  },
+  {
+   "ref": "PLFE 064 i=4",
+   "marque": "Neugart",
+   "serie": "Neugart PLFE 064",
+   "ratio": 4,
+   "t2n": 23,
+   "t2b": 38,
+   "t2not": 80,
+   "rendement": 98,
+   "notes": "Neugart PLFE (catalogue 2026/05). T2N = couple continu T2D, T2B = couple de cycle T2Z, T2Not = couple d'arrêt d'urgence T2Stop (admis 1000 fois). T2max occasionnel 60 Nm. 1 étage, jeu standard < 10 arcmin. Inertie d'entrée J1 : 0,093 - 0,231 kg·cm² selon le rapport et le diamètre de serrage (valeur exacte dans le Tec Data Finder Neugart) : J_Gear = 0,162 kg·cm² : ESTIMATION au milieu de la plage (0,093 - 0,231), la valeur exacte dépend du rapport et du serrage (Tec Data Finder Neugart).",
+   "id": "plfe064-4",
+   "jGear": 0.162
+  },
+  {
+   "ref": "PLFE 090 i=4",
+   "marque": "Neugart",
+   "serie": "Neugart PLFE 090",
+   "ratio": 4,
+   "t2n": 94,
+   "t2b": 115,
+   "t2not": 200,
+   "rendement": 98,
+   "notes": "Neugart PLFE (catalogue 2026/05). T2N = couple continu T2D, T2B = couple de cycle T2Z, T2Not = couple d'arrêt d'urgence T2Stop (admis 1000 fois). T2max occasionnel 140 Nm. 1 étage, jeu standard < 7 arcmin. Inertie d'entrée J1 : 0,406 - 1,164 kg·cm² selon le rapport et le diamètre de serrage (valeur exacte dans le Tec Data Finder Neugart) : J_Gear = 0,785 kg·cm² : ESTIMATION au milieu de la plage (0,406 - 1,164), la valeur exacte dépend du rapport et du serrage (Tec Data Finder Neugart).",
+   "id": "plfe090-4",
+   "jGear": 0.785
+  },
+  {
+   "ref": "PLFE 110 i=4",
+   "marque": "Neugart",
+   "serie": "Neugart PLFE 110",
+   "ratio": 4,
+   "t2n": 131,
+   "t2b": 155,
+   "t2not": 500,
+   "rendement": 98,
+   "notes": "Neugart PLFE (catalogue 2026/05). T2N = couple continu T2D, T2B = couple de cycle T2Z, T2Not = couple d'arrêt d'urgence T2Stop (admis 1000 fois). T2max occasionnel 245 Nm. 1 étage, jeu standard < 7 arcmin. Inertie d'entrée J1 : 1,484 - 3,430 kg·cm² selon le rapport et le diamètre de serrage (valeur exacte dans le Tec Data Finder Neugart) : J_Gear = 2,457 kg·cm² : ESTIMATION au milieu de la plage (1,484 - 3,430), la valeur exacte dépend du rapport et du serrage (Tec Data Finder Neugart).",
+   "id": "plfe110-4",
+   "jGear": 2.457
+  },
+  {
+   "ref": "PLFE 055 i=5",
+   "marque": "Neugart",
+   "serie": "Neugart PLFE 055",
+   "ratio": 5,
+   "t2n": 11.5,
+   "t2b": 14,
+   "t2not": 36,
+   "rendement": 98,
+   "notes": "Neugart PLFE (catalogue 2026/05). T2N = couple continu T2D, T2B = couple de cycle T2Z, T2Not = couple d'arrêt d'urgence T2Stop (admis 1000 fois). T2max occasionnel 22 Nm. 1 étage, jeu standard < 15 arcmin. Inertie d'entrée J1 : 0,025 - 0,070 kg·cm² selon le rapport et le diamètre de serrage (valeur exacte dans le Tec Data Finder Neugart) : J_Gear = 0,048 kg·cm² : ESTIMATION au milieu de la plage (0,025 - 0,070), la valeur exacte dépend du rapport et du serrage (Tec Data Finder Neugart).",
+   "id": "plfe055-5",
+   "jGear": 0.048
+  },
+  {
+   "ref": "PLFE 064 i=5",
+   "marque": "Neugart",
+   "serie": "Neugart PLFE 064",
+   "ratio": 5,
+   "t2n": 24,
+   "t2b": 40,
+   "t2not": 80,
+   "rendement": 98,
+   "notes": "Neugart PLFE (catalogue 2026/05). T2N = couple continu T2D, T2B = couple de cycle T2Z, T2Not = couple d'arrêt d'urgence T2Stop (admis 1000 fois). T2max occasionnel 61 Nm. 1 étage, jeu standard < 10 arcmin. Inertie d'entrée J1 : 0,093 - 0,231 kg·cm² selon le rapport et le diamètre de serrage (valeur exacte dans le Tec Data Finder Neugart) : J_Gear = 0,162 kg·cm² : ESTIMATION au milieu de la plage (0,093 - 0,231), la valeur exacte dépend du rapport et du serrage (Tec Data Finder Neugart).",
+   "id": "plfe064-5",
+   "jGear": 0.162
+  },
+  {
+   "ref": "PLFE 090 i=5",
+   "marque": "Neugart",
+   "serie": "Neugart PLFE 090",
+   "ratio": 5,
+   "t2n": 93,
+   "t2b": 110,
+   "t2not": 220,
+   "rendement": 98,
+   "notes": "Neugart PLFE (catalogue 2026/05). T2N = couple continu T2D, T2B = couple de cycle T2Z, T2Not = couple d'arrêt d'urgence T2Stop (admis 1000 fois). T2max occasionnel 175 Nm. 1 étage, jeu standard < 7 arcmin. Inertie d'entrée J1 : 0,406 - 1,164 kg·cm² selon le rapport et le diamètre de serrage (valeur exacte dans le Tec Data Finder Neugart) : J_Gear = 0,785 kg·cm² : ESTIMATION au milieu de la plage (0,406 - 1,164), la valeur exacte dépend du rapport et du serrage (Tec Data Finder Neugart).",
+   "id": "plfe090-5",
+   "jGear": 0.785
+  },
+  {
+   "ref": "PLFE 110 i=5",
+   "marque": "Neugart",
+   "serie": "Neugart PLFE 110",
+   "ratio": 5,
+   "t2n": 165,
+   "t2b": 195,
+   "t2not": 500,
+   "rendement": 98,
+   "notes": "Neugart PLFE (catalogue 2026/05). T2N = couple continu T2D, T2B = couple de cycle T2Z, T2Not = couple d'arrêt d'urgence T2Stop (admis 1000 fois). T2max occasionnel 310 Nm. 1 étage, jeu standard < 7 arcmin. Inertie d'entrée J1 : 1,484 - 3,430 kg·cm² selon le rapport et le diamètre de serrage (valeur exacte dans le Tec Data Finder Neugart) : J_Gear = 2,457 kg·cm² : ESTIMATION au milieu de la plage (1,484 - 3,430), la valeur exacte dépend du rapport et du serrage (Tec Data Finder Neugart).",
+   "id": "plfe110-5",
+   "jGear": 2.457
+  },
+  {
+   "ref": "PLFE 055 i=7",
+   "marque": "Neugart",
+   "serie": "Neugart PLFE 055",
+   "ratio": 7,
+   "t2n": 7,
+   "t2b": 8.5,
+   "t2not": 26,
+   "rendement": 98,
+   "notes": "Neugart PLFE (catalogue 2026/05). T2N = couple continu T2D, T2B = couple de cycle T2Z, T2Not = couple d'arrêt d'urgence T2Stop (admis 1000 fois). T2max occasionnel 13.5 Nm. 1 étage, jeu standard < 15 arcmin. Inertie d'entrée J1 : 0,025 - 0,070 kg·cm² selon le rapport et le diamètre de serrage (valeur exacte dans le Tec Data Finder Neugart) : J_Gear = 0,048 kg·cm² : ESTIMATION au milieu de la plage (0,025 - 0,070), la valeur exacte dépend du rapport et du serrage (Tec Data Finder Neugart).",
+   "id": "plfe055-7",
+   "jGear": 0.048
+  },
+  {
+   "ref": "PLFE 064 i=7",
+   "marque": "Neugart",
+   "serie": "Neugart PLFE 064",
+   "ratio": 7,
+   "t2n": 19.5,
+   "t2b": 25,
+   "t2not": 80,
+   "rendement": 98,
+   "notes": "Neugart PLFE (catalogue 2026/05). T2N = couple continu T2D, T2B = couple de cycle T2Z, T2Not = couple d'arrêt d'urgence T2Stop (admis 1000 fois). T2max occasionnel 40 Nm. 1 étage, jeu standard < 10 arcmin. Inertie d'entrée J1 : 0,093 - 0,231 kg·cm² selon le rapport et le diamètre de serrage (valeur exacte dans le Tec Data Finder Neugart) : J_Gear = 0,162 kg·cm² : ESTIMATION au milieu de la plage (0,093 - 0,231), la valeur exacte dépend du rapport et du serrage (Tec Data Finder Neugart).",
+   "id": "plfe064-7",
+   "jGear": 0.162
+  },
+  {
+   "ref": "PLFE 090 i=7",
+   "marque": "Neugart",
+   "serie": "Neugart PLFE 090",
+   "ratio": 7,
+   "t2n": 55,
+   "t2b": 65,
+   "t2not": 178,
+   "rendement": 98,
+   "notes": "Neugart PLFE (catalogue 2026/05). T2N = couple continu T2D, T2B = couple de cycle T2Z, T2Not = couple d'arrêt d'urgence T2Stop (admis 1000 fois). T2max occasionnel 104 Nm. 1 étage, jeu standard < 7 arcmin. Inertie d'entrée J1 : 0,406 - 1,164 kg·cm² selon le rapport et le diamètre de serrage (valeur exacte dans le Tec Data Finder Neugart) : J_Gear = 0,785 kg·cm² : ESTIMATION au milieu de la plage (0,406 - 1,164), la valeur exacte dépend du rapport et du serrage (Tec Data Finder Neugart).",
+   "id": "plfe090-7",
+   "jGear": 0.785
+  },
+  {
+   "ref": "PLFE 110 i=7",
+   "marque": "Neugart",
+   "serie": "Neugart PLFE 110",
+   "ratio": 7,
+   "t2n": 114,
+   "t2b": 135,
+   "t2not": 340,
+   "rendement": 98,
+   "notes": "Neugart PLFE (catalogue 2026/05). T2N = couple continu T2D, T2B = couple de cycle T2Z, T2Not = couple d'arrêt d'urgence T2Stop (admis 1000 fois). T2max occasionnel 215 Nm. 1 étage, jeu standard < 7 arcmin. Inertie d'entrée J1 : 1,484 - 3,430 kg·cm² selon le rapport et le diamètre de serrage (valeur exacte dans le Tec Data Finder Neugart) : J_Gear = 2,457 kg·cm² : ESTIMATION au milieu de la plage (1,484 - 3,430), la valeur exacte dépend du rapport et du serrage (Tec Data Finder Neugart).",
+   "id": "plfe110-7",
+   "jGear": 2.457
+  },
+  {
+   "ref": "PLFE 055 i=8",
+   "marque": "Neugart",
+   "serie": "Neugart PLFE 055",
+   "ratio": 8,
+   "t2n": 5,
+   "t2b": 6,
+   "t2not": 27,
+   "rendement": 98,
+   "notes": "Neugart PLFE (catalogue 2026/05). T2N = couple continu T2D, T2B = couple de cycle T2Z, T2Not = couple d'arrêt d'urgence T2Stop (admis 1000 fois). T2max occasionnel 9.5 Nm. 1 étage, jeu standard < 15 arcmin. Inertie d'entrée J1 : 0,025 - 0,070 kg·cm² selon le rapport et le diamètre de serrage (valeur exacte dans le Tec Data Finder Neugart) : J_Gear = 0,048 kg·cm² : ESTIMATION au milieu de la plage (0,025 - 0,070), la valeur exacte dépend du rapport et du serrage (Tec Data Finder Neugart).",
+   "id": "plfe055-8",
+   "jGear": 0.048
+  },
+  {
+   "ref": "PLFE 064 i=8",
+   "marque": "Neugart",
+   "serie": "Neugart PLFE 064",
+   "ratio": 8,
+   "t2n": 15,
+   "t2b": 18,
+   "t2not": 80,
+   "rendement": 98,
+   "notes": "Neugart PLFE (catalogue 2026/05). T2N = couple continu T2D, T2B = couple de cycle T2Z, T2Not = couple d'arrêt d'urgence T2Stop (admis 1000 fois). T2max occasionnel 28 Nm. 1 étage, jeu standard < 10 arcmin. Inertie d'entrée J1 : 0,093 - 0,231 kg·cm² selon le rapport et le diamètre de serrage (valeur exacte dans le Tec Data Finder Neugart) : J_Gear = 0,162 kg·cm² : ESTIMATION au milieu de la plage (0,093 - 0,231), la valeur exacte dépend du rapport et du serrage (Tec Data Finder Neugart).",
+   "id": "plfe064-8",
+   "jGear": 0.162
+  },
+  {
+   "ref": "PLFE 090 i=8",
+   "marque": "Neugart",
+   "serie": "Neugart PLFE 090",
+   "ratio": 8,
+   "t2n": 42,
+   "t2b": 50,
+   "t2not": 190,
+   "rendement": 98,
+   "notes": "Neugart PLFE (catalogue 2026/05). T2N = couple continu T2D, T2B = couple de cycle T2Z, T2Not = couple d'arrêt d'urgence T2Stop (admis 1000 fois). T2max occasionnel 80 Nm. 1 étage, jeu standard < 7 arcmin. Inertie d'entrée J1 : 0,406 - 1,164 kg·cm² selon le rapport et le diamètre de serrage (valeur exacte dans le Tec Data Finder Neugart) : J_Gear = 0,785 kg·cm² : ESTIMATION au milieu de la plage (0,406 - 1,164), la valeur exacte dépend du rapport et du serrage (Tec Data Finder Neugart).",
+   "id": "plfe090-8",
+   "jGear": 0.785
+  },
+  {
+   "ref": "PLFE 110 i=8",
+   "marque": "Neugart",
+   "serie": "Neugart PLFE 110",
+   "ratio": 8,
+   "t2n": 102,
+   "t2b": 120,
+   "t2not": 380,
+   "rendement": 98,
+   "notes": "Neugart PLFE (catalogue 2026/05). T2N = couple continu T2D, T2B = couple de cycle T2Z, T2Not = couple d'arrêt d'urgence T2Stop (admis 1000 fois). T2max occasionnel 192 Nm. 1 étage, jeu standard < 7 arcmin. Inertie d'entrée J1 : 1,484 - 3,430 kg·cm² selon le rapport et le diamètre de serrage (valeur exacte dans le Tec Data Finder Neugart) : J_Gear = 2,457 kg·cm² : ESTIMATION au milieu de la plage (1,484 - 3,430), la valeur exacte dépend du rapport et du serrage (Tec Data Finder Neugart).",
+   "id": "plfe110-8",
+   "jGear": 2.457
+  },
+  {
+   "ref": "PLFE 055 i=10",
+   "marque": "Neugart",
+   "serie": "Neugart PLFE 055",
+   "ratio": 10,
+   "t2n": 4,
+   "t2b": 5,
+   "t2not": 27,
+   "rendement": 98,
+   "notes": "Neugart PLFE (catalogue 2026/05). T2N = couple continu T2D, T2B = couple de cycle T2Z, T2Not = couple d'arrêt d'urgence T2Stop (admis 1000 fois). T2max occasionnel 8 Nm. 1 étage, jeu standard < 15 arcmin. Inertie d'entrée J1 : 0,025 - 0,070 kg·cm² selon le rapport et le diamètre de serrage (valeur exacte dans le Tec Data Finder Neugart) : J_Gear = 0,048 kg·cm² : ESTIMATION au milieu de la plage (0,025 - 0,070), la valeur exacte dépend du rapport et du serrage (Tec Data Finder Neugart).",
+   "id": "plfe055-10",
+   "jGear": 0.048
+  },
+  {
+   "ref": "PLFE 064 i=10",
+   "marque": "Neugart",
+   "serie": "Neugart PLFE 064",
+   "ratio": 10,
+   "t2n": 12.5,
+   "t2b": 15,
+   "t2not": 75,
+   "rendement": 98,
+   "notes": "Neugart PLFE (catalogue 2026/05). T2N = couple continu T2D, T2B = couple de cycle T2Z, T2Not = couple d'arrêt d'urgence T2Stop (admis 1000 fois). T2max occasionnel 24 Nm. 1 étage, jeu standard < 10 arcmin. Inertie d'entrée J1 : 0,093 - 0,231 kg·cm² selon le rapport et le diamètre de serrage (valeur exacte dans le Tec Data Finder Neugart) : J_Gear = 0,162 kg·cm² : ESTIMATION au milieu de la plage (0,093 - 0,231), la valeur exacte dépend du rapport et du serrage (Tec Data Finder Neugart).",
+   "id": "plfe064-10",
+   "jGear": 0.162
+  },
+  {
+   "ref": "PLFE 090 i=10",
+   "marque": "Neugart",
+   "serie": "Neugart PLFE 090",
+   "ratio": 10,
+   "t2n": 32,
+   "t2b": 38,
+   "t2not": 200,
+   "rendement": 98,
+   "notes": "Neugart PLFE (catalogue 2026/05). T2N = couple continu T2D, T2B = couple de cycle T2Z, T2Not = couple d'arrêt d'urgence T2Stop (admis 1000 fois). T2max occasionnel 60 Nm. 1 étage, jeu standard < 7 arcmin. Inertie d'entrée J1 : 0,406 - 1,164 kg·cm² selon le rapport et le diamètre de serrage (valeur exacte dans le Tec Data Finder Neugart) : J_Gear = 0,785 kg·cm² : ESTIMATION au milieu de la plage (0,406 - 1,164), la valeur exacte dépend du rapport et du serrage (Tec Data Finder Neugart).",
+   "id": "plfe090-10",
+   "jGear": 0.785
+  },
+  {
+   "ref": "PLFE 110 i=10",
+   "marque": "Neugart",
+   "serie": "Neugart PLFE 110",
+   "ratio": 10,
+   "t2n": 80,
+   "t2b": 95,
+   "t2not": 480,
+   "rendement": 98,
+   "notes": "Neugart PLFE (catalogue 2026/05). T2N = couple continu T2D, T2B = couple de cycle T2Z, T2Not = couple d'arrêt d'urgence T2Stop (admis 1000 fois). T2max occasionnel 152 Nm. 1 étage, jeu standard < 7 arcmin. Inertie d'entrée J1 : 1,484 - 3,430 kg·cm² selon le rapport et le diamètre de serrage (valeur exacte dans le Tec Data Finder Neugart) : J_Gear = 2,457 kg·cm² : ESTIMATION au milieu de la plage (1,484 - 3,430), la valeur exacte dépend du rapport et du serrage (Tec Data Finder Neugart).",
+   "id": "plfe110-10",
+   "jGear": 2.457
+  },
+  {
+   "ref": "PLFE 055 i=9",
+   "marque": "Neugart",
+   "serie": "Neugart PLFE 055",
+   "ratio": 9,
+   "t2n": 10.5,
+   "t2b": 16.5,
+   "t2not": 33,
+   "rendement": 97,
+   "notes": "Neugart PLFE (catalogue 2026/05). T2N = couple continu T2D, T2B = couple de cycle T2Z, T2Not = couple d'arrêt d'urgence T2Stop (admis 1000 fois). T2max occasionnel 16.5 Nm. 2 étage, jeu standard < 19 arcmin. Inertie d'entrée J1 : 0,022 - 0,036 kg·cm² selon le rapport et le diamètre de serrage (valeur exacte dans le Tec Data Finder Neugart) : J_Gear = 0,029 kg·cm² : ESTIMATION au milieu de la plage (0,022 - 0,036), la valeur exacte dépend du rapport et du serrage (Tec Data Finder Neugart).",
+   "id": "plfe055-9",
+   "jGear": 0.029
+  },
+  {
+   "ref": "PLFE 064 i=9",
+   "marque": "Neugart",
+   "serie": "Neugart PLFE 064",
+   "ratio": 9,
+   "t2n": 30,
+   "t2b": 44,
+   "t2not": 88,
+   "rendement": 97,
+   "notes": "Neugart PLFE (catalogue 2026/05). T2N = couple continu T2D, T2B = couple de cycle T2Z, T2Not = couple d'arrêt d'urgence T2Stop (admis 1000 fois). T2max occasionnel 70 Nm. 2 étage, jeu standard < 12 arcmin. Inertie d'entrée J1 : 0,084 - 0,151 kg·cm² selon le rapport et le diamètre de serrage (valeur exacte dans le Tec Data Finder Neugart) : J_Gear = 0,117 kg·cm² : ESTIMATION au milieu de la plage (0,084 - 0,151), la valeur exacte dépend du rapport et du serrage (Tec Data Finder Neugart).",
+   "id": "plfe064-9",
+   "jGear": 0.117
+  },
+  {
+   "ref": "PLFE 090 i=9",
+   "marque": "Neugart",
+   "serie": "Neugart PLFE 090",
+   "ratio": 9,
+   "t2n": 89,
+   "t2b": 130,
+   "t2not": 260,
+   "rendement": 97,
+   "notes": "Neugart PLFE (catalogue 2026/05). T2N = couple continu T2D, T2B = couple de cycle T2Z, T2Not = couple d'arrêt d'urgence T2Stop (admis 1000 fois). T2max occasionnel 182 Nm. 2 étage, jeu standard < 9 arcmin. Inertie d'entrée J1 : 0,356 - 0,666 kg·cm² selon le rapport et le diamètre de serrage (valeur exacte dans le Tec Data Finder Neugart) : J_Gear = 0,511 kg·cm² : ESTIMATION au milieu de la plage (0,356 - 0,666), la valeur exacte dépend du rapport et du serrage (Tec Data Finder Neugart).",
+   "id": "plfe090-9",
+   "jGear": 0.511
+  },
+  {
+   "ref": "PLFE 110 i=9",
+   "marque": "Neugart",
+   "serie": "Neugart PLFE 110",
+   "ratio": 9,
+   "t2n": 178,
+   "t2b": 210,
+   "t2not": 500,
+   "rendement": 97,
+   "notes": "Neugart PLFE (catalogue 2026/05). T2N = couple continu T2D, T2B = couple de cycle T2Z, T2Not = couple d'arrêt d'urgence T2Stop (admis 1000 fois). T2max occasionnel 335 Nm. 2 étage, jeu standard < 9 arcmin. Inertie d'entrée J1 : 1,377 - 2,407 kg·cm² selon le rapport et le diamètre de serrage (valeur exacte dans le Tec Data Finder Neugart) : J_Gear = 1,892 kg·cm² : ESTIMATION au milieu de la plage (1,377 - 2,407), la valeur exacte dépend du rapport et du serrage (Tec Data Finder Neugart).",
+   "id": "plfe110-9",
+   "jGear": 1.892
+  },
+  {
+   "ref": "PLFE 055 i=12",
+   "marque": "Neugart",
+   "serie": "Neugart PLFE 055",
+   "ratio": 12,
+   "t2n": 14.5,
+   "t2b": 20,
+   "t2not": 40,
+   "rendement": 97,
+   "notes": "Neugart PLFE (catalogue 2026/05). T2N = couple continu T2D, T2B = couple de cycle T2Z, T2Not = couple d'arrêt d'urgence T2Stop (admis 1000 fois). T2max occasionnel 32 Nm. 2 étage, jeu standard < 19 arcmin. Inertie d'entrée J1 : 0,022 - 0,036 kg·cm² selon le rapport et le diamètre de serrage (valeur exacte dans le Tec Data Finder Neugart) : J_Gear = 0,029 kg·cm² : ESTIMATION au milieu de la plage (0,022 - 0,036), la valeur exacte dépend du rapport et du serrage (Tec Data Finder Neugart).",
+   "id": "plfe055-12",
+   "jGear": 0.029
+  },
+  {
+   "ref": "PLFE 064 i=12",
+   "marque": "Neugart",
+   "serie": "Neugart PLFE 064",
+   "ratio": 12,
+   "t2n": 32,
+   "t2b": 44,
+   "t2not": 88,
+   "rendement": 97,
+   "notes": "Neugart PLFE (catalogue 2026/05). T2N = couple continu T2D, T2B = couple de cycle T2Z, T2Not = couple d'arrêt d'urgence T2Stop (admis 1000 fois). T2max occasionnel 65 Nm. 2 étage, jeu standard < 12 arcmin. Inertie d'entrée J1 : 0,084 - 0,151 kg·cm² selon le rapport et le diamètre de serrage (valeur exacte dans le Tec Data Finder Neugart) : J_Gear = 0,117 kg·cm² : ESTIMATION au milieu de la plage (0,084 - 0,151), la valeur exacte dépend du rapport et du serrage (Tec Data Finder Neugart).",
+   "id": "plfe064-12",
+   "jGear": 0.117
+  },
+  {
+   "ref": "PLFE 090 i=12",
+   "marque": "Neugart",
+   "serie": "Neugart PLFE 090",
+   "ratio": 12,
+   "t2n": 102,
+   "t2b": 120,
+   "t2not": 240,
+   "rendement": 97,
+   "notes": "Neugart PLFE (catalogue 2026/05). T2N = couple continu T2D, T2B = couple de cycle T2Z, T2Not = couple d'arrêt d'urgence T2Stop (admis 1000 fois). T2max occasionnel 192 Nm. 2 étage, jeu standard < 9 arcmin. Inertie d'entrée J1 : 0,356 - 0,666 kg·cm² selon le rapport et le diamètre de serrage (valeur exacte dans le Tec Data Finder Neugart) : J_Gear = 0,511 kg·cm² : ESTIMATION au milieu de la plage (0,356 - 0,666), la valeur exacte dépend du rapport et du serrage (Tec Data Finder Neugart).",
+   "id": "plfe090-12",
+   "jGear": 0.511
+  },
+  {
+   "ref": "PLFE 110 i=12",
+   "marque": "Neugart",
+   "serie": "Neugart PLFE 110",
+   "ratio": 12,
+   "t2n": 220,
+   "t2b": 260,
+   "t2not": 520,
+   "rendement": 97,
+   "notes": "Neugart PLFE (catalogue 2026/05). T2N = couple continu T2D, T2B = couple de cycle T2Z, T2Not = couple d'arrêt d'urgence T2Stop (admis 1000 fois). T2max occasionnel 415 Nm. 2 étage, jeu standard < 9 arcmin. Inertie d'entrée J1 : 1,377 - 2,407 kg·cm² selon le rapport et le diamètre de serrage (valeur exacte dans le Tec Data Finder Neugart) : J_Gear = 1,892 kg·cm² : ESTIMATION au milieu de la plage (1,377 - 2,407), la valeur exacte dépend du rapport et du serrage (Tec Data Finder Neugart).",
+   "id": "plfe110-12",
+   "jGear": 1.892
+  },
+  {
+   "ref": "PLFE 055 i=15",
+   "marque": "Neugart",
+   "serie": "Neugart PLFE 055",
+   "ratio": 15,
+   "t2n": 15,
+   "t2b": 18,
+   "t2not": 36,
+   "rendement": 97,
+   "notes": "Neugart PLFE (catalogue 2026/05). T2N = couple continu T2D, T2B = couple de cycle T2Z, T2Not = couple d'arrêt d'urgence T2Stop (admis 1000 fois). T2max occasionnel 28 Nm. 2 étage, jeu standard < 19 arcmin. Inertie d'entrée J1 : 0,022 - 0,036 kg·cm² selon le rapport et le diamètre de serrage (valeur exacte dans le Tec Data Finder Neugart) : J_Gear = 0,029 kg·cm² : ESTIMATION au milieu de la plage (0,022 - 0,036), la valeur exacte dépend du rapport et du serrage (Tec Data Finder Neugart).",
+   "id": "plfe055-15",
+   "jGear": 0.029
+  },
+  {
+   "ref": "PLFE 064 i=15",
+   "marque": "Neugart",
+   "serie": "Neugart PLFE 064",
+   "ratio": 15,
+   "t2n": 35,
+   "t2b": 44,
+   "t2not": 88,
+   "rendement": 97,
+   "notes": "Neugart PLFE (catalogue 2026/05). T2N = couple continu T2D, T2B = couple de cycle T2Z, T2Not = couple d'arrêt d'urgence T2Stop (admis 1000 fois). T2max occasionnel 70 Nm. 2 étage, jeu standard < 12 arcmin. Inertie d'entrée J1 : 0,084 - 0,151 kg·cm² selon le rapport et le diamètre de serrage (valeur exacte dans le Tec Data Finder Neugart) : J_Gear = 0,117 kg·cm² : ESTIMATION au milieu de la plage (0,084 - 0,151), la valeur exacte dépend du rapport et du serrage (Tec Data Finder Neugart).",
+   "id": "plfe064-15",
+   "jGear": 0.117
+  },
+  {
+   "ref": "PLFE 090 i=15",
+   "marque": "Neugart",
+   "serie": "Neugart PLFE 090",
+   "ratio": 15,
+   "t2n": 93,
+   "t2b": 110,
+   "t2not": 220,
+   "rendement": 97,
+   "notes": "Neugart PLFE (catalogue 2026/05). T2N = couple continu T2D, T2B = couple de cycle T2Z, T2Not = couple d'arrêt d'urgence T2Stop (admis 1000 fois). T2max occasionnel 176 Nm. 2 étage, jeu standard < 9 arcmin. Inertie d'entrée J1 : 0,356 - 0,666 kg·cm² selon le rapport et le diamètre de serrage (valeur exacte dans le Tec Data Finder Neugart) : J_Gear = 0,511 kg·cm² : ESTIMATION au milieu de la plage (0,356 - 0,666), la valeur exacte dépend du rapport et du serrage (Tec Data Finder Neugart).",
+   "id": "plfe090-15",
+   "jGear": 0.511
+  },
+  {
+   "ref": "PLFE 110 i=15",
+   "marque": "Neugart",
+   "serie": "Neugart PLFE 110",
+   "ratio": 15,
+   "t2n": 195,
+   "t2b": 230,
+   "t2not": 500,
+   "rendement": 97,
+   "notes": "Neugart PLFE (catalogue 2026/05). T2N = couple continu T2D, T2B = couple de cycle T2Z, T2Not = couple d'arrêt d'urgence T2Stop (admis 1000 fois). T2max occasionnel 365 Nm. 2 étage, jeu standard < 9 arcmin. Inertie d'entrée J1 : 1,377 - 2,407 kg·cm² selon le rapport et le diamètre de serrage (valeur exacte dans le Tec Data Finder Neugart) : J_Gear = 1,892 kg·cm² : ESTIMATION au milieu de la plage (1,377 - 2,407), la valeur exacte dépend du rapport et du serrage (Tec Data Finder Neugart).",
+   "id": "plfe110-15",
+   "jGear": 1.892
+  },
+  {
+   "ref": "PLFE 055 i=16",
+   "marque": "Neugart",
+   "serie": "Neugart PLFE 055",
+   "ratio": 16,
+   "t2n": 17,
+   "t2b": 20,
+   "t2not": 40,
+   "rendement": 97,
+   "notes": "Neugart PLFE (catalogue 2026/05). T2N = couple continu T2D, T2B = couple de cycle T2Z, T2Not = couple d'arrêt d'urgence T2Stop (admis 1000 fois). T2max occasionnel 32 Nm. 2 étage, jeu standard < 19 arcmin. Inertie d'entrée J1 : 0,022 - 0,036 kg·cm² selon le rapport et le diamètre de serrage (valeur exacte dans le Tec Data Finder Neugart) : J_Gear = 0,029 kg·cm² : ESTIMATION au milieu de la plage (0,022 - 0,036), la valeur exacte dépend du rapport et du serrage (Tec Data Finder Neugart).",
+   "id": "plfe055-16",
+   "jGear": 0.029
+  },
+  {
+   "ref": "PLFE 064 i=16",
+   "marque": "Neugart",
+   "serie": "Neugart PLFE 064",
+   "ratio": 16,
+   "t2n": 35,
+   "t2b": 44,
+   "t2not": 88,
+   "rendement": 97,
+   "notes": "Neugart PLFE (catalogue 2026/05). T2N = couple continu T2D, T2B = couple de cycle T2Z, T2Not = couple d'arrêt d'urgence T2Stop (admis 1000 fois). T2max occasionnel 65 Nm. 2 étage, jeu standard < 12 arcmin. Inertie d'entrée J1 : 0,084 - 0,151 kg·cm² selon le rapport et le diamètre de serrage (valeur exacte dans le Tec Data Finder Neugart) : J_Gear = 0,117 kg·cm² : ESTIMATION au milieu de la plage (0,084 - 0,151), la valeur exacte dépend du rapport et du serrage (Tec Data Finder Neugart).",
+   "id": "plfe064-16",
+   "jGear": 0.117
+  },
+  {
+   "ref": "PLFE 090 i=16",
+   "marque": "Neugart",
+   "serie": "Neugart PLFE 090",
+   "ratio": 16,
+   "t2n": 102,
+   "t2b": 120,
+   "t2not": 240,
+   "rendement": 97,
+   "notes": "Neugart PLFE (catalogue 2026/05). T2N = couple continu T2D, T2B = couple de cycle T2Z, T2Not = couple d'arrêt d'urgence T2Stop (admis 1000 fois). T2max occasionnel 192 Nm. 2 étage, jeu standard < 9 arcmin. Inertie d'entrée J1 : 0,356 - 0,666 kg·cm² selon le rapport et le diamètre de serrage (valeur exacte dans le Tec Data Finder Neugart) : J_Gear = 0,511 kg·cm² : ESTIMATION au milieu de la plage (0,356 - 0,666), la valeur exacte dépend du rapport et du serrage (Tec Data Finder Neugart).",
+   "id": "plfe090-16",
+   "jGear": 0.511
+  },
+  {
+   "ref": "PLFE 110 i=16",
+   "marque": "Neugart",
+   "serie": "Neugart PLFE 110",
+   "ratio": 16,
+   "t2n": 220,
+   "t2b": 260,
+   "t2not": 520,
+   "rendement": 97,
+   "notes": "Neugart PLFE (catalogue 2026/05). T2N = couple continu T2D, T2B = couple de cycle T2Z, T2Not = couple d'arrêt d'urgence T2Stop (admis 1000 fois). T2max occasionnel 415 Nm. 2 étage, jeu standard < 9 arcmin. Inertie d'entrée J1 : 1,377 - 2,407 kg·cm² selon le rapport et le diamètre de serrage (valeur exacte dans le Tec Data Finder Neugart) : J_Gear = 1,892 kg·cm² : ESTIMATION au milieu de la plage (1,377 - 2,407), la valeur exacte dépend du rapport et du serrage (Tec Data Finder Neugart).",
+   "id": "plfe110-16",
+   "jGear": 1.892
+  },
+  {
+   "ref": "PLFE 055 i=20",
+   "marque": "Neugart",
+   "serie": "Neugart PLFE 055",
+   "ratio": 20,
+   "t2n": 17,
+   "t2b": 20,
+   "t2not": 40,
+   "rendement": 97,
+   "notes": "Neugart PLFE (catalogue 2026/05). T2N = couple continu T2D, T2B = couple de cycle T2Z, T2Not = couple d'arrêt d'urgence T2Stop (admis 1000 fois). T2max occasionnel 32 Nm. 2 étage, jeu standard < 19 arcmin. Inertie d'entrée J1 : 0,022 - 0,036 kg·cm² selon le rapport et le diamètre de serrage (valeur exacte dans le Tec Data Finder Neugart) : J_Gear = 0,029 kg·cm² : ESTIMATION au milieu de la plage (0,022 - 0,036), la valeur exacte dépend du rapport et du serrage (Tec Data Finder Neugart).",
+   "id": "plfe055-20",
+   "jGear": 0.029
+  },
+  {
+   "ref": "PLFE 064 i=20",
+   "marque": "Neugart",
+   "serie": "Neugart PLFE 064",
+   "ratio": 20,
+   "t2n": 37,
+   "t2b": 44,
+   "t2not": 88,
+   "rendement": 97,
+   "notes": "Neugart PLFE (catalogue 2026/05). T2N = couple continu T2D, T2B = couple de cycle T2Z, T2Not = couple d'arrêt d'urgence T2Stop (admis 1000 fois). T2max occasionnel 65 Nm. 2 étage, jeu standard < 12 arcmin. Inertie d'entrée J1 : 0,084 - 0,151 kg·cm² selon le rapport et le diamètre de serrage (valeur exacte dans le Tec Data Finder Neugart) : J_Gear = 0,117 kg·cm² : ESTIMATION au milieu de la plage (0,084 - 0,151), la valeur exacte dépend du rapport et du serrage (Tec Data Finder Neugart).",
+   "id": "plfe064-20",
+   "jGear": 0.117
+  },
+  {
+   "ref": "PLFE 090 i=20",
+   "marque": "Neugart",
+   "serie": "Neugart PLFE 090",
+   "ratio": 20,
+   "t2n": 102,
+   "t2b": 120,
+   "t2not": 240,
+   "rendement": 97,
+   "notes": "Neugart PLFE (catalogue 2026/05). T2N = couple continu T2D, T2B = couple de cycle T2Z, T2Not = couple d'arrêt d'urgence T2Stop (admis 1000 fois). T2max occasionnel 192 Nm. 2 étage, jeu standard < 9 arcmin. Inertie d'entrée J1 : 0,356 - 0,666 kg·cm² selon le rapport et le diamètre de serrage (valeur exacte dans le Tec Data Finder Neugart) : J_Gear = 0,511 kg·cm² : ESTIMATION au milieu de la plage (0,356 - 0,666), la valeur exacte dépend du rapport et du serrage (Tec Data Finder Neugart).",
+   "id": "plfe090-20",
+   "jGear": 0.511
+  },
+  {
+   "ref": "PLFE 110 i=20",
+   "marque": "Neugart",
+   "serie": "Neugart PLFE 110",
+   "ratio": 20,
+   "t2n": 220,
+   "t2b": 260,
+   "t2not": 520,
+   "rendement": 97,
+   "notes": "Neugart PLFE (catalogue 2026/05). T2N = couple continu T2D, T2B = couple de cycle T2Z, T2Not = couple d'arrêt d'urgence T2Stop (admis 1000 fois). T2max occasionnel 415 Nm. 2 étage, jeu standard < 9 arcmin. Inertie d'entrée J1 : 1,377 - 2,407 kg·cm² selon le rapport et le diamètre de serrage (valeur exacte dans le Tec Data Finder Neugart) : J_Gear = 1,892 kg·cm² : ESTIMATION au milieu de la plage (1,377 - 2,407), la valeur exacte dépend du rapport et du serrage (Tec Data Finder Neugart).",
+   "id": "plfe110-20",
+   "jGear": 1.892
+  },
+  {
+   "ref": "PLFE 055 i=25",
+   "marque": "Neugart",
+   "serie": "Neugart PLFE 055",
+   "ratio": 25,
+   "t2n": 15,
+   "t2b": 18,
+   "t2not": 36,
+   "rendement": 97,
+   "notes": "Neugart PLFE (catalogue 2026/05). T2N = couple continu T2D, T2B = couple de cycle T2Z, T2Not = couple d'arrêt d'urgence T2Stop (admis 1000 fois). T2max occasionnel 28 Nm. 2 étage, jeu standard < 19 arcmin. Inertie d'entrée J1 : 0,022 - 0,036 kg·cm² selon le rapport et le diamètre de serrage (valeur exacte dans le Tec Data Finder Neugart) : J_Gear = 0,029 kg·cm² : ESTIMATION au milieu de la plage (0,022 - 0,036), la valeur exacte dépend du rapport et du serrage (Tec Data Finder Neugart).",
+   "id": "plfe055-25",
+   "jGear": 0.029
+  },
+  {
+   "ref": "PLFE 064 i=25",
+   "marque": "Neugart",
+   "serie": "Neugart PLFE 064",
+   "ratio": 25,
+   "t2n": 34,
+   "t2b": 40,
+   "t2not": 80,
+   "rendement": 97,
+   "notes": "Neugart PLFE (catalogue 2026/05). T2N = couple continu T2D, T2B = couple de cycle T2Z, T2Not = couple d'arrêt d'urgence T2Stop (admis 1000 fois). T2max occasionnel 61 Nm. 2 étage, jeu standard < 12 arcmin. Inertie d'entrée J1 : 0,084 - 0,151 kg·cm² selon le rapport et le diamètre de serrage (valeur exacte dans le Tec Data Finder Neugart) : J_Gear = 0,117 kg·cm² : ESTIMATION au milieu de la plage (0,084 - 0,151), la valeur exacte dépend du rapport et du serrage (Tec Data Finder Neugart).",
+   "id": "plfe064-25",
+   "jGear": 0.117
+  },
+  {
+   "ref": "PLFE 090 i=25",
+   "marque": "Neugart",
+   "serie": "Neugart PLFE 090",
+   "ratio": 25,
+   "t2n": 93,
+   "t2b": 110,
+   "t2not": 220,
+   "rendement": 97,
+   "notes": "Neugart PLFE (catalogue 2026/05). T2N = couple continu T2D, T2B = couple de cycle T2Z, T2Not = couple d'arrêt d'urgence T2Stop (admis 1000 fois). T2max occasionnel 176 Nm. 2 étage, jeu standard < 9 arcmin. Inertie d'entrée J1 : 0,356 - 0,666 kg·cm² selon le rapport et le diamètre de serrage (valeur exacte dans le Tec Data Finder Neugart) : J_Gear = 0,511 kg·cm² : ESTIMATION au milieu de la plage (0,356 - 0,666), la valeur exacte dépend du rapport et du serrage (Tec Data Finder Neugart).",
+   "id": "plfe090-25",
+   "jGear": 0.511
+  },
+  {
+   "ref": "PLFE 110 i=25",
+   "marque": "Neugart",
+   "serie": "Neugart PLFE 110",
+   "ratio": 25,
+   "t2n": 195,
+   "t2b": 230,
+   "t2not": 500,
+   "rendement": 97,
+   "notes": "Neugart PLFE (catalogue 2026/05). T2N = couple continu T2D, T2B = couple de cycle T2Z, T2Not = couple d'arrêt d'urgence T2Stop (admis 1000 fois). T2max occasionnel 365 Nm. 2 étage, jeu standard < 9 arcmin. Inertie d'entrée J1 : 1,377 - 2,407 kg·cm² selon le rapport et le diamètre de serrage (valeur exacte dans le Tec Data Finder Neugart) : J_Gear = 1,892 kg·cm² : ESTIMATION au milieu de la plage (1,377 - 2,407), la valeur exacte dépend du rapport et du serrage (Tec Data Finder Neugart).",
+   "id": "plfe110-25",
+   "jGear": 1.892
+  },
+  {
+   "ref": "PLFE 055 i=32",
+   "marque": "Neugart",
+   "serie": "Neugart PLFE 055",
+   "ratio": 32,
+   "t2n": 17,
+   "t2b": 20,
+   "t2not": 40,
+   "rendement": 97,
+   "notes": "Neugart PLFE (catalogue 2026/05). T2N = couple continu T2D, T2B = couple de cycle T2Z, T2Not = couple d'arrêt d'urgence T2Stop (admis 1000 fois). T2max occasionnel 32 Nm. 2 étage, jeu standard < 19 arcmin. Inertie d'entrée J1 : 0,022 - 0,036 kg·cm² selon le rapport et le diamètre de serrage (valeur exacte dans le Tec Data Finder Neugart) : J_Gear = 0,029 kg·cm² : ESTIMATION au milieu de la plage (0,022 - 0,036), la valeur exacte dépend du rapport et du serrage (Tec Data Finder Neugart).",
+   "id": "plfe055-32",
+   "jGear": 0.029
+  },
+  {
+   "ref": "PLFE 064 i=32",
+   "marque": "Neugart",
+   "serie": "Neugart PLFE 064",
+   "ratio": 32,
+   "t2n": 37,
+   "t2b": 44,
+   "t2not": 88,
+   "rendement": 97,
+   "notes": "Neugart PLFE (catalogue 2026/05). T2N = couple continu T2D, T2B = couple de cycle T2Z, T2Not = couple d'arrêt d'urgence T2Stop (admis 1000 fois). T2max occasionnel 65 Nm. 2 étage, jeu standard < 12 arcmin. Inertie d'entrée J1 : 0,084 - 0,151 kg·cm² selon le rapport et le diamètre de serrage (valeur exacte dans le Tec Data Finder Neugart) : J_Gear = 0,117 kg·cm² : ESTIMATION au milieu de la plage (0,084 - 0,151), la valeur exacte dépend du rapport et du serrage (Tec Data Finder Neugart).",
+   "id": "plfe064-32",
+   "jGear": 0.117
+  },
+  {
+   "ref": "PLFE 090 i=32",
+   "marque": "Neugart",
+   "serie": "Neugart PLFE 090",
+   "ratio": 32,
+   "t2n": 102,
+   "t2b": 120,
+   "t2not": 240,
+   "rendement": 97,
+   "notes": "Neugart PLFE (catalogue 2026/05). T2N = couple continu T2D, T2B = couple de cycle T2Z, T2Not = couple d'arrêt d'urgence T2Stop (admis 1000 fois). T2max occasionnel 192 Nm. 2 étage, jeu standard < 9 arcmin. Inertie d'entrée J1 : 0,356 - 0,666 kg·cm² selon le rapport et le diamètre de serrage (valeur exacte dans le Tec Data Finder Neugart) : J_Gear = 0,511 kg·cm² : ESTIMATION au milieu de la plage (0,356 - 0,666), la valeur exacte dépend du rapport et du serrage (Tec Data Finder Neugart).",
+   "id": "plfe090-32",
+   "jGear": 0.511
+  },
+  {
+   "ref": "PLFE 110 i=32",
+   "marque": "Neugart",
+   "serie": "Neugart PLFE 110",
+   "ratio": 32,
+   "t2n": 220,
+   "t2b": 260,
+   "t2not": 520,
+   "rendement": 97,
+   "notes": "Neugart PLFE (catalogue 2026/05). T2N = couple continu T2D, T2B = couple de cycle T2Z, T2Not = couple d'arrêt d'urgence T2Stop (admis 1000 fois). T2max occasionnel 415 Nm. 2 étage, jeu standard < 9 arcmin. Inertie d'entrée J1 : 1,377 - 2,407 kg·cm² selon le rapport et le diamètre de serrage (valeur exacte dans le Tec Data Finder Neugart) : J_Gear = 1,892 kg·cm² : ESTIMATION au milieu de la plage (1,377 - 2,407), la valeur exacte dépend du rapport et du serrage (Tec Data Finder Neugart).",
+   "id": "plfe110-32",
+   "jGear": 1.892
+  },
+  {
+   "ref": "PLFE 055 i=40",
+   "marque": "Neugart",
+   "serie": "Neugart PLFE 055",
+   "ratio": 40,
+   "t2n": 15,
+   "t2b": 18,
+   "t2not": 36,
+   "rendement": 97,
+   "notes": "Neugart PLFE (catalogue 2026/05). T2N = couple continu T2D, T2B = couple de cycle T2Z, T2Not = couple d'arrêt d'urgence T2Stop (admis 1000 fois). T2max occasionnel 28 Nm. 2 étage, jeu standard < 19 arcmin. Inertie d'entrée J1 : 0,022 - 0,036 kg·cm² selon le rapport et le diamètre de serrage (valeur exacte dans le Tec Data Finder Neugart) : J_Gear = 0,029 kg·cm² : ESTIMATION au milieu de la plage (0,022 - 0,036), la valeur exacte dépend du rapport et du serrage (Tec Data Finder Neugart).",
+   "id": "plfe055-40",
+   "jGear": 0.029
+  },
+  {
+   "ref": "PLFE 064 i=40",
+   "marque": "Neugart",
+   "serie": "Neugart PLFE 064",
+   "ratio": 40,
+   "t2n": 34,
+   "t2b": 40,
+   "t2not": 80,
+   "rendement": 97,
+   "notes": "Neugart PLFE (catalogue 2026/05). T2N = couple continu T2D, T2B = couple de cycle T2Z, T2Not = couple d'arrêt d'urgence T2Stop (admis 1000 fois). T2max occasionnel 61 Nm. 2 étage, jeu standard < 12 arcmin. Inertie d'entrée J1 : 0,084 - 0,151 kg·cm² selon le rapport et le diamètre de serrage (valeur exacte dans le Tec Data Finder Neugart) : J_Gear = 0,117 kg·cm² : ESTIMATION au milieu de la plage (0,084 - 0,151), la valeur exacte dépend du rapport et du serrage (Tec Data Finder Neugart).",
+   "id": "plfe064-40",
+   "jGear": 0.117
+  },
+  {
+   "ref": "PLFE 090 i=40",
+   "marque": "Neugart",
+   "serie": "Neugart PLFE 090",
+   "ratio": 40,
+   "t2n": 93,
+   "t2b": 110,
+   "t2not": 220,
+   "rendement": 97,
+   "notes": "Neugart PLFE (catalogue 2026/05). T2N = couple continu T2D, T2B = couple de cycle T2Z, T2Not = couple d'arrêt d'urgence T2Stop (admis 1000 fois). T2max occasionnel 176 Nm. 2 étage, jeu standard < 9 arcmin. Inertie d'entrée J1 : 0,356 - 0,666 kg·cm² selon le rapport et le diamètre de serrage (valeur exacte dans le Tec Data Finder Neugart) : J_Gear = 0,511 kg·cm² : ESTIMATION au milieu de la plage (0,356 - 0,666), la valeur exacte dépend du rapport et du serrage (Tec Data Finder Neugart).",
+   "id": "plfe090-40",
+   "jGear": 0.511
+  },
+  {
+   "ref": "PLFE 110 i=40",
+   "marque": "Neugart",
+   "serie": "Neugart PLFE 110",
+   "ratio": 40,
+   "t2n": 195,
+   "t2b": 230,
+   "t2not": 500,
+   "rendement": 97,
+   "notes": "Neugart PLFE (catalogue 2026/05). T2N = couple continu T2D, T2B = couple de cycle T2Z, T2Not = couple d'arrêt d'urgence T2Stop (admis 1000 fois). T2max occasionnel 365 Nm. 2 étage, jeu standard < 9 arcmin. Inertie d'entrée J1 : 1,377 - 2,407 kg·cm² selon le rapport et le diamètre de serrage (valeur exacte dans le Tec Data Finder Neugart) : J_Gear = 1,892 kg·cm² : ESTIMATION au milieu de la plage (1,377 - 2,407), la valeur exacte dépend du rapport et du serrage (Tec Data Finder Neugart).",
+   "id": "plfe110-40",
+   "jGear": 1.892
+  },
+  {
+   "ref": "PLFE 055 i=64",
+   "marque": "Neugart",
+   "serie": "Neugart PLFE 055",
+   "ratio": 64,
+   "t2n": 6,
+   "t2b": 7.5,
+   "t2not": 27,
+   "rendement": 97,
+   "notes": "Neugart PLFE (catalogue 2026/05). T2N = couple continu T2D, T2B = couple de cycle T2Z, T2Not = couple d'arrêt d'urgence T2Stop (admis 1000 fois). T2max occasionnel 12 Nm. 2 étage, jeu standard < 19 arcmin. Inertie d'entrée J1 : 0,022 - 0,036 kg·cm² selon le rapport et le diamètre de serrage (valeur exacte dans le Tec Data Finder Neugart) : J_Gear = 0,029 kg·cm² : ESTIMATION au milieu de la plage (0,022 - 0,036), la valeur exacte dépend du rapport et du serrage (Tec Data Finder Neugart).",
+   "id": "plfe055-64",
+   "jGear": 0.029
+  },
+  {
+   "ref": "PLFE 064 i=64",
+   "marque": "Neugart",
+   "serie": "Neugart PLFE 064",
+   "ratio": 64,
+   "t2n": 15,
+   "t2b": 18,
+   "t2not": 80,
+   "rendement": 97,
+   "notes": "Neugart PLFE (catalogue 2026/05). T2N = couple continu T2D, T2B = couple de cycle T2Z, T2Not = couple d'arrêt d'urgence T2Stop (admis 1000 fois). T2max occasionnel 28 Nm. 2 étage, jeu standard < 12 arcmin. Inertie d'entrée J1 : 0,084 - 0,151 kg·cm² selon le rapport et le diamètre de serrage (valeur exacte dans le Tec Data Finder Neugart) : J_Gear = 0,117 kg·cm² : ESTIMATION au milieu de la plage (0,084 - 0,151), la valeur exacte dépend du rapport et du serrage (Tec Data Finder Neugart).",
+   "id": "plfe064-64",
+   "jGear": 0.117
+  },
+  {
+   "ref": "PLFE 090 i=64",
+   "marque": "Neugart",
+   "serie": "Neugart PLFE 090",
+   "ratio": 64,
+   "t2n": 42,
+   "t2b": 50,
+   "t2not": 190,
+   "rendement": 97,
+   "notes": "Neugart PLFE (catalogue 2026/05). T2N = couple continu T2D, T2B = couple de cycle T2Z, T2Not = couple d'arrêt d'urgence T2Stop (admis 1000 fois). T2max occasionnel 80 Nm. 2 étage, jeu standard < 9 arcmin. Inertie d'entrée J1 : 0,356 - 0,666 kg·cm² selon le rapport et le diamètre de serrage (valeur exacte dans le Tec Data Finder Neugart) : J_Gear = 0,511 kg·cm² : ESTIMATION au milieu de la plage (0,356 - 0,666), la valeur exacte dépend du rapport et du serrage (Tec Data Finder Neugart).",
+   "id": "plfe090-64",
+   "jGear": 0.511
+  },
+  {
+   "ref": "PLFE 110 i=64",
+   "marque": "Neugart",
+   "serie": "Neugart PLFE 110",
+   "ratio": 64,
+   "t2n": 102,
+   "t2b": 120,
+   "t2not": 380,
+   "rendement": 97,
+   "notes": "Neugart PLFE (catalogue 2026/05). T2N = couple continu T2D, T2B = couple de cycle T2Z, T2Not = couple d'arrêt d'urgence T2Stop (admis 1000 fois). T2max occasionnel 192 Nm. 2 étage, jeu standard < 9 arcmin. Inertie d'entrée J1 : 1,377 - 2,407 kg·cm² selon le rapport et le diamètre de serrage (valeur exacte dans le Tec Data Finder Neugart) : J_Gear = 1,892 kg·cm² : ESTIMATION au milieu de la plage (1,377 - 2,407), la valeur exacte dépend du rapport et du serrage (Tec Data Finder Neugart).",
+   "id": "plfe110-64",
+   "jGear": 1.892
+  },
+  {
+   "ref": "PLFE 055 i=100",
+   "marque": "Neugart",
+   "serie": "Neugart PLFE 055",
+   "ratio": 100,
+   "t2n": 4,
+   "t2b": 5,
+   "t2not": 27,
+   "rendement": 97,
+   "notes": "Neugart PLFE (catalogue 2026/05). T2N = couple continu T2D, T2B = couple de cycle T2Z, T2Not = couple d'arrêt d'urgence T2Stop (admis 1000 fois). T2max occasionnel 8 Nm. 2 étage, jeu standard < 19 arcmin. Inertie d'entrée J1 : 0,022 - 0,036 kg·cm² selon le rapport et le diamètre de serrage (valeur exacte dans le Tec Data Finder Neugart) : J_Gear = 0,029 kg·cm² : ESTIMATION au milieu de la plage (0,022 - 0,036), la valeur exacte dépend du rapport et du serrage (Tec Data Finder Neugart).",
+   "id": "plfe055-100",
+   "jGear": 0.029
+  },
+  {
+   "ref": "PLFE 064 i=100",
+   "marque": "Neugart",
+   "serie": "Neugart PLFE 064",
+   "ratio": 100,
+   "t2n": 12.5,
+   "t2b": 15,
+   "t2not": 75,
+   "rendement": 97,
+   "notes": "Neugart PLFE (catalogue 2026/05). T2N = couple continu T2D, T2B = couple de cycle T2Z, T2Not = couple d'arrêt d'urgence T2Stop (admis 1000 fois). T2max occasionnel 24 Nm. 2 étage, jeu standard < 12 arcmin. Inertie d'entrée J1 : 0,084 - 0,151 kg·cm² selon le rapport et le diamètre de serrage (valeur exacte dans le Tec Data Finder Neugart) : J_Gear = 0,117 kg·cm² : ESTIMATION au milieu de la plage (0,084 - 0,151), la valeur exacte dépend du rapport et du serrage (Tec Data Finder Neugart).",
+   "id": "plfe064-100",
+   "jGear": 0.117
+  },
+  {
+   "ref": "PLFE 090 i=100",
+   "marque": "Neugart",
+   "serie": "Neugart PLFE 090",
+   "ratio": 100,
+   "t2n": 32,
+   "t2b": 38,
+   "t2not": 200,
+   "rendement": 97,
+   "notes": "Neugart PLFE (catalogue 2026/05). T2N = couple continu T2D, T2B = couple de cycle T2Z, T2Not = couple d'arrêt d'urgence T2Stop (admis 1000 fois). T2max occasionnel 60 Nm. 2 étage, jeu standard < 9 arcmin. Inertie d'entrée J1 : 0,356 - 0,666 kg·cm² selon le rapport et le diamètre de serrage (valeur exacte dans le Tec Data Finder Neugart) : J_Gear = 0,511 kg·cm² : ESTIMATION au milieu de la plage (0,356 - 0,666), la valeur exacte dépend du rapport et du serrage (Tec Data Finder Neugart).",
+   "id": "plfe090-100",
+   "jGear": 0.511
+  },
+  {
+   "ref": "PLFE 110 i=100",
+   "marque": "Neugart",
+   "serie": "Neugart PLFE 110",
+   "ratio": 100,
+   "t2n": 80,
+   "t2b": 95,
+   "t2not": 480,
+   "rendement": 97,
+   "notes": "Neugart PLFE (catalogue 2026/05). T2N = couple continu T2D, T2B = couple de cycle T2Z, T2Not = couple d'arrêt d'urgence T2Stop (admis 1000 fois). T2max occasionnel 152 Nm. 2 étage, jeu standard < 9 arcmin. Inertie d'entrée J1 : 1,377 - 2,407 kg·cm² selon le rapport et le diamètre de serrage (valeur exacte dans le Tec Data Finder Neugart) : J_Gear = 1,892 kg·cm² : ESTIMATION au milieu de la plage (1,377 - 2,407), la valeur exacte dépend du rapport et du serrage (Tec Data Finder Neugart).",
+   "id": "plfe110-100",
+   "jGear": 1.892
+  },
+  {
+   "ref": "KH29BAQSH80/1 i=71.93",
+   "marque": "SEW",
+   "serie": "SEW KH29BAQSH80/1",
+   "ratio": 71.9286,
+   "t2b": 130,
+   "notes": "KH29B (à pattes, arbre creux avec frette) + adaptateur servo AQSH80, bride /1 (centrage 60 / cercle 75 mm, à confirmer sur ta fiche). Rapport exact 1007/14. Mamax 130 Nm du tableau SEW KH29 (ne=1400 tr/min) mis en T2B. J_Gear et rendement à renseigner (fiche SEW de la référence exacte).",
+   "id": "sew-kh29baqsh80-1-71.93"
+  },
+  {
+   "ref": "KH29BAQSH80/1 i=66.25",
+   "marque": "SEW",
+   "serie": "SEW KH29BAQSH80/1",
+   "ratio": 66.25,
+   "t2b": 130,
+   "notes": "KH29B (à pattes, arbre creux avec frette) + adaptateur servo AQSH80, bride /1 (centrage 60 / cercle 75 mm, à confirmer sur ta fiche). Rapport exact 265/4. Mamax 130 Nm du tableau SEW KH29 (ne=1400 tr/min) mis en T2B. J_Gear et rendement à renseigner (fiche SEW de la référence exacte).",
+   "id": "sew-kh29baqsh80-1-66.25"
+  },
+  {
+   "ref": "KH29BAQSH80/1 i=61.28",
+   "marque": "SEW",
+   "serie": "SEW KH29BAQSH80/1",
+   "ratio": 61.2812,
+   "t2b": 130,
+   "notes": "KH29B (à pattes, arbre creux avec frette) + adaptateur servo AQSH80, bride /1 (centrage 60 / cercle 75 mm, à confirmer sur ta fiche). Rapport exact 1961/32. Mamax 130 Nm du tableau SEW KH29 (ne=1400 tr/min) mis en T2B. J_Gear et rendement à renseigner (fiche SEW de la référence exacte).",
+   "id": "sew-kh29baqsh80-1-61.28"
+  },
+  {
+   "ref": "KH29BAQSH80/1 i=54.89",
+   "marque": "SEW",
+   "serie": "SEW KH29BAQSH80/1",
+   "ratio": 54.8929,
+   "t2b": 130,
+   "notes": "KH29B (à pattes, arbre creux avec frette) + adaptateur servo AQSH80, bride /1 (centrage 60 / cercle 75 mm, à confirmer sur ta fiche). Rapport exact 1537/28. Mamax 130 Nm du tableau SEW KH29 (ne=1400 tr/min) mis en T2B. J_Gear et rendement à renseigner (fiche SEW de la référence exacte).",
+   "id": "sew-kh29baqsh80-1-54.89"
+  },
+  {
+   "ref": "KH29BAQSH80/1 i=50.35",
+   "marque": "SEW",
+   "serie": "SEW KH29BAQSH80/1",
+   "ratio": 50.35,
+   "t2b": 130,
+   "notes": "KH29B (à pattes, arbre creux avec frette) + adaptateur servo AQSH80, bride /1 (centrage 60 / cercle 75 mm, à confirmer sur ta fiche). Rapport exact 1007/20. Mamax 130 Nm du tableau SEW KH29 (ne=1400 tr/min) mis en T2B. J_Gear et rendement à renseigner (fiche SEW de la référence exacte).",
+   "id": "sew-kh29baqsh80-1-50.35"
+  },
+  {
+   "ref": "KH29BAQSH80/1 i=42.87",
+   "marque": "SEW",
+   "serie": "SEW KH29BAQSH80/1",
+   "ratio": 42.8676,
+   "t2b": 128,
+   "notes": "KH29B (à pattes, arbre creux avec frette) + adaptateur servo AQSH80, bride /1 (centrage 60 / cercle 75 mm, à confirmer sur ta fiche). Rapport exact 2915/68. Mamax 128 Nm du tableau SEW KH29 (ne=1400 tr/min) mis en T2B. J_Gear et rendement à renseigner (fiche SEW de la référence exacte).",
+   "id": "sew-kh29baqsh80-1-42.87"
+  },
+  {
+   "ref": "KH29BAQSH80/1 i=38.9",
+   "marque": "SEW",
+   "serie": "SEW KH29BAQSH80/1",
+   "ratio": 38.9048,
+   "t2b": 130,
+   "notes": "KH29B (à pattes, arbre creux avec frette) + adaptateur servo AQSH80, bride /1 (centrage 60 / cercle 75 mm, à confirmer sur ta fiche). Rapport exact 817/21. Mamax 130 Nm du tableau SEW KH29 (ne=1400 tr/min) mis en T2B. J_Gear et rendement à renseigner (fiche SEW de la référence exacte).",
+   "id": "sew-kh29baqsh80-1-38.9"
+  },
+  {
+   "ref": "KH29BAQSH80/1 i=36.96",
+   "marque": "SEW",
+   "serie": "SEW KH29BAQSH80/1",
+   "ratio": 36.9605,
+   "t2b": 122,
+   "notes": "KH29B (à pattes, arbre creux avec frette) + adaptateur servo AQSH80, bride /1 (centrage 60 / cercle 75 mm, à confirmer sur ta fiche). Rapport exact 2809/76. Mamax 122 Nm du tableau SEW KH29 (ne=1400 tr/min) mis en T2B. J_Gear et rendement à renseigner (fiche SEW de la référence exacte).",
+   "id": "sew-kh29baqsh80-1-36.96"
+  },
+  {
+   "ref": "KH29BAQSH80/1 i=35.83",
+   "marque": "SEW",
+   "serie": "SEW KH29BAQSH80/1",
+   "ratio": 35.8333,
+   "t2b": 130,
+   "notes": "KH29B (à pattes, arbre creux avec frette) + adaptateur servo AQSH80, bride /1 (centrage 60 / cercle 75 mm, à confirmer sur ta fiche). Rapport exact 215/6. Mamax 130 Nm du tableau SEW KH29 (ne=1400 tr/min) mis en T2B. J_Gear et rendement à renseigner (fiche SEW de la référence exacte).",
+   "id": "sew-kh29baqsh80-1-35.83"
+  },
+  {
+   "ref": "KH29BAQSH80/1 i=33.15",
+   "marque": "SEW",
+   "serie": "SEW KH29BAQSH80/1",
+   "ratio": 33.1458,
+   "t2b": 130,
+   "notes": "KH29B (à pattes, arbre creux avec frette) + adaptateur servo AQSH80, bride /1 (centrage 60 / cercle 75 mm, à confirmer sur ta fiche). Rapport exact 1591/48. Mamax 130 Nm du tableau SEW KH29 (ne=1400 tr/min) mis en T2B. J_Gear et rendement à renseigner (fiche SEW de la référence exacte).",
+   "id": "sew-kh29baqsh80-1-33.15"
+  },
+  {
+   "ref": "KH29BAQSH80/1 i=30.11",
+   "marque": "SEW",
+   "serie": "SEW KH29BAQSH80/1",
+   "ratio": 30.1136,
+   "t2b": 115,
+   "notes": "KH29B (à pattes, arbre creux avec frette) + adaptateur servo AQSH80, bride /1 (centrage 60 / cercle 75 mm, à confirmer sur ta fiche). Rapport exact 1325/44. Mamax 115 Nm du tableau SEW KH29 (ne=1400 tr/min) mis en T2B. J_Gear et rendement à renseigner (fiche SEW de la référence exacte).",
+   "id": "sew-kh29baqsh80-1-30.11"
+  },
+  {
+   "ref": "KH29BAQSH80/1 i=29.69",
+   "marque": "SEW",
+   "serie": "SEW KH29BAQSH80/1",
+   "ratio": 29.6905,
+   "t2b": 130,
+   "notes": "KH29B (à pattes, arbre creux avec frette) + adaptateur servo AQSH80, bride /1 (centrage 60 / cercle 75 mm, à confirmer sur ta fiche). Rapport exact 1247/42. Mamax 130 Nm du tableau SEW KH29 (ne=1400 tr/min) mis en T2B. J_Gear et rendement à renseigner (fiche SEW de la référence exacte).",
+   "id": "sew-kh29baqsh80-1-29.69"
+  },
+  {
+   "ref": "KH29BAQSH80/1 i=27.23",
+   "marque": "SEW",
+   "serie": "SEW KH29BAQSH80/1",
+   "ratio": 27.2333,
+   "t2b": 130,
+   "notes": "KH29B (à pattes, arbre creux avec frette) + adaptateur servo AQSH80, bride /1 (centrage 60 / cercle 75 mm, à confirmer sur ta fiche). Rapport exact 817/30. Mamax 130 Nm du tableau SEW KH29 (ne=1400 tr/min) mis en T2B. J_Gear et rendement à renseigner (fiche SEW de la référence exacte).",
+   "id": "sew-kh29baqsh80-1-27.23"
+  },
+  {
+   "ref": "KH29BAQSH80/1 i=24.91",
+   "marque": "SEW",
+   "serie": "SEW KH29BAQSH80/1",
+   "ratio": 24.91,
+   "t2b": 109,
+   "notes": "KH29B (à pattes, arbre creux avec frette) + adaptateur servo AQSH80, bride /1 (centrage 60 / cercle 75 mm, à confirmer sur ta fiche). Rapport exact 2491/100. Mamax 109 Nm du tableau SEW KH29 (ne=1400 tr/min) mis en T2B. J_Gear et rendement à renseigner (fiche SEW de la référence exacte).",
+   "id": "sew-kh29baqsh80-1-24.91"
+  },
+  {
+   "ref": "KH29BAQSH80/1 i=23.19",
+   "marque": "SEW",
+   "serie": "SEW KH29BAQSH80/1",
+   "ratio": 23.1863,
+   "t2b": 130,
+   "notes": "KH29B (à pattes, arbre creux avec frette) + adaptateur servo AQSH80, bride /1 (centrage 60 / cercle 75 mm, à confirmer sur ta fiche). Rapport exact 2365/102. Mamax 130 Nm du tableau SEW KH29 (ne=1400 tr/min) mis en T2B. J_Gear et rendement à renseigner (fiche SEW de la référence exacte).",
+   "id": "sew-kh29baqsh80-1-23.19"
+  },
+  {
+   "ref": "KH29BAQSH80/1 i=22.08",
+   "marque": "SEW",
+   "serie": "SEW KH29BAQSH80/1",
+   "ratio": 22.0833,
+   "t2b": 105,
+   "notes": "KH29B (à pattes, arbre creux avec frette) + adaptateur servo AQSH80, bride /1 (centrage 60 / cercle 75 mm, à confirmer sur ta fiche). Rapport exact 265/12. Mamax 105 Nm du tableau SEW KH29 (ne=1400 tr/min) mis en T2B. J_Gear et rendement à renseigner (fiche SEW de la référence exacte).",
+   "id": "sew-kh29baqsh80-1-22.08"
+  },
+  {
+   "ref": "KH29BAQSH80/1 i=19.99",
+   "marque": "SEW",
+   "serie": "SEW KH29BAQSH80/1",
+   "ratio": 19.9912,
+   "t2b": 130,
+   "notes": "KH29B (à pattes, arbre creux avec frette) + adaptateur servo AQSH80, bride /1 (centrage 60 / cercle 75 mm, à confirmer sur ta fiche). Rapport exact 2279/114. Mamax 130 Nm du tableau SEW KH29 (ne=1400 tr/min) mis en T2B. J_Gear et rendement à renseigner (fiche SEW de la référence exacte).",
+   "id": "sew-kh29baqsh80-1-19.99"
+  },
+  {
+   "ref": "KH29BAQSH80/1 i=16.29",
+   "marque": "SEW",
+   "serie": "SEW KH29BAQSH80/1",
+   "ratio": 16.2879,
+   "t2b": 130,
+   "notes": "KH29B (à pattes, arbre creux avec frette) + adaptateur servo AQSH80, bride /1 (centrage 60 / cercle 75 mm, à confirmer sur ta fiche). Rapport exact 1075/66. Mamax 130 Nm du tableau SEW KH29 (ne=1400 tr/min) mis en T2B. J_Gear et rendement à renseigner (fiche SEW de la référence exacte).",
+   "id": "sew-kh29baqsh80-1-16.29"
+  },
+  {
+   "ref": "KH29BAQSH80/1 i=13.47",
+   "marque": "SEW",
+   "serie": "SEW KH29BAQSH80/1",
+   "ratio": 13.4733,
+   "t2b": 130,
+   "notes": "KH29B (à pattes, arbre creux avec frette) + adaptateur servo AQSH80, bride /1 (centrage 60 / cercle 75 mm, à confirmer sur ta fiche). Rapport exact 2021/150. Mamax 130 Nm du tableau SEW KH29 (ne=1400 tr/min) mis en T2B. J_Gear et rendement à renseigner (fiche SEW de la référence exacte).",
+   "id": "sew-kh29baqsh80-1-13.47"
+  },
+  {
+   "ref": "KH29BAQSH80/1 i=11.94",
+   "marque": "SEW",
+   "serie": "SEW KH29BAQSH80/1",
+   "ratio": 11.9444,
+   "t2b": 130,
+   "notes": "KH29B (à pattes, arbre creux avec frette) + adaptateur servo AQSH80, bride /1 (centrage 60 / cercle 75 mm, à confirmer sur ta fiche). Rapport exact 215/18. Mamax 130 Nm du tableau SEW KH29 (ne=1400 tr/min) mis en T2B. J_Gear et rendement à renseigner (fiche SEW de la référence exacte).",
+   "id": "sew-kh29baqsh80-1-11.94"
+  },
+  {
+   "ref": "KH29BAQSH80/1 i=9.9",
+   "marque": "SEW",
+   "serie": "SEW KH29BAQSH80/1",
+   "ratio": 9.8962,
+   "t2b": 110,
+   "notes": "KH29B (à pattes, arbre creux avec frette) + adaptateur servo AQSH80, bride /1 (centrage 60 / cercle 75 mm, à confirmer sur ta fiche). Rapport exact 2860/289. Mamax 110 Nm du tableau SEW KH29 (ne=1400 tr/min) mis en T2B. J_Gear et rendement à renseigner (fiche SEW de la référence exacte).",
+   "id": "sew-kh29baqsh80-1-9.9"
+  },
+  {
+   "ref": "KH29BAQSH80/1 i=9.17",
+   "marque": "SEW",
+   "serie": "SEW KH29BAQSH80/1",
+   "ratio": 9.1733,
+   "t2b": 130,
+   "notes": "KH29B (à pattes, arbre creux avec frette) + adaptateur servo AQSH80, bride /1 (centrage 60 / cercle 75 mm, à confirmer sur ta fiche). Rapport exact 688/75. Mamax 130 Nm du tableau SEW KH29 (ne=1400 tr/min) mis en T2B. J_Gear et rendement à renseigner (fiche SEW de la référence exacte).",
+   "id": "sew-kh29baqsh80-1-9.17"
+  },
+  {
+   "ref": "KH29BAQSH80/1 i=8.53",
+   "marque": "SEW",
+   "serie": "SEW KH29BAQSH80/1",
+   "ratio": 8.5325,
+   "t2b": 122,
+   "notes": "KH29B (à pattes, arbre creux avec frette) + adaptateur servo AQSH80, bride /1 (centrage 60 / cercle 75 mm, à confirmer sur ta fiche). Rapport exact 2756/323. Mamax 122 Nm du tableau SEW KH29 (ne=1400 tr/min) mis en T2B. J_Gear et rendement à renseigner (fiche SEW de la référence exacte).",
+   "id": "sew-kh29baqsh80-1-8.53"
+  },
+  {
+   "ref": "KH29BAQSH80/1 i=7.48",
+   "marque": "SEW",
+   "serie": "SEW KH29BAQSH80/1",
+   "ratio": 7.4783,
+   "t2b": 123,
+   "notes": "KH29B (à pattes, arbre creux avec frette) + adaptateur servo AQSH80, bride /1 (centrage 60 / cercle 75 mm, à confirmer sur ta fiche). Rapport exact 172/23. Mamax 123 Nm du tableau SEW KH29 (ne=1400 tr/min) mis en T2B. J_Gear et rendement à renseigner (fiche SEW de la référence exacte).",
+   "id": "sew-kh29baqsh80-1-7.48"
+  },
+  {
+   "ref": "KH29BAQSH80/1 i=6.95",
+   "marque": "SEW",
+   "serie": "SEW KH29BAQSH80/1",
+   "ratio": 6.9519,
+   "t2b": 112,
+   "notes": "KH29B (à pattes, arbre creux avec frette) + adaptateur servo AQSH80, bride /1 (centrage 60 / cercle 75 mm, à confirmer sur ta fiche). Rapport exact 1300/187. Mamax 112 Nm du tableau SEW KH29 (ne=1400 tr/min) mis en T2B. J_Gear et rendement à renseigner (fiche SEW de la référence exacte).",
+   "id": "sew-kh29baqsh80-1-6.95"
+  },
+  {
+   "ref": "KH29BAQSH80/1 i=5.75",
+   "marque": "SEW",
+   "serie": "SEW KH29BAQSH80/1",
+   "ratio": 5.7506,
+   "t2b": 112,
+   "notes": "KH29B (à pattes, arbre creux avec frette) + adaptateur servo AQSH80, bride /1 (centrage 60 / cercle 75 mm, à confirmer sur ta fiche). Rapport exact 2444/425. Mamax 112 Nm du tableau SEW KH29 (ne=1400 tr/min) mis en T2B. J_Gear et rendement à renseigner (fiche SEW de la référence exacte).",
+   "id": "sew-kh29baqsh80-1-5.75"
+  },
+  {
+   "ref": "KH29BAQSH80/1 i=5.1",
+   "marque": "SEW",
+   "serie": "SEW KH29BAQSH80/1",
+   "ratio": 5.098,
+   "t2b": 110,
+   "notes": "KH29B (à pattes, arbre creux avec frette) + adaptateur servo AQSH80, bride /1 (centrage 60 / cercle 75 mm, à confirmer sur ta fiche). Rapport exact 260/51. Mamax 110 Nm du tableau SEW KH29 (ne=1400 tr/min) mis en T2B. J_Gear et rendement à renseigner (fiche SEW de la référence exacte).",
+   "id": "sew-kh29baqsh80-1-5.1"
+  },
+  {
+   "ref": "KH29BAQSH80/1 i=3.92",
+   "marque": "SEW",
+   "serie": "SEW KH29BAQSH80/1",
+   "ratio": 3.9153,
+   "t2b": 126,
+   "notes": "KH29B (à pattes, arbre creux avec frette) + adaptateur servo AQSH80, bride /1 (centrage 60 / cercle 75 mm, à confirmer sur ta fiche). Rapport exact 1664/425. Mamax 126 Nm du tableau SEW KH29 (ne=1400 tr/min) mis en T2B. J_Gear et rendement à renseigner (fiche SEW de la référence exacte).",
+   "id": "sew-kh29baqsh80-1-3.92"
+  },
+  {
+   "ref": "KH29BAQSH80/1 i=3.19",
+   "marque": "SEW",
+   "serie": "SEW KH29BAQSH80/1",
+   "ratio": 3.1918,
+   "t2b": 110,
+   "notes": "KH29B (à pattes, arbre creux avec frette) + adaptateur servo AQSH80, bride /1 (centrage 60 / cercle 75 mm, à confirmer sur ta fiche). Rapport exact 1248/391. Mamax 110 Nm du tableau SEW KH29 (ne=1400 tr/min) mis en T2B. J_Gear et rendement à renseigner (fiche SEW de la référence exacte).",
+   "id": "sew-kh29baqsh80-1-3.19"
+  },
+  {
+   "ref": "KHF19 AQSH80/1 i=15.84",
+   "marque": "SEW",
+   "serie": "SEW KHF19 AQSH80/1",
+   "ratio": 15.84,
+   "t2b": 88,
+   "notes": "Relevé sur la plaque signalétique : KHF19 AQSH80/1, i=15,84, Ma pk 88 Nm, na pk 284 tr/min, ne pk 4500 tr/min, masse 6,363 kg, position IM M6B, huile SEW GearOil Poly 460 (0,40 l). Mamax plaque 88 Nm mis en T2B (le catalogue K19 en donne 80 Nm : vérifier). J_Gear et rendement à renseigner.",
+   "id": "sew-khf19-aqsh80-1-15.84"
   }
  ],
  "drives": [
