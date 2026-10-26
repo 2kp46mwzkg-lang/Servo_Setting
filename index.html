@@ -72,6 +72,8 @@ fieldset{border:0;margin:0;padding:0;display:flex;flex-direction:column;gap:8px;
 legend{font-size:11.5px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);padding:0;margin-bottom:4px}
 .field{display:grid;grid-template-columns:minmax(0,1fr) 140px;gap:4px 10px;align-items:center}
 .field label{font-size:13px}
+.whbtn{appearance:none;border:1px solid var(--line-strong,#aab);background:none;color:var(--accent);width:17px;height:17px;border-radius:50%;font:inherit;font-size:11px;line-height:1;cursor:pointer;margin-left:6px;padding:0;vertical-align:1px}.whbtn.on{background:var(--accent);color:#fff}
+.where{grid-column:1/-1;font-size:12px;line-height:1.45;background:rgba(120,130,160,.12);border-left:3px solid var(--accent);border-radius:4px;padding:6px 9px;margin-top:4px}
 .fnote{grid-column:1/-1;text-align:right;font-size:11px;color:var(--muted,#6b7280);margin-top:-2px}.todo{color:#b45309;font-style:italic}
 .field label .hint{text-decoration:underline dotted var(--line-strong);text-underline-offset:3px;cursor:help}
 .gtag{display:inline-block;margin-left:6px;padding:0 5px;border-radius:3px;font-size:10px;font-weight:600;line-height:16px;text-transform:uppercase;letter-spacing:.05em;color:var(--accent);background:var(--accent-soft);vertical-align:1px;cursor:help}
@@ -1147,12 +1149,74 @@ function render() {
   if (S.tab === 'axes') renderAxes(); else renderLib(S.tab);
 }
 
+
+/* Aide « où trouver ce paramètre » : bouton ? à côté de chaque champ */
+const WHERE = {
+  'motors.ref': 'Plaque signalétique du moteur (champ « Type ») ou bon de livraison. Ex. SH31004P, ILM1001P. La lettre finale (P, M) est le bobinage ; « 01F » ou « F » dans la référence indique un frein.',
+  'motors.serie': 'Les premiers caractères de la référence (ex. SH3 100 pour SH31004P). Sert seulement à ranger la liste.',
+  'motors.kt': 'Catalogue / manuel du moteur, tableau des données techniques : « Torque constant kt » en Nm/A. Si la valeur n’est pas donnée, laisse vide : le site calcule M0 ÷ I0. Dans Machine Expert : paramètre TorqueConstant du dossier Motor du moteur réel.',
+  'motors.jMotor': 'Catalogue, tableau « Rotor inertia » (kg·cm²) : prends la ligne AVEC frein si le moteur en a un. Dans Machine Expert : MotorInertia (dossier Motor), à privilégier car c’est la valeur lue sur le moteur réel.',
+  'motors.m0': 'Catalogue, « Continuous stall torque M0 » (couple à l’arrêt, en Nm). Souvent aussi sur la plaque.',
+  'motors.i0': 'Catalogue, « Continuous stall current I0 » (A eff). Courant correspondant à M0.',
+  'motors.imax': 'Catalogue, « Peak current Imax » (A eff), ou plaque moteur. Ce n’est pas le courant crête du variateur.',
+  'motors.nNom': 'Catalogue, « Nominal speed » (tr/min). Elle dépend de la tension d’alimentation : le tableau donne une ligne par tension (230 / 400 / 480 Vac). Prends celle de ton réseau.',
+  'motors.nMax': 'Catalogue, « Max. permissible speed » (tr/min).',
+  'motors.frein': 'Coche si la référence contient un frein (lettre F / « 01F… » dans le code type) ou si la plaque indique un frein 24 Vdc.',
+  'motors.sonde': 'Catalogue : type de sonde de température du bobinage (ex. KTY84, PT1000). Facultatif.',
+  'reducers.ref': 'Plaque du réducteur (champ « Type ») ou catalogue du fabricant. Ex. PLFN 090 i=7, KH47, KS703.',
+  'reducers.marque': 'Fabricant inscrit sur la plaque (Neugart, SEW, STOBER, Interroll…).',
+  'reducers.serie': 'Famille et taille du réducteur (ex. Neugart PLFN 090). Sert à regrouper la liste.',
+  'reducers.ratio': 'Plaque du réducteur : « i » ou « Ratio ». Le rapport exact est souvent une fraction (ex. 70 = 1/70) : prends la valeur décimale précise du catalogue.',
+  'reducers.t2n': 'Catalogue, tableau de sélection : T2N = couple nominal de sortie (parfois M2N). Souvent donné pour 100 % de service à ne=3000 ou 1400 tr/min : lis la note du tableau.',
+  'reducers.t2b': 'Catalogue : T2B = couple d’accélération maximal en sortie (STOBER/SEW : « Mamax » ou M2B). Sert à fixer la limite de courant du moteur.',
+  'reducers.t2not': 'Catalogue : T2Not = couple admissible en arrêt d’urgence (M2Not). Plus élevé que T2B. Souvent donné pour un nombre limité d’arrêts sur la vie du réducteur.',
+  'reducers.jGear': 'Catalogue : inertie du réducteur ramenée côté ENTRÉE (J1), en kg·cm². Dépend du rapport et de la taille d’arbre/bride du moteur. Dans Machine Expert : J_Gear.',
+  'reducers.rendement': 'Catalogue (rendement en %), ou plaque. À défaut ~95 % pour un planétaire, ~90 % renvoi d’angle.',
+  'drives.ref': 'Plaque du variateur, ex. LXM62DU60. Doit correspondre à la référence de ton projet Machine Expert.',
+  'drives.serie': 'Famille du variateur (ex. Lexium 62 simple / double axe).',
+  'drives.iPeak': 'Catalogue Lexium 62, « Peak current » du module (A). Dans Machine Expert : MaxDrivePeakCurrent.',
+  'drives.iNom': 'Catalogue Lexium 62, courant de sortie permanent à 8 kHz (A).',
+  'drives.format': 'Catalogue : simple axe ou double axe (un variateur pour 2 moteurs).',
+  moteurId: 'Choisis la référence de la plaque du moteur. Absent de la liste : ajoute-le dans l’onglet Moteurs.',
+  reducteurId: 'Choisis la référence + rapport de la plaque du réducteur. Absent : ajoute-le dans l’onglet Réducteurs.',
+  nom: 'Le nom de l’axe dans ton projet Machine Expert (ex. MC1, DRV_MT2).',
+  typeCharge: 'Linéaire : courroie, vis, crémaillère. Rotative : plateau, pivot. Bielle-manivelle : rotation continue qui fait coulisser une plaque.',
+  feed: 'Machine Expert : FeedConstant de l’axe. Déplacement de la charge pour 1 tour de SORTIE du réducteur (ex. π × diamètre de la poulie, pas de la vis, 360 pour un axe en degrés).',
+  masse: 'Masse totale qui se déplace (charge + chariot + courroie), en kg. Plan de la machine, ou pesée.',
+  jLoadDirect: 'Inertie de la charge côté sortie du réducteur : modèle CAO (propriétés de masse, moment d’inertie autour de l’axe), ou formule (disque ½·m·r², tige…). En kg·cm² (1 kg·m² = 10 000 kg·cm²).',
+  rManiv: 'Plan : distance entre l’axe de rotation et le maneton (la course de la plaque = 2 × ce rayon).',
+  lBielle: 'Plan : entraxe entre le maneton et l’articulation sur la plaque.',
+  mPlaque: 'CAO ou pesée : plaque + tout ce qu’elle porte et qui coulisse.',
+  mBielle: 'CAO ou pesée : masse de la bielle seule.',
+  jManiv: 'CAO : inertie de la manivelle (bras + contrepoids + maneton) autour de l’axe de rotation, côté sortie du réducteur.',
+  jSupp: 'CAO ou formule : inertie des éléments ajoutés sur l’arbre de sortie (poulies, rouleaux, accouplement…).',
+  vertical: 'Coche si la charge tombe quand le frein ou le moteur lâche (axe Z, levage).',
+  vMax: 'Programme de l’automate (vitesse la plus haute demandée au mouvement) ou cahier des charges. Ce n’est pas la vitesse max du moteur.',
+  tStop: 'Temps souhaité pour s’immobiliser en arrêt d’urgence. 0,15 à 0,2 s en général. Plus court = plus de couple sur le réducteur.',
+  marge: 'Choix de ta marge de sécurité : 80 % de T2B autorisé = 20 % de marge.',
+  acc: 'Programme de l’automate (accélération du mouvement) ou cahier des charges.',
+  periode: 'Durée d’un aller-retour de l’oscillation, déduite du cycle de la machine.',
+  velPRetenu: 'Machine Expert, dossier de l’axe / Controller : Vel_P_Gain. Reporte la valeur gardée après tes essais.',
+  velIRetenu: 'Machine Expert : Vel_I_Gain, après essais.',
+  velPActuel: 'Machine Expert : Vel_P_Gain actuellement réglé sur la machine (avant changement de charge ou de réducteur).',
+  jLoadActuel: 'Machine Expert : J_Load actuellement réglé sur la machine.',
+  jGearActuel: 'Machine Expert : J_Gear actuellement réglé sur la machine.',
+  notes: 'Texte libre : source de la donnée, remarque, point à vérifier.'
+};
+function whereOf(f, prefix) { return (prefix === 'lib-' ? (WHERE[S.tab + '.' + f.k] || WHERE[f.k]) : WHERE[f.k]) || ''; }
+const whBtn = w => w ? `<button type="button" class="whbtn" tabindex="-1" aria-label="Où trouver ce paramètre ?" title="Où trouver ce paramètre ?">?</button>` : '';
+const whBox = w => w ? `<div class="where" hidden>${esc(w)}</div>` : '';
+document.addEventListener('click', e => {
+  const b = e.target.closest('.whbtn'); if (!b) return;
+  e.preventDefault(); const f = b.closest('.field'), bx = f && f.querySelector('.where'); if (bx) { bx.hidden = !bx.hidden; b.classList.toggle('on', !bx.hidden); }
+});
+
 function inputHtml(f, val, prefix) {
   const id = prefix + f.k;
   const ga = f.g ? ` data-g="${f.g.join(' ')}"` : '';
-  const tag = '';
-  if (f.t === 'bool') return `<div class="field wide"${ga}><label class="chk"><input type="checkbox" id="${id}" data-k="${f.k}" ${val ? 'checked' : ''}> ${esc(f.l)}${tag}</label></div>`;
-  if (f.t === 'area') return `<div class="field wide"><label for="${id}">${esc(f.l)}</label><textarea id="${id}" data-k="${f.k}">${esc(val)}</textarea></div>`;
+  const wh = whereOf(f, prefix), tag = whBtn(wh), box = whBox(wh);
+  if (f.t === 'bool') return `<div class="field wide"${ga}><label class="chk"><input type="checkbox" id="${id}" data-k="${f.k}" ${val ? 'checked' : ''}> ${esc(f.l)}${tag}</label>${box}</div>`;
+  if (f.t === 'area') return `<div class="field wide"><label for="${id}">${esc(f.l)}${tag}</label><textarea id="${id}" data-k="${f.k}">${esc(val)}</textarea>${box}</div>`;
   let ctrl;
   if (f.t === 'motor' || f.t === 'reducer' || f.t === 'drive') {
     const list = f.t === 'motor' ? S.motors : f.t === 'reducer' ? S.reducers : S.drives;
@@ -1163,15 +1227,15 @@ function inputHtml(f, val, prefix) {
       ctrl = `<div class="combo" data-combo="${f.t}" data-ck="${f.k}"><div class="inp text"><input id="${id}" class="combo-in" role="combobox" aria-expanded="false" aria-autocomplete="list" autocomplete="off" spellcheck="false" placeholder="Taper la référence (ex. ${f.t === 'motor' ? 'SH31004' : 'PLFN 090 i=7'})…" value="${esc(cur ? cur.ref : '')}"><span class="u" aria-hidden="true">▾</span></div><div class="combo-list" role="listbox" hidden></div></div>`; }
     const sel = f.t === 'reducer' && val ? S.reducers.find(x => x.id === val) : null;
     const sum = sel ? `<div class="rsum">Couple max <b>T2B ${sel.t2b != null ? fmt(num(sel.t2b), 0) + ' Nm' : '— (à renseigner)'}</b>${sel.t2n != null ? ' · T2N ' + fmt(num(sel.t2n), 0) + ' Nm' : ''}${sel.t2not != null ? ' · T2Not ' + fmt(num(sel.t2not), 0) + ' Nm' : ''} · i=${fmt(num(sel.ratio), 3)}</div>` : '';
-    return `<div class="field wide"${ga}><label for="${id}">${esc(f.l)}${tag}</label>${ctrl}${sum}</div>`;
+    return `<div class="field wide"${ga}><label for="${id}">${esc(f.l)}${tag}</label>${ctrl}${sum}${box}</div>`;
   }
   if (f.t === 'select') {
     ctrl = `<select id="${id}" data-k="${f.k}">${f.o.map(([v, l]) => `<option value="${v}" ${v === (val || f.o[0][0]) ? 'selected' : ''}>${esc(l)}</option>`).join('')}</select>`;
-    return `<div class="field wide"><label for="${id}">${esc(f.l)}</label>${ctrl}</div>`;
+    return `<div class="field wide"><label for="${id}">${esc(f.l)}${tag}</label>${ctrl}${box}</div>`;
   }
   const txt = f.t === 'text';
   ctrl = `<div class="inp ${txt ? 'text' : ''}"><input id="${id}" data-k="${f.k}" ${txt ? '' : 'inputmode="decimal"'} autocomplete="off" value="${esc(val == null ? '' : (txt ? val : String(val).replace('.', ',')))}">${f.u ? `<span class="u">${esc(f.u)}</span>` : ''}</div>`;
-  return `<div class="field ${txt ? 'wide' : ''}"${ga}><label for="${id}"><span${f.h ? ` class="hint" title="${esc(f.h)}"` : ''}>${esc(f.l)}</span>${tag}</label>${ctrl}${f.n ? `<div class="fnote">${esc(f.n)}</div>` : ''}${f.conv ? `<div class="conv"><button type="button" class="convbtn" tabindex="-1">saisir en kg·m²</button><span class="convbox" hidden><input class="convin" data-for="${id}" inputmode="decimal" placeholder="valeur en kg·m²" aria-label="Valeur en kg·m², convertie en kg·cm²"><span>kg·m² → ×10 000</span></span></div>` : ''}</div>`;
+  return `<div class="field ${txt ? 'wide' : ''}"${ga}><label for="${id}"><span${f.h ? ` class="hint" title="${esc(f.h)}"` : ''}>${esc(f.l)}</span>${tag}</label>${ctrl}${f.n ? `<div class="fnote">${esc(f.n)}</div>` : ''}${box}${f.conv ? `<div class="conv"><button type="button" class="convbtn" tabindex="-1">saisir en kg·m²</button><span class="convbox" hidden><input class="convin" data-for="${id}" inputmode="decimal" placeholder="valeur en kg·m²" aria-label="Valeur en kg·m², convertie en kg·cm²"><span>kg·m² → ×10 000</span></span></div>` : ''}</div>`;
 }
 function readInput(el) { if (el.type === 'checkbox') return el.checked; const k = el.dataset.k; return NUM_KEYS.has(k) ? (num(el.value)) : el.value; }
 
