@@ -1,5 +1,5 @@
 {
- "_version": "20261026-1730",
+ "_version": "20261026-1830",
  "motors": [
   {
    "id": "sh30701p",
@@ -763,6 +763,96 @@
    "nNom": 3000,
    "frein": false,
    "notes": "Moteur synchrone à aimants permanents, 8 pôles, 200 Hz, 3000 tr/min, 400 V. Fiche Interroll DM 0080 (moteurs synchrones). IN = 0.75 A (I0), IMAX = 2.25 A, MN = 0.75 Nm (couple nominal, pas de M0 donné : mis en M0), MMAX = 2.25 Nm, kTN = 1.03 Nm/A, JR = 1.84 kg·cm² (rotor). Moteur monté dans un tambour (réducteur intégré) : voir les réducteurs « DM 0080 235 W » pour les rapports."
+  },
+  {
+   "id": "sh30551p",
+   "ref": "SH30551P",
+   "serie": "SH3 055",
+   "kt": 0.68,
+   "jMotor": 0.057,
+   "m0": 0.5,
+   "i0": 0.73,
+   "imax": 2.9,
+   "nNom": 8000,
+   "nMax": 9000,
+   "frein": false,
+   "sonde": "",
+   "notes": "SH3 055 taille 1, bobinage P. Manuel Schneider SH3 (données techniques SH3055) : M0 0,5 Nm, I0 0.73 A, Imax 2.9 A, Mmax 1.5 Nm, Kt 0.68 Nm/A. nNom = 8000 tr/min (400 Vac), nMax 9000. Inertie sans frein ; avec frein 0.079 kg·cm². Le variateur peut lire une valeur plus élevée sur le moteur réel : prendre MotorInertia du dossier Motor."
+  },
+  {
+   "id": "sh30551p01f2000",
+   "ref": "SH30551P01F2000",
+   "serie": "SH3 055",
+   "kt": 0.68,
+   "jMotor": 0.079,
+   "m0": 0.5,
+   "i0": 0.73,
+   "imax": 2.9,
+   "nNom": 8000,
+   "nMax": 9000,
+   "frein": true,
+   "sonde": "",
+   "notes": "SH3 055 taille 1, bobinage P, avec frein (F). Manuel Schneider SH3 (données techniques SH3055) : M0 0,5 Nm, I0 0.73 A, Imax 2.9 A, Mmax 1.5 Nm, Kt 0.68 Nm/A. nNom = 8000 tr/min (400 Vac), nMax 9000. Inertie avec frein 0.079 kg·cm² (matériel ≥RS02 ; 0.057 sans frein). Le variateur peut lire une valeur plus élevée sur le moteur réel : prendre MotorInertia du dossier Motor."
+  },
+  {
+   "id": "sh30552p",
+   "ref": "SH30552P",
+   "serie": "SH3 055",
+   "kt": 0.7,
+   "jMotor": 0.093,
+   "m0": 0.8,
+   "i0": 1.2,
+   "imax": 4.8,
+   "nNom": 8000,
+   "nMax": 9000,
+   "frein": false,
+   "sonde": "",
+   "notes": "SH3 055 taille 2, bobinage P. Manuel Schneider SH3 (données techniques SH3055) : M0 0,8 Nm, I0 1.2 A, Imax 4.8 A, Mmax 2.5 Nm, Kt 0.7 Nm/A. nNom = 8000 tr/min (400 Vac), nMax 9000. Inertie sans frein ; avec frein 0.115 kg·cm². Le variateur peut lire une valeur plus élevée sur le moteur réel : prendre MotorInertia du dossier Motor."
+  },
+  {
+   "id": "sh30552p01f2000",
+   "ref": "SH30552P01F2000",
+   "serie": "SH3 055",
+   "kt": 0.7,
+   "jMotor": 0.115,
+   "m0": 0.8,
+   "i0": 1.2,
+   "imax": 4.8,
+   "nNom": 8000,
+   "nMax": 9000,
+   "frein": true,
+   "sonde": "",
+   "notes": "SH3 055 taille 2, bobinage P, avec frein (F). Manuel Schneider SH3 (données techniques SH3055) : M0 0,8 Nm, I0 1.2 A, Imax 4.8 A, Mmax 2.5 Nm, Kt 0.7 Nm/A. nNom = 8000 tr/min (400 Vac), nMax 9000. Inertie avec frein 0.115 kg·cm² (matériel ≥RS02 ; 0.093 sans frein). Le variateur peut lire une valeur plus élevée sur le moteur réel : prendre MotorInertia du dossier Motor."
+  },
+  {
+   "id": "sh30553p",
+   "ref": "SH30553P",
+   "serie": "SH3 055",
+   "kt": 0.7,
+   "jMotor": 0.13,
+   "m0": 1.2,
+   "i0": 1.7,
+   "imax": 6.5,
+   "nNom": 8000,
+   "nMax": 9000,
+   "frein": false,
+   "sonde": "",
+   "notes": "SH3 055 taille 3, bobinage P. Manuel Schneider SH3 (données techniques SH3055) : M0 1,2 Nm, I0 1.7 A, Imax 6.5 A, Mmax 3.5 Nm, Kt 0.7 Nm/A. nNom = 8000 tr/min (400 Vac), nMax 9000. Inertie sans frein ; avec frein 0.152 kg·cm². Valeur avec frein 0,115 donnée pour matériel <RS02 sur la taille 3 : incohérente dans le manuel. Le variateur peut lire une valeur plus élevée sur le moteur réel : prendre MotorInertia du dossier Motor."
+  },
+  {
+   "id": "sh30553p01f2000",
+   "ref": "SH30553P01F2000",
+   "serie": "SH3 055",
+   "kt": 0.7,
+   "jMotor": 0.152,
+   "m0": 1.2,
+   "i0": 1.7,
+   "imax": 6.5,
+   "nNom": 8000,
+   "nMax": 9000,
+   "frein": true,
+   "sonde": "",
+   "notes": "SH3 055 taille 3, bobinage P, avec frein (F). Manuel Schneider SH3 (données techniques SH3055) : M0 1,2 Nm, I0 1.7 A, Imax 6.5 A, Mmax 3.5 Nm, Kt 0.7 Nm/A. nNom = 8000 tr/min (400 Vac), nMax 9000. Inertie avec frein 0.152 kg·cm² (matériel ≥RS02 ; 0.13 sans frein). Valeur avec frein 0,115 donnée pour matériel <RS02 sur la taille 3 : incohérente dans le manuel. Le variateur peut lire une valeur plus élevée sur le moteur réel : prendre MotorInertia du dossier Motor."
   }
  ],
  "reducers": [
