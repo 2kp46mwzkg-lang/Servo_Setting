@@ -58,6 +58,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .pill{font-size:11px;padding:2px 8px;border-radius:99px;background:var(--surface-2);border:1px solid var(--line);color:var(--muted)}
 .pill.done{background:var(--ok-soft);color:var(--ok);border-color:transparent}
 .pform{display:flex;flex-wrap:wrap;gap:8px;align-items:center;width:100%}
+.meform .memsg{flex-basis:100%;font-size:13px;color:var(--muted)}
 .axisbar{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
 .axischip{appearance:none;font:inherit;font-family:var(--mono);font-size:14px;font-weight:600;border:1px solid var(--line);background:var(--surface);color:var(--fg);border-radius:var(--r);padding:6px 14px;cursor:pointer}
 .axischip[aria-pressed="true"]{border-color:var(--accent);background:var(--accent);color:var(--accent-fg)}
@@ -451,13 +452,6 @@ function compute(a) {
   if (!Ilim) Ilim = null;
   const pct = Iref && Ilim ? Math.floor(Ilim / Iref * 1000) / 10 : null;
   R.gears = gearsOf(r);
-  // FeedConstant à virgule : équivalent tout en entiers (la décimale passe dans GearOut, même échelle Units / tour moteur)
-  R.feedInt = null;
-  if (R.gears && feed && !Number.isInteger(feed)) {
-    const k = Math.min((String(feed).split('.')[1] || '').length, 4), p10 = Math.pow(10, k);
-    let fc = Math.round(feed * p10), gi = R.gears.gIn, go = R.gears.gOut * p10, g = gcd(fc, go); fc /= g; go /= g; g = gcd(gi, go); gi /= g; go /= g;
-    R.feedInt = { fc, gIn: gi, gOut: go };
-  }
   Object.assign(R, { integ, etaT, m0: num(m.m0), i0: num(m.i0), Iref, I_T2B, I_T2N, I_T2Not, Ilim, pct, marge });
 
   const vertical = lin && !!a.vertical;
@@ -1002,7 +996,7 @@ const XL = (() => {
     ];
     return zip(files);
   }
-  return { Styles, Sheet, book };
+  return { Styles, Sheet, book, zip };
 })();
 
 function gainsOf(a, R) {
@@ -1033,6 +1027,7 @@ function buildXlsx() {
   const sSect = s({ b: 1, sz: 11, color: C.white, fill: C.acc, indent: 1 });
   const sLabel = s({ fill: C.grey, border: 1, indent: 1 }), sTxt = s({ border: 1, indent: 1 }), sTxtB = s({ b: 1, border: 1, indent: 1 }), sUnit = s({ color: C.muted, border: 1, h: 'center' });
   const sNote = s({ i: 1, color: C.muted }), sWrap = s({ border: 1, wrap: 1, indent: 1 });
+  const feedDec = v => Number.isInteger(v) ? 'int' : Math.min(3, (String(v).split('.')[1] || '').length);
   const nfOf = d => d === 'int' ? '0' : d === 0 ? '#,##0' : d === 1 ? '#,##0.0' : d === 2 ? '#,##0.00' : '0.000';
   const sNum = (d, key) => s({ border: 1, fmt: nfOf(d), h: 'right', ...(key ? { b: 1, fill: C.key, sz: 11 } : {}) });
   const sStat = (st, d) => s({ b: 1, border: 1, h: d == null ? 'center' : 'right', fill: C[st], color: C[st + 'T'], ...(d != null ? { fmt: nfOf(d) } : {}) });
@@ -1059,7 +1054,7 @@ function buildXlsx() {
     if (R.missing) { sy.set(r, 3, R.why || 'Ensemble incomplet', sStat('warn')); sy.merge(r, 3, r, lastC); for (let c = 4; c <= lastC; c++) sy.set(r, c, '', sStat('warn')); return; }
     sy.set(r, 3, R.i, sNum(R.i % 1 ? 2 : 0));
     sy.set(r, 4, R.gears ? R.gears.gIn : 1, sNum('int', 1)); sy.set(r, 5, R.gears ? R.gears.gOut : R.i, R.gears && !R.gears.exact ? s({ border: 1, h: 'right', fmt: '0', b: 1, fill: C.warn, color: C.warnT }) : sNum(R.gears ? 'int' : 3, 1));
-    sy.set(r, 6, R.feed ?? null, R.feed && !Number.isInteger(R.feed) ? s({ border: 1, h: 'right', fmt: '0.000', b: 1, fill: C.warn, color: C.warnT }) : sNum('int', 1));
+    sy.set(r, 6, R.feed ?? null, sNum(R.feed ? feedDec(R.feed) : 'int', 1));
     sy.set(r, 7, J(R), sNum(0, 1)); sy.set(r, 8, R.Jg, sNum(3, 1));
     sy.set(r, 9, R.pct, sNum(1, 1)); sy.set(r, 10, R.driveStopMa, sNum(0)); sy.set(r, 11, R.dec, sNum(0)); sy.set(r, 12, R.jerkStop, sNum(0)); sy.set(r, 13, R.stl, sNum(0));
     sy.set(r, 14, g.vp, sNum(1, 1)); sy.set(r, 15, g.vi, sNum(1, 1));
@@ -1111,13 +1106,7 @@ function buildXlsx() {
     p('GearIn', R.gears ? R.gears.gIn : 1, '', 'Mechanic', 'int', 1);
     p('GearOut', R.gears ? R.gears.gOut : R.i, '', 'Mechanic', R.gears ? 'int' : (R.i % 1 ? 3 : 0), 1);
     if (R.gears) { ws.set(r - 1, 3, 'Mechanic · ' + gearsNote(R.gears), R.gears.exact ? sTxt : s({ color: C.warnT, wrap: 1 })); }
-    if (R.feed) p('FeedConstant', R.feed, 'Units/tr', 'Mechanic', R.feed % 1 ? 3 : 0, 1);
-    if (R.feedInt) {
-      ws.set(r - 1, 3, 'Mechanic · à virgule : voir l’équivalent en entiers ci-dessous', s({ color: C.warnT, wrap: 1 }));
-      p('Si entiers uniquement : FeedConstant', R.feedInt.fc, '', 'Même échelle : la décimale passe dans GearOut', 'int');
-      p('Si entiers uniquement : GearIn', R.feedInt.gIn, '', 'À utiliser avec le FeedConstant ci-dessus', 'int');
-      p('Si entiers uniquement : GearOut', R.feedInt.gOut, '', 'À utiliser avec le FeedConstant ci-dessus', 'int');
-    }
+    if (R.feed) p('FeedConstant', R.feed, 'Units/tr', 'Mechanic', feedDec(R.feed), 1);
     p('J_Load', J(R), 'kg·cm²', 'Mechanic', 0, 1);
     p('J_Gear', R.Jg, 'kg·cm²', 'Mechanic', 3, 1);
     p('UserCurrentLimit', R.pct, '%', 'General', 1, 1);
@@ -1162,6 +1151,255 @@ async function exportProject() {
     setStatus('Export enregistré : ' + name);
   } catch (e) { setStatus('Export impossible dans ce navigateur.', true); }
 }
+/* ---------- Script Machine Expert (IronPython 2.7, API de script CODESYS) ---------- */
+const ME_CORE = String.raw`try:
+    unicode
+except NameError:
+    unicode = str
+
+def safe(f, defaut=None):
+    try:
+        return f()
+    except Exception:
+        return defaut
+
+def appareils(obj, res):
+    """Parcours recursif de l'arbre du projet (meme principe que le script de lecture)"""
+    for enfant in safe(lambda: list(obj.get_children(False)), []):
+        if safe(lambda: enfant.is_device, False):
+            res.append(enfant)
+        appareils(enfant, res)
+
+def parametres(dev):
+    """host_parameters du variateur et de ses sous-noeuds, ranges par nom"""
+    res = {}
+    pile = [dev]
+    while pile:
+        d = pile.pop(0)
+        for conn in safe(lambda: list(d.connectors), []):
+            for p in safe(lambda: list(conn.host_parameters), []):
+                nom = safe(lambda: p.name, "")
+                if nom and nom not in res:
+                    res[nom] = p
+        for e in safe(lambda: list(d.get_children(False)), []):
+            if safe(lambda: e.is_device, False):
+                pile.append(e)
+    return res
+
+def texte(valeur, genre):
+    if genre == "txt":
+        return unicode(valeur)
+    if genre == "int":
+        return "%d" % int(round(valeur))
+    s = ("%.6f" % valeur).rstrip("0")
+    if s.endswith("."):
+        s += "0"
+    return s
+
+def identique(ancien, nouveau):
+    a = unicode(ancien if ancien is not None else "").strip().lower()
+    try:
+        return abs(float(a) - float(nouveau)) < 1e-9
+    except Exception:
+        return a == unicode(nouveau).strip().lower()
+
+def ecrire(p, valeur):
+    try:
+        p.value = valeur
+    except Exception:
+        if hasattr(p, "set_value"):
+            p.set_value(valeur)
+        else:
+            raise
+    return safe(lambda: p.value, "")
+
+lignes = []
+def dire(s=""):
+    print(s)
+    lignes.append(unicode(s))
+
+projet = projects.primary
+if projet is None:
+    raise Exception("Aucun projet ouvert dans Machine Expert")
+
+tous = []
+appareils(projet, tous)
+par_nom = {}
+for d in tous:
+    par_nom.setdefault(safe(lambda: d.get_name(), ""), []).append(d)
+
+dire("Reglages servo -> Machine Expert : projet " + PROJET)
+dire("Mode : " + ("SIMULATION (rien n'est ecrit)" if SIMULATION else "ECRITURE"))
+dire("")
+n_mod = n_ok = n_err = n_absent = n_main = 0
+for axe, alertes, liste in REGLAGES:
+    nom_drv = PREFIXE + axe
+    trouves = par_nom.get(nom_drv, [])
+    if not trouves:
+        dire("%s : variateur introuvable dans le projet, axe ignore" % nom_drv)
+        dire("")
+        n_absent += 1
+        continue
+    dire(nom_drv)
+    if len(trouves) > 1:
+        dire("   ! %d appareils portent ce nom : le premier est utilise" % len(trouves))
+    for a in alertes:
+        dire("   ! alerte de l'outil : " + a)
+    params = parametres(trouves[0])
+    for nom_p, valeur, genre, origine in liste:
+        if nom_p in INERTIES:
+            valeur = valeur * FACTEUR_INERTIE
+        nouveau = texte(valeur, genre)
+        p = params.get(nom_p)
+        if p is None:
+            dire("   %-22s introuvable sur ce variateur" % nom_p)
+            n_err += 1
+            continue
+        ancien = safe(lambda: p.value, "")
+        note = ""
+        if nom_p in INERTIES:
+            try:
+                fa, fb = float(ancien), float(nouveau)
+                if fa > 0 and fb > 0 and (fb / fa > 1000 or fa / fb > 1000):
+                    note = "   <- ecart x1000 : verifier l'unite (FACTEUR_INERTIE)"
+            except Exception:
+                pass
+        if identique(ancien, nouveau):
+            dire("   %-22s %12s   inchange" % (nom_p, ancien))
+            n_ok += 1
+            continue
+        if genre == "txt":
+            try:
+                float(ancien)
+                dire("   %-22s %12s   valeur codee : a regler a la main sur '%s'" % (nom_p, ancien, nouveau))
+                n_main += 1
+                continue
+            except Exception:
+                pass
+        if SIMULATION:
+            dire("   %-22s %12s -> %-12s [%s]%s" % (nom_p, ancien, nouveau, origine, note))
+            n_mod += 1
+            continue
+        try:
+            relu = ecrire(p, nouveau)
+            etat = "ecrit" if identique(relu, nouveau) else "ecrit, relu " + unicode(relu)
+            dire("   %-22s %12s -> %-12s %s [%s]%s" % (nom_p, ancien, nouveau, etat, origine, note))
+            n_mod += 1
+        except Exception as ex:
+            dire("   %-22s ERREUR d'ecriture : %s" % (nom_p, ex))
+            n_err += 1
+    dire("")
+for axe, raison in AXES_IGNORES:
+    dire("%s : non genere par l'outil (%s)" % (PREFIXE + axe, raison))
+if AXES_IGNORES:
+    dire("")
+dire("Bilan : %d %s, %d inchanges, %d a regler a la main, %d erreurs, %d variateurs introuvables"
+     % (n_mod, "a modifier" if SIMULATION else "modifies", n_ok, n_main, n_err, n_absent))
+if SIMULATION:
+    dire("Rien n'a ete modifie (SIMULATION = True). Mets SIMULATION = False pour ecrire.")
+else:
+    dire("Termine. Verifie quelques valeurs dans Machine Expert puis enregistre le projet.")
+try:
+    with codecs.open(FICHIER_RAPPORT, "w", "utf-8") as f:
+        f.write(u"\n".join(lignes))
+    print("\nRapport ecrit : " + FICHIER_RAPPORT)
+except Exception as ex:
+    print("\nRapport non ecrit (%s)" % ex)
+`;
+const asciiPy = v => String(v ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[‘’]/g, "'").replace(/[“”«»]/g, '"').replace(/[–—]/g, '-').replace(/[^\x20-\x7E]/g, '?');
+const pyU = v => 'u"' + String(v).replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/[^\x20-\x7E]/g, ch => '\\u' + ch.charCodeAt(0).toString(16).padStart(4, '0')) + '"';
+const pyA = v => '"' + asciiPy(v).replace(/\\/g, '\\\\').replace(/"/g, '\\"') + '"';
+const pyNum = (v, genre) => genre === 'int' ? String(Math.round(v)) : (Number.isInteger(v) ? v.toFixed(1) : String(+Number(v).toPrecision(12)));
+const slugOf = t => String(t || 'projet').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^\w\-]+/g, '_').replace(/^_+|_+$/g, '') || 'projet';
+function buildMeScript(o) {
+  const cur = curProj(), now = new Date();
+  const when = now.toLocaleDateString('fr-FR') + ' ' + now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+  const rows = [], ign = [];
+  pAxes().forEach(a => {
+    const nom = String(a.nom || '').trim();
+    if (!nom) { ign.push(['(sans nom)', 'axe sans nom']); return; }
+    const R = compute(a);
+    if (R.missing) { ign.push([nom, R.why || 'moteur ou reducteur manquant']); return; }
+    const L = [], skip = [];
+    if (o.meca) {
+      if (R.feed != null) L.push(['FeedConstant', R.feed, 'real', 'outil']);
+      if (R.gears) { const src = R.gears.exact ? 'rapport exact' : 'rapport catalogue arrondi, a confirmer'; L.push(['GearIn', R.gears.gIn, 'int', src], ['GearOut', R.gears.gOut, 'int', src]); }
+      L.push(['J_Load', Math.round(R.JL / 10) * 10, 'real', 'calcule par l\'outil'], ['J_Gear', R.Jg, 'real', R.r.jGear == null ? 'non renseigne : 0' : 'fiche reducteur']);
+    }
+    if (o.lim && R.pct != null) L.push(['UserCurrentLimit', R.pct, 'real', 'limite calculee']);
+    if (o.stop) {
+      if (R.driveStopMa != null) L.push(['DriveStopCurrentLimit', R.driveStopMa, 'int', 'mA, part de T2B autorisee']);
+      if (R.dec) L.push(['ControllerStopDec', R.dec, 'real', 'vitesse du cycle / duree d\'arret'], ['ControllerStopJerk', R.jerkStop, 'real', 'calcule par l\'outil'], ['StopTimeLim', R.stl, 'int', 'ms, duree d\'arret + 25 %']);
+      else skip.push('ControllerStopDec, ControllerStopJerk, StopTimeLim : vitesse max du cycle non saisie dans l\'outil');
+      L.push(['UserDefinedStopMode', 'Start with actual values', 'txt', 'recommande par l\'outil']);
+    }
+    if (o.gains) { const g = gainsOf(a, R); L.push(['Vel_P_Gain', g.vp, 'real', g.vpSrc], ['Vel_I_Gain', g.vi, 'real', g.viSrc]); }
+    const al = R.checks.filter(c => c[0] === 'crit').map(c => asciiPy(c[1]).slice(0, 170)).concat(skip.map(asciiPy));
+    if (L.length) rows.push({ nom, al, L, R });
+  });
+  const slug = slugOf(cur?.nom);
+  const groupes = [o.meca ? 'Mechanic (FeedConstant, GearIn, GearOut, J_Load, J_Gear)' : null, o.lim ? 'UserCurrentLimit' : null, o.stop ? 'Arret (DriveStopCurrentLimit, ControllerStopDec, ControllerStopJerk, StopTimeLim, UserDefinedStopMode)' : null, o.gains ? 'Vel_P_Gain / Vel_I_Gain' : null].filter(Boolean).join(' + ');
+  const H = [
+    '# -*- coding: utf-8 -*-',
+    '# =====================================================================',
+    '#  Reglages servo -> Machine Expert',
+    '#  Projet : ' + asciiPy(cur?.nom || ''),
+    '#  Genere le ' + asciiPy(when) + ' par l\'outil Reglages servo',
+    '#  Parametres : ' + asciiPy(groupes),
+    '# =====================================================================',
+    '#  Mode d\'emploi',
+    '#   1. Ouvre le projet dans Machine Expert (hors ligne).',
+    '#   2. Lance ce script comme vos autres scripts Python :',
+    '#      il ECRIT DIRECTEMENT les valeurs et affiche ancienne -> nouvelle.',
+    '#      Rapport dans Documents.',
+    '#   3. Verifie quelques valeurs puis enregistre le projet.',
+    '#  Pour seulement voir les ecarts sans rien modifier : SIMULATION = True.',
+    '#  Seuls les parametres listes plus bas sont touches.',
+    '#  Variateur cherche = PREFIXE + nom de l\'axe dans l\'outil (ex. DRV_MT1).',
+    '# =====================================================================',
+    'from __future__ import print_function',
+    'import os, codecs',
+    '',
+    'SIMULATION = False       # False : ecrit les valeurs ; True : affiche seulement les ecarts',
+    'PREFIXE = "DRV_"         # nom du variateur dans le projet = PREFIXE + nom de l\'axe',
+    'FACTEUR_INERTIE = 1.0    # J_Load / J_Gear en kg.cm2 dans l\'outil ; 0.0001 si Machine Expert attend des kg.m2',
+    'FICHIER_RAPPORT = os.path.join(os.path.expanduser("~"), "Documents", "rapport_reglages_' + slug + '.txt")',
+    '',
+    'PROJET = ' + pyU(cur?.nom || ''),
+    'INERTIES = ("J_Load", "J_Gear")',
+    '',
+    '# (axe, alertes critiques de l\'outil, [(parametre, valeur, type, origine), ...])',
+    'REGLAGES = ['
+  ];
+  rows.forEach(({ nom, al, L, R }) => {
+    H.push('    # ' + asciiPy(nom) + ' : ' + asciiPy(R.m.ref) + ' + ' + asciiPy(R.r.ref));
+    H.push('    (' + pyU(nom) + ', [' + al.map(pyA).join(', ') + '], [');
+    L.forEach(([k, v, t, src]) => H.push('        ("' + k + '", ' + (t === 'txt' ? pyA(v) : pyNum(v, t)) + ', "' + t + '", ' + pyA(src) + '),'));
+    H.push('    ]),');
+  });
+  H.push(']', '', '# Axes du projet de l\'outil qui ne sont pas dans le script', 'AXES_IGNORES = [');
+  ign.forEach(([n, r]) => H.push('    (' + pyU(n) + ', ' + pyA(r) + '),'));
+  H.push(']', '', '# ---------------------------------------------------------------------', '# Code commun (ne pas modifier)', '# ---------------------------------------------------------------------');
+  return H.join('\n') + '\n' + ME_CORE.replace(/^\n+/, '');
+}
+async function exportMeScript(o) {
+  const cur = curProj(); if (!cur) return;
+  let py;
+  try { py = buildMeScript(o); } catch (e) { setStatus('Script impossible : ' + (e.message || e), true); return; }
+  const d = new Date(), day = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  const slug = slugOf(cur.nom), pyName = 'reglages_' + slug + '.py';
+  if (S.dl) {
+    const zipName = 'Script_MachineExpert_' + slug + '_' + day + '.zip';
+    try { await S.dl.save({ filename: zipName, data: XL.zip([{ name: pyName, data: py }]) }); setStatus('Script enregistré : ' + zipName + ' (extraire ' + pyName + ').'); }
+    catch (e) { if (e && e.code === 'declined') return; if (e && e.code === 'rate_limited') { setStatus('Un téléchargement attend déjà ta confirmation.'); return; } setStatus('Script impossible : ' + ((e && (e.message || e.code)) || 'erreur'), true); }
+    return;
+  }
+  try {
+    const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([py], { type: 'text/x-python' })); a.download = pyName;
+    document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+    setStatus('Script enregistré : ' + pyName);
+  } catch (e) { setStatus('Script impossible dans ce navigateur.', true); }
+}
 function renderProj() {
   const b = $('#projbar'); if (!b) return;
   const cur = curProj(), done = cur?.statut === 'termine';
@@ -1169,16 +1407,28 @@ function renderProj() {
   const n = cur ? pAxes().length : 0;
   b.innerHTML = `<span class="lbl">Projet</span>${S.projects.length ? `<select id="projSel" aria-label="Projet">${opts('en cours', 'En cours')}${opts('termine', 'Terminés')}</select>` : '<span class="muted">Aucun projet</span>'}
     ${done ? '<span class="pill done">Terminé</span>' : ''}<span class="grow"></span>
-    ${cur && pAxes().length && (S.dl || !S.db) ? '<button class="btn" id="projExp">Exporter (Excel)</button>' : ''}
+    ${cur && pAxes().length && (S.dl || !S.db) ? '<button class="btn" id="projExp">Exporter (Excel)</button><button class="btn" id="projMe">Script Machine Expert</button>' : ''}
     ${cur ? `<button class="btn ghost" id="projRen">Renommer</button><button class="btn ghost" id="projDone">${done ? 'Rouvrir' : 'Terminer'}</button>` : ''}
     <button class="btn" id="projNew">+ Projet</button>
     ${S.projForm ? `<div class="pform"><div class="inp text" style="flex:1;min-width:200px"><input id="pfNom" placeholder="Nom du projet (machine, client…)" value="${esc(S.projForm.nom)}" autocomplete="off"></div>
       ${S.projForm.mode === 'new' && cur && n ? `<label class="chk"><input type="checkbox" id="pfCopy" ${S.projForm.copy ? 'checked' : ''}> Copier les ${n} axes de « ${esc(cur.nom)} »</label>` : ''}
-      <button class="btn primary" id="pfOk">${S.projForm.mode === 'new' ? 'Créer' : 'Renommer'}</button><button class="btn" id="pfCancel">Annuler</button></div>` : ''}`;
+      <button class="btn primary" id="pfOk">${S.projForm.mode === 'new' ? 'Créer' : 'Renommer'}</button><button class="btn" id="pfCancel">Annuler</button></div>` : ''}
+    ${S.meForm && cur ? `<div class="pform meform"><div class="memsg">Script Python pour Machine Expert : il cherche les variateurs <b>DRV_</b> + nom de l’axe dans le projet ouvert et écrit les paramètres cochés. Il <b>écrit directement</b> les valeurs et affiche ancienne → nouvelle (pour seulement voir les écarts : SIMULATION = True en tête du fichier).</div>
+      <label class="chk"><input type="checkbox" id="meMeca" ${S.meForm.meca ? 'checked' : ''}> Mechanic : FeedConstant, GearIn, GearOut, J_Load, J_Gear</label>
+      <label class="chk"><input type="checkbox" id="meLim" ${S.meForm.lim ? 'checked' : ''}> UserCurrentLimit</label>
+      <label class="chk"><input type="checkbox" id="meStop" ${S.meForm.stop ? 'checked' : ''}> Arrêt : DriveStopCurrentLimit, ControllerStopDec, ControllerStopJerk, StopTimeLim, UserDefinedStopMode</label>
+      <label class="chk"><input type="checkbox" id="meGains" ${S.meForm.gains ? 'checked' : ''}> Gains Vel_P / Vel_I (gardés si notés, sinon proposés)</label>
+      <button class="btn primary" id="meOk">Générer le script</button><button class="btn" id="meCancel">Annuler</button></div>` : ''}`;
   const sel = $('#projSel'); if (sel) sel.onchange = () => { if (S.dirty && !confirm_()) { sel.value = S.projId; return; } S.projId = sel.value; S.axisId = null; S.dirty = false; S.draft = null; try { localStorage.setItem('servo-proj', S.projId); } catch (e) {} onData(); };
   $('#projNew').onclick = () => { S.projForm = { mode: 'new', nom: '', copy: false }; renderProj(); $('#pfNom').focus(); };
   const rn = $('#projRen'); if (rn) rn.onclick = () => { S.projForm = { mode: 'ren', nom: cur.nom }; renderProj(); $('#pfNom').focus(); };
   const ex = $('#projExp'); if (ex) ex.onclick = () => exportProject();
+  const me = $('#projMe'); if (me) me.onclick = () => { S.projForm = null; S.meForm = S.meForm ? null : { meca: true, lim: true, stop: true, gains: true }; renderProj(); };
+  if (S.meForm && $('#meOk')) {
+    ['meMeca', 'meLim', 'meStop', 'meGains'].forEach(id => { $('#' + id).onchange = e => { S.meForm[{ meMeca: 'meca', meLim: 'lim', meStop: 'stop', meGains: 'gains' }[id]] = e.target.checked; }; });
+    $('#meCancel').onclick = () => { S.meForm = null; renderProj(); };
+    $('#meOk').onclick = async () => { const o = { ...S.meForm }; if (!o.meca && !o.lim && !o.stop && !o.gains) { setStatus('Coche au moins un groupe de paramètres.', true); return; } await exportMeScript(o); S.meForm = null; renderProj(); };
+  }
   const dn = $('#projDone'); if (dn) dn.onclick = async () => { try { await writeDoc('projects', cur.id, { ...strip(cur), statut: done ? 'en cours' : 'termine', termine: done ? null : Date.now() }); setStatus(done ? '' : 'Projet terminé et sauvegardé. Crée le suivant avec « + Projet ».'); } catch (e) { setStatus('Impossible : ' + (e.message || e.code), true); } };
   if (S.projForm) {
     $('#pfNom').oninput = e => { S.projForm.nom = e.target.value; };
@@ -1352,7 +1602,7 @@ function renderResults() {
   const grow = (n, v, sub) => `<div class="prow ${v != null ? 'key' : ''}"><span class="pn">${n}</span><span class="pv">${v != null ? esc(v) : '<span class="muted" style="font-size:12px;font-weight:400">à régler</span>'}</span></div>`;
   const gains = grow('Vel_P_Gain', vpShow) + grow('Vel_I_Gain', viShow) + (vpR == null || viR == null ? `<div class="pnote">${vpR == null && viR == null ? 'Valeurs proposées' : 'Valeur proposée'} : partir de là, monter par paliers de 10 % ; si le moteur grogne, redescendre de 30 %. Noter ensuite les valeurs gardées dans « Gains ».</div>` : '');
   const groups = `<div class="pgroups">
-    <div class="pcol"><div class="pgroup"><div class="pg-h">Mechanic</div>${mech}<div class="pnote">${R.gears ? `GearIn ${R.gears.gIn} · GearOut ${R.gears.gOut}${R.gears.exact ? '' : ' ⚠'}` : 'GearIn 1 · GearOut ' + fmt(R.i, 3)}${R.feed ? ' · FeedConstant ' + fmt(R.feed, 3) : ''}${R.gears ? `<br>${esc(gearsNote(R.gears))}` : ''}${R.feedInt ? `<br>Tout en entiers (même échelle) : FeedConstant ${R.feedInt.fc} · GearIn ${R.feedInt.gIn} · GearOut ${R.feedInt.gOut}` : ''}</div></div>
+    <div class="pcol"><div class="pgroup"><div class="pg-h">Mechanic</div>${mech}<div class="pnote">${R.gears ? `GearIn ${R.gears.gIn} · GearOut ${R.gears.gOut}${R.gears.exact ? '' : ' ⚠'}` : 'GearIn 1 · GearOut ' + fmt(R.i, 3)}${R.feed ? ' · FeedConstant ' + fmt(R.feed, 3) : ''}${R.gears ? `<br>${esc(gearsNote(R.gears))}` : ''}</div></div>
     <div class="pgroup"><div class="pg-h">Control loop</div>${gains}</div></div>
     <div class="pgroup"><div class="pg-h">General</div>${gen}<div class="pnote">UserDefinedStopMode : Start with actual values</div></div></div>`;
   const P = [['GearIn', R.gears ? String(R.gears.gIn) : '1'], ['GearOut', R.gears ? String(R.gears.gOut) : fmt(R.i, 3)], R.feed ? ['FeedConstant', fmt(R.feed, 3)] : null, ['J_Load', fmt(Math.round(R.JL / 10) * 10, 0)], ['J_Gear', fmt(R.Jg, 3)],
