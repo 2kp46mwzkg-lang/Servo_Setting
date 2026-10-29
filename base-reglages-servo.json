@@ -1,5 +1,5 @@
 {
- "_version": "20261028-1700",
+ "_version": "20261029-1700",
  "motors": [
   {
    "id": "ilm0701p-frein",
@@ -28860,6 +28860,188 @@
    "parent": "EIPS_Scanner",
    "ref": "EX500_GEN2",
    "serie": "Ethernet/IP"
+  },
+  {
+   "id": "hw-atv320",
+   "ref": "ATV320",
+   "serie": "Variateur CAN",
+   "devType": 18,
+   "devId": "101A 2038",
+   "devVer": "1.2.11.0",
+   "module": "",
+   "parent": "CAN_Manager",
+   "alias": "",
+   "nomAuto": "ATV320_{dossier}",
+   "notes": "Dictionnaire Auto_Pannel (Config_A3)",
+   "params": [
+    {
+     "n": "Supported Functions"
+    },
+    {
+     "n": "Node-ID",
+     "v": "1"
+    },
+    {
+     "n": "General Options"
+    },
+    {
+     "n": "Granularity",
+     "v": "8"
+    },
+    {
+     "n": "NrOfSupportedRXPDOs",
+     "v": "3"
+    },
+    {
+     "n": "NrOfSupportedTXPDOs",
+     "v": "3"
+    },
+    {
+     "n": "DummyParameter1",
+     "v": "0"
+    },
+    {
+     "n": "NODEIDSAVED",
+     "v": "1"
+    },
+    {
+     "n": "SDO Timeout",
+     "v": "1000000"
+    },
+    {
+     "n": "Explicit Deactivate PDOs",
+     "v": "FALSE"
+    },
+    {
+     "n": "Profiles"
+    },
+    {
+     "n": "EXPERTSETTINGS",
+     "v": "FALSE"
+    },
+    {
+     "n": "Diag String:"
+    },
+    {
+     "n": "Diag Acknowledge",
+     "v": "FALSE"
+    },
+    {
+     "n": "Device-Type",
+     "v": "16#410192"
+    },
+    {
+     "n": "Nodeguarding"
+    },
+    {
+     "n": "Emergency-General Parameters"
+    },
+    {
+     "n": "Generic Emergency COBID",
+     "v": "'$NODEID+16#80'"
+    },
+    {
+     "n": "Heartbeat-Producer Time",
+     "v": "195"
+    },
+    {
+     "n": "PDO 16#1400"
+    },
+    {
+     "n": "Generic COBID",
+     "v": "'$NODEID+16#80000200'"
+    },
+    {
+     "n": "Process by CANopenManager",
+     "v": "TRUE"
+    },
+    {
+     "n": "PDO 16#1401"
+    },
+    {
+     "n": "PDO 16#1402"
+    },
+    {
+     "n": "PDO 16#1800"
+    },
+    {
+     "n": "PDO 16#1801"
+    },
+    {
+     "n": "PDO 16#1802"
+    },
+    {
+     "n": "Heartbeat-Consuming1"
+    },
+    {
+     "n": "Vendor ID",
+     "v": "16#0200005A"
+    },
+    {
+     "n": "Product Code",
+     "v": "320"
+    },
+    {
+     "n": "Product Revision",
+     "v": "16#00010101"
+    },
+    {
+     "n": "Controlword"
+    },
+    {
+     "n": "Target Velocity"
+    },
+    {
+     "n": "NC1 (12761)"
+    },
+    {
+     "n": "NC2 (12762)"
+    },
+    {
+     "n": "NC3 (12763)"
+    },
+    {
+     "n": "NC4 (12764)"
+    },
+    {
+     "n": "Logic Output Map"
+    },
+    {
+     "n": "Motor Current"
+    },
+    {
+     "n": "Statusword"
+    },
+    {
+     "n": "Extended Statusword"
+    },
+    {
+     "n": "Output Velocity"
+    },
+    {
+     "n": "Logic Input Map"
+    },
+    {
+     "n": "NM1 (12741)"
+    },
+    {
+     "n": "NM2 (12742)"
+    },
+    {
+     "n": "NM3 (12743)"
+    },
+    {
+     "n": "NM4 (12744)"
+    },
+    {
+     "n": "SDO List"
+    },
+    {
+     "n": "ConfigVersion",
+     "v": "50659584"
+    }
+   ],
+   "paramsLu": "projet Machine Expert V2.2, 29/10/2026"
   }
  ],
  "axes": [],
