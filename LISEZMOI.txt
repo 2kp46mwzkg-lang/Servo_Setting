@@ -4,7 +4,7 @@ RÉGLAGES SERVO — version hors ligne
 Contenu
 -------
 index.html                  Le site complet (un seul fichier). Le catalogue est déjà dedans :
-                            72 moteurs (Schneider SH3 / ILM, Interroll DM), 2271 réducteurs
+                            85 moteurs (Schneider SH3 / ILM / BMP, Interroll DM), 2271 réducteurs
                             (Neugart, Atlanta, STOBER, SEW, Wittenstein…), 5 variateurs LXM62,
                             et les types de matériel Machine Expert (Dico de l'Auto_Pannel).
                             Aucun projet : chacun crée les siens.
