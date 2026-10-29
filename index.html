@@ -118,6 +118,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .imp{margin-top:14px}
 .warnline{margin:10px 16px 0;padding:8px 10px;border-radius:var(--r);background:var(--warn-soft);color:var(--warn);font-size:13px}
 .mono{font-family:var(--mono);font-size:12px}
+td.hwact{white-space:nowrap}
 tr.el-ok td{color:var(--muted)}
 .meform .memsg{flex-basis:100%;font-size:13px;color:var(--muted)}
 .mesec{flex-basis:100%;border:1px solid var(--line);border-radius:var(--r);padding:8px 12px;display:flex;flex-direction:column;gap:6px}
@@ -356,7 +357,7 @@ td.used{color:var(--muted);font-size:12px}
       <div><h3>4 · Machine Expert</h3><p><b>Script Machine Expert</b> génère un script Python : il crée le hardware qui manque (jamais de suppression), écrit les réglages des axes avec une confirmation avant chacun, et tient à jour une liste de paramètres. Rapport dans Documents.</p></div>
     </div>
     <div class="helpgrid helpvoc">
-      <div><h3>Noms dans Machine Expert</h3><p><code>DRV_MT1</code> variateur de l’axe MT1 · <code>LE_MT1</code> son codeur logique · <code>IO_MT1</code> sa carte IO · <code>ATV320_M3</code> variateur CANopen du moteur M3 · <code>FIELDBUS_1</code> tête d’îlot TM5.</p></div>
+      <div><h3>Noms dans Machine Expert</h3><p><code>DRV_MT1</code> variateur de l’axe MT1 · <code>LE_MT1</code> son codeur logique · <code>IO_MT1</code> sa carte IO · <code>ATV320_M3</code> variateur CANopen du moteur M3 · <code>FIELDBUS_1</code> tête d’îlot TM5 · <code>PS_1</code> sa carte d’alimentation. Le modèle de chaque nom se voit et se change dans Catalogue › Matériel (« Nom dans l’automate »), ou pour un projet avec « Renommer » dans Matériel du projet. Le script reconnaît un appareil déjà présent sous un autre nom (même parent, même référence) et le garde.</p></div>
       <div><h3>Unités</h3><p><b>Units</b> = unité de l’axe dans Machine Expert (mm ou °) ; FeedConstant = déplacement pour un tour de sortie du réducteur. Inerties en <b>kg·cm²</b> (1 kg·m² = 10 000 kg·cm²). <b>T2B</b> = couple max du réducteur, <b>T2N</b> nominal, <b>T2Not</b> arrêt d’urgence.</p></div>
       <div><h3>Les données</h3><p>Les catalogues (moteurs, réducteurs, matériel) sont communs à tous les projets. Le bouton <b>?</b> à côté d’un champ dit où trouver la valeur. En mode hors ligne, la base vit dans ce navigateur : exporte-la régulièrement.</p></div>
     </div>
@@ -521,6 +522,7 @@ const HWTYPE_FIELDS = [
   { k: 'devVer', l: 'DeviceID : version', t: 'text', h: 'Ex. 1.56.15.2. plc_v = version de l’automate du projet' },
   { k: 'module', l: 'Module', t: 'text', h: 'Quatrième paramètre de add() (ex. LXM62DxS), souvent vide' },
   { k: 'parent', l: 'Parent', t: 'text', h: 'Appareil sous lequel le créer : LMC_PacDrive, Sercos_Master, CAN_Manager, EIPS_Scanner. TM5NS31 = sous la tête de bus TM5 qui le précède (BC_TM5NS31, ancien nom de la tête, revient au même)' },
+  { k: 'nomAuto', l: 'Nom dans l’automate', t: 'text', ph: '{dossier}', h: 'Modèle du nom que le script donne à l’appareil dans Machine Expert, pour tous les projets. {dossier} = nom donné par le dossier élec (colonne C des « Matériels », sinon colonne B + repère ; repère du moteur pour un ATV320), {n} = numéro d’ordre de ce type dans le projet, {ilot} = numéro de l’îlot TM5 (1 par tête de bus), {type} = la référence. Vide = {dossier}. Pour un seul projet, « Renommer » dans Matériel du projet. Variateurs, cartes IO et codeurs des axes : toujours DRV_, IO_, LE_ + repère de l’axe (convention Auto_Pannel)' },
   { k: 'alias', l: 'Autres références du dossier élec', t: 'text', h: 'Références qui donnent ce type, séparées par des virgules ; le début de la référence suffit (ex. LXM62PD)' },
   { k: 'voiesE', l: 'Voies d’entrée', u: '', h: 'Pour le futur mapping des E/S' },
   { k: 'voiesS', l: 'Voies de sortie', u: '', h: 'Pour le futur mapping des E/S' },
@@ -1539,8 +1541,64 @@ def hardware():
         plan.append((PREFIXE + axe, gamme, CATALOGUE[gamme][4], [], "variateur", axe))
         if carte:
             plan.append(("IO_" + axe, gamme + "_IO", PREFIXE + axe, modes, "carte", axe))
+    # Appareil deja present sous un autre nom : meme parent, meme DeviceID (type + identifiant, module), nom non prevu par le plan
+    noms_plan = set([x[0] for x in plan])
+    equiv = {}
+    def hw_ident(dev):
+        i = safe(lambda: dev.get_device_identification())
+        m = safe(lambda: dev.get_module_identification())
+        return (unicode(safe(lambda: i.type, u"")), unicode(safe(lambda: i.id, u"")), unicode(safe(lambda: m.id, u"")) if m is not None else u"")
+    def meme_type(dev, c):
+        t, i, m = hw_ident(dev)
+        cid = plc_id if c[1] == "plc_id" else unicode(c[1])
+        return t == unicode(c[0]) and i.strip().lower() == cid.strip().lower() and (not c[3] or m.strip().lower() == unicode(c[3]).strip().lower())
+    def hw_par(nom):
+        # appareil par son nom, sinon son equivalent (present sous un autre nom)
+        d = (hw_find(nom) or [None])[0]
+        return d if d is not None else equiv.get(nom)
+    def hw_node(dev):
+        p = hw_params_directs(dev).get("Node-ID")
+        return unicode(safe(lambda: p.value, u"")).strip() if p is not None else u""
+    def hw_equiv(x):
+        nom, typ, parent_nom, params = x[0], x[1], x[2], x[3]
+        if typ not in CATALOGUE or nom in equiv:
+            return equiv.get(nom)
+        c = CATALOGUE[typ]
+        par = hw_par(parent_nom)
+        if par is None:
+            return None
+        node = [unicode(v).strip() for k, v in params if k == "Node-ID"]
+        pris = set([unicode(safe(lambda: d.get_name(), u"")) for d in equiv.values()])
+        for e in safe(lambda: list(par.get_children(False)), []):
+            n = unicode(safe(lambda: e.get_name(), u""))
+            if n in noms_plan or n in pris or not safe(lambda: e.is_device, False):
+                continue
+            if not meme_type(e, c):
+                continue
+            # esclave CANopen : meme reference ET meme Node-ID, sinon c'est un autre appareil
+            if node:
+                ne = hw_node(e)
+                if ne and ne != node[0]:
+                    continue
+            equiv[nom] = e
+            return e
+        return None
     def present(x):
-        return bool(hw_find(x[0]))
+        if hw_find(x[0]):
+            return True
+        e = hw_equiv(x)
+        if e is not None:
+            n = unicode(safe(lambda: e.get_name(), u"?"))
+            if RENOMMER_EXISTANTS:
+                try:
+                    e.rename(x[0])
+                    dire("   %-28s deja present sous %s sous le nom %s (meme reference) : renomme %s" % (x[0], x[2], n, x[0]))
+                except Exception as ex:
+                    dire("   %-28s deja present sous %s sous le nom %s (meme reference) : renommage impossible (%s)" % (x[0], x[2], n, ex))
+            else:
+                dire("   %-28s deja present sous %s sous le nom %s (meme reference) : garde tel quel, non cree (RENOMMER_EXISTANTS = True pour le renommer)" % (x[0], x[2], n))
+            return True
+        return False
     # chaque ilot TM5 commence par une carte d'alimentation (TM5SPS...)
     for k, x in enumerate(MATERIEL):
         if x[1] == "TM5NS31":
@@ -1580,11 +1638,13 @@ def hardware():
     n_cree = n_err = 0
     for nom, typ, parent_nom, params, role, axe in plan:
         dev = (hw_find(nom) or [None])[0]
+        if dev is None and nom in equiv:
+            dev = equiv[nom]   # present sous un autre nom : on le regle quand meme
         if dev is None:
             if nom not in creer:
                 continue
             c = CATALOGUE[typ]
-            par = (hw_find(parent_nom) or [None])[0]
+            par = hw_par(parent_nom)
             if par is None:
                 dire("   %-28s parent %s introuvable : non cree" % (nom, parent_nom))
                 n_err += 1
@@ -2331,6 +2391,7 @@ function buildMeScript(o) {
     'FICHIER_RAPPORT = os.path.join(os.path.expanduser("~"), "Documents", "rapport_reglages_' + slug + '.txt")',
     'LISTE_PARAMETRES = ' + (o.liste ? '"ParameterList_Reglages"' : '""') + '   # liste de parametres creee / completee a la fin ("" = pas de liste)',
     'CREER_HARDWARE = ' + (o.hw ? 'True ' : 'False') + '    # True : cree les appareils qui manquent (materiel du projet + DRV_ / IO_ / LE_ des axes)',
+    'RENOMMER_EXISTANTS = False   # un appareil deja present sous un autre nom (meme parent, meme reference) : True = le renommer comme dans l\'outil, False = le garder tel quel',
     '',
     'PROJET = ' + pyU(cur?.nom || ''),
     'INERTIES = ("J_Load", "J_Gear")',
@@ -2438,8 +2499,32 @@ const HW_ALIAS = { LXM62PS: 'LXM62PD', EX500_GEN2: 'EX500-GEN2' };
 /* Parent « TM5NS31 » ou « BC_… » (ancien nom de la tête dans le Dico) : sous la tête de bus TM5 qui précède */
 const sousTete = p => p === 'TM5NS31' || /^BC_/.test(String(p || ''));
 /* Catalogue intégré (dictionnaire Auto_Pannel) ; une fiche enregistrée dans l'onglet Matériel le remplace */
+/* Nom de l'appareil dans Machine Expert : modèle par type (catalogue, champ « Nom dans l'automate »), remplaçable pour un projet (Renommer).
+   {dossier} = nom donné par le dossier élec, {n} = n° d'ordre de ce type dans le projet, {ilot} = n° de l'îlot TM5, {type} = la référence, {axe} = repère de l'axe */
+const HW_NOM = { TM5SPS3: 'PS_{ilot}', ATV320: 'ATV320_{dossier}', CAN_Layer: 'CAN_Layer', CAN_Manager: 'CAN_Manager', EIPS_Scanner: 'EIPS_Scanner', LXM62: 'DRV_{axe}', ILM62: 'DRV_{axe}', LXM62_IO: 'IO_{axe}', ILM62_IO: 'IO_{axe}', LE_Enc: 'LE_{axe}' };
+const hwNomAuto = t => String(hwCat()[t]?.nomAuto || HW_NOM[t] || (/^TM5SPS/.test(refKey(t)) ? 'PS_{ilot}' : '{dossier}')).trim() || '{dossier}';
+function hwNommer(type, c) {
+  const pat = hwNomAuto(type), n = c.n ?? 1, ilot = c.ilot ?? n, dossier = hwName(c.dossier || '');
+  if (/\{dossier\}/i.test(pat) && !dossier) return hwName(type) + '_' + n;
+  const s = hwName(pat.replace(/\{dossier\}/gi, dossier).replace(/\{n\}/gi, n).replace(/\{ilot\}/gi, ilot).replace(/\{type\}/gi, type).replace(/\{axe\}/gi, c.axe || dossier));
+  return s || hwName(type) + '_' + n;
+}
+const hwUnique = (nom, noms) => { let s = nom, k = 1; while (noms.has(s)) s = nom + '_' + (++k); return s; };
+/* Donne un nom aux appareils qui n'en ont pas encore (x.dossier = nom du dossier élec) ; only = ne traiter que ceux-là */
+function hwNoms(items, warn, only) {
+  const cnt = {}, noms = new Set(items.filter(x => x.nom).map(x => x.nom)), heads = items.filter(x => x.type === 'TM5NS31'), renom = {};
+  items.forEach(x => {
+    if (x.nom || (only && !only(x))) return;
+    const n = (cnt[x.type] = (cnt[x.type] || 0) + 1), hi = heads.findIndex(h => h.nom && h.nom === x.parent);
+    const nom = hwUnique(hwNommer(x.type, { dossier: x.dossier, n, ilot: hi >= 0 ? hi + 1 : n }), noms);
+    noms.add(nom); x.nom = nom;
+    if (x.dossier && !x.auto && !/\{dossier\}/i.test(hwNomAuto(x.type)) && nom !== hwName(x.dossier)) (renom[x.type] = renom[x.type] || []).push(x.dossier + ' → ' + nom);
+  });
+  if (warn) Object.entries(renom).forEach(([t, l]) => { if (l.some(x => !/^$/.test(x))) warn.push(t + ' : nommé d’après le catalogue (modèle ' + hwNomAuto(t) + ') : ' + l.slice(0, 3).join(', ') + (l.length > 3 ? '…' : '') + '. Mets {dossier} dans « Nom dans l’automate » du type pour garder le nom du dossier.'); });
+  return items;
+}
 function hwBuiltin() {
-  return Object.entries(HW_CAT).map(([ref, c]) => ({ id: 'hw-' + ref.toLowerCase().replace(/[^a-z0-9]+/g, '-'), ref, serie: HW_FAM0(ref), devType: c[0], devId: c[1], devVer: c[2], module: c[3], parent: c[4], alias: HW_ALIAS[ref] || '', _cat: true, notes: 'Dictionnaire Auto_Pannel (Config_A3)' }));
+  return Object.entries(HW_CAT).map(([ref, c]) => ({ id: 'hw-' + ref.toLowerCase().replace(/[^a-z0-9]+/g, '-'), ref, serie: HW_FAM0(ref), devType: c[0], devId: c[1], devVer: c[2], module: c[3], parent: c[4], alias: HW_ALIAS[ref] || '', nomAuto: HW_NOM[ref] || '{dossier}', _cat: true, notes: 'Dictionnaire Auto_Pannel (Config_A3)' }));
 }
 function hwCat() { const m = {}; S.hwtypes.filter(x => x._cat).forEach(x => { m[x.ref] = x; }); S.hwtypes.filter(x => !x._cat && x.ref).forEach(x => { m[x.ref] = x; }); if (!S.hwtypes.length) hwBuiltin().forEach(x => { m[x.ref] = x; }); return m; }
 const HW_FAM = t => hwCat()[t]?.serie || HW_FAM0(t);
@@ -2453,39 +2538,43 @@ function parseMateriel(sheets, asyn) {
   const items = [], warn = [];
   const atv = asyn.filter(a => /^ATV320/i.test(a.gamme));
   if (atv.length) {
-    items.push({ nom: 'CAN_Layer', type: 'CAN_Layer' }, { nom: 'CAN_Manager', type: 'CAN_Manager' });
-    atv.forEach((a, k) => items.push({ nom: 'ATV320_' + a.nom, type: 'ATV320', nodeId: k + 1, desc: a.desc, ...(a.ref ? { ref: a.ref } : {}), ...(a.moteurRef ? { moteurRef: a.moteurRef } : {}) }));
+    items.push({ dossier: 'CAN_Layer', type: 'CAN_Layer' }, { dossier: 'CAN_Manager', type: 'CAN_Manager' });
+    atv.forEach((a, k) => items.push({ dossier: a.nom, type: 'ATV320', nodeId: k + 1, desc: a.desc, ...(a.ref ? { ref: a.ref } : {}), ...(a.moteurRef ? { moteurRef: a.moteurRef } : {}) }));
   }
   const key = Object.keys(sheets).find(k => nrmE(k) === 'materiels');
-  if (!key) { warn.push('onglet « Matériels » introuvable : seuls le CAN et les ATV320 sont repris'); return { items, warn }; }
+  if (!key) { warn.push('onglet « Matériels » introuvable : seuls le CAN et les ATV320 sont repris'); hwNoms(items, warn); return { items, warn }; }
   const ps = [], bus = [], eth = [], cat = hwCat(), auto = {}, byKey = {};
   Object.keys(cat).forEach(t => { byKey[refKey(t)] = t; });
   sheets[key].forEach((r, i) => {
     if (!r) return;
     const B = cellTxt(r[1]), C = cellTxt(r[2]), E = cellTxt(r[4]), O = cellTxt(r[14]), P = cellTxt(r[15]), R = cellTxt(r[17]);
     const al = cat[E] ? E : (byKey[refKey(E)] || hwAliasOf(E, cat)), fam = al ? (cat[al].serie || HW_FAM0(al)) : '';
-    if (nrmE(O) === 'ethernet ip') eth.push({ nom: hwName(B) + (R ? '_' + R : ''), type: al || E.replace(/-/g, '_'), ip: P, ref: E, ligne: i + 1 });
-    else if (fam === 'Alimentation') ps.push({ nom: hwName(B) + (R ? '_' + R : ''), type: al, ref: E, ligne: i + 1 });
-    else if (C && E && (al || /^TM5/i.test(E))) bus.push({ nom: C, type: al || E, ligne: i + 1 });
+    const nomB = hwName(B) + (R ? '_' + R : '');
+    if (nrmE(O) === 'ethernet ip') eth.push({ dossier: nomB, type: al || E.replace(/-/g, '_'), ip: P, ref: E, ligne: i + 1 });
+    else if (fam === 'Alimentation') ps.push({ dossier: nomB, type: al, ref: E, ligne: i + 1 });
+    else if (C && E && (al || /^TM5/i.test(E))) bus.push({ dossier: C, type: al || E, ligne: i + 1 });
     else if (!C && /^TM5SPS/i.test(refKey(E))) {
-      /* alimentation de l'îlot TM5 sans nom TM5 dans le dossier : nom repris de la colonne B (+ repère), sinon type_n */
-      const t = al || E.toUpperCase(), n = (auto[t] = (auto[t] || 0) + 1);
-      let nom = B ? hwName(B) + (R ? '_' + R : '') : t + '_' + n;
-      if (auto['@' + nom]) nom += '_' + n; auto['@' + nom] = 1;
-      bus.push({ nom, type: t, ligne: i + 1, auto: true });
-      warn.push('« ' + nom + ' » (' + t + ', ligne ' + (i + 1) + ') : nom généré, colonne C vide ; vérifie sa place dans l’îlot TM5');
+      /* alimentation de l'îlot TM5 sans nom TM5 dans le dossier : nommée d'après le catalogue (PS_{ilot}), ou colonne B si le modèle est {dossier} */
+      const t = al || E.toUpperCase();
+      bus.push({ dossier: B ? nomB : '', type: t, ligne: i + 1, auto: true });
+      auto[t] = 1;
     }
   });
   items.push(...ps, ...bus);
-  if (eth.length) items.push({ nom: 'EIPS_Scanner', type: 'EIPS_Scanner', ip: EIPS_IP }, ...eth);
+  if (eth.length) items.push({ dossier: 'EIPS_Scanner', type: 'EIPS_Scanner', ip: EIPS_IP }, ...eth);
+  /* même nom de dossier deux fois (même type) : gardé une fois */
+  const vuD = new Set();
+  let items2 = items.filter(x => { const k = x.type + '|' + x.dossier; if (x.dossier && vuD.has(k)) { warn.push('« ' + x.dossier + ' » en double dans le dossier : gardé une fois'); return false; } vuD.add(k); return true; });
+  items.length = 0; items.push(...items2);
+  hwNoms(items, null, x => x.type === 'TM5NS31');   // les têtes d'abord : les modules s'y rattachent
   // parent réel : un appareil dont le parent est TM5NS31 va sous la dernière tête de bus rencontrée
   let tete = null;
   items.forEach(x => { const c = cat[x.type]; if (x.type === 'TM5NS31') tete = x.nom; const par = c ? c.parent : (/^TM5/.test(x.type) ? 'TM5NS31' : '?'); x.parent = sousTete(par) && x.type !== 'TM5NS31' ? (tete || 'TM5NS31 ?') : par; x.connu = !!c; });
   /* module listé avant sa tête de bus (parent inconnu) : il appartient à l'îlot qui suit */
-  items.forEach((x, k) => { if (x.parent === 'TM5NS31 ?') { const h = items.slice(k + 1).find(y => y.type === 'TM5NS31') || items.find(y => y.type === 'TM5NS31'); if (h) { x.parent = h.nom; warn.push('« ' + x.nom + ' » listé avant sa tête de bus : rattaché à ' + h.nom); } } });
-  const vus = new Set();
-  let out = items.filter(x => { if (!x.nom || vus.has(x.nom)) { if (x.nom) warn.push('« ' + x.nom + ' » en double dans le dossier : gardé une fois'); return false; } vus.add(x.nom); return true; });
-  out = tm5Alims(out, warn);
+  items.forEach((x, k) => { if (x.parent === 'TM5NS31 ?') { const h = items.slice(k + 1).find(y => y.type === 'TM5NS31') || items.find(y => y.type === 'TM5NS31'); if (h) { x.parent = h.nom; warn.push('« ' + (x.dossier || x.type) + ' » listé avant sa tête de bus : rattaché à ' + h.nom); } } });
+  hwNoms(items, warn);
+  Object.keys(auto).forEach(t => { const l = items.filter(x => x.auto && x.type === t); if (l.length) warn.push('« ' + l.map(x => x.nom).join(' », « ') + ' » (' + t + ') : colonne C vide dans le dossier, nom ' + (/\{dossier\}/i.test(hwNomAuto(t)) ? 'repris de la colonne B' : 'donné par le catalogue (modèle ' + hwNomAuto(t) + (l[0].dossier ? ', colonne B : ' + l.map(x => x.dossier).join(', ') : '') + ')') + ' ; vérifie sa place dans l’îlot TM5'); });
+  let out = tm5Alims(items, warn);
   if (out.some(x => !x.connu)) warn.push('types absents du catalogue d’appareils : ' + [...new Set(out.filter(x => !x.connu).map(x => x.type))].join(', ') + ' (le script ne saura pas les créer)');
   return { items: out, warn };
 }
@@ -2512,8 +2601,7 @@ function tm5Alims(items, warn) {
     }
     const orph = items.find(y => estAlimTm5(y) && !heads.some(h => h.nom === y.parent) && !places.has(y));
     if (orph) { const i = out.indexOf(orph); if (i >= 0) out.splice(i, 1); orph.parent = x.nom; out.push(orph); places.add(orph); if (warn) warn.push('« ' + orph.nom + ' » rattachée à la tête de bus ' + x.nom + ' comme carte d’alimentation'); return; }
-    let nom = 'PS_' + k; while (noms.has(nom)) nom += '_'; noms.add(nom);
-    const t = ALIM_TM5_TYPE();
+    const t = ALIM_TM5_TYPE(), nom = hwUnique(hwNommer(t, { n: items.filter(estAlimTm5).length + k, ilot: k }), noms); noms.add(nom);
     out.push({ nom, type: t, parent: x.nom, auto: true, connu: !!hwCat()[t] });
     if (warn) warn.push('« ' + nom + ' » (' + t + ') ajoutée après la tête de bus ' + x.nom + ' : chaque îlot TM5 commence par une carte d’alimentation, le dossier n’en donnait pas. Vérifie la référence.');
   });
@@ -2530,11 +2618,26 @@ function hwDiff(newItems) {
   /* ATV320 importé avant avec le folio dans le nom (ATV320_11M1) : c'est le même appareil, renommé ATV320_M1 */
   const propre = n => { const m = /^(ATV320_)(.+)$/.exec(n); return m ? m[1] + sansFolio(m[2]) : n; };
   const byPropre = new Map(oldE.filter(x => propre(x.nom) !== x.nom).map(x => [propre(x.nom), x])), pris = new Set(), renommes = [];
-  const rows = newItems.map(x0 => {
+  /* même appareil du dossier (type + nom du dossier) sous un autre nom : modèle du catalogue changé, ou renommé dans le projet (nom gardé) */
+  const byDos = new Map(oldE.filter(x => x.dossier).map(x => [x.type + '|' + x.dossier, x]));
+  const libre = c => c && !newN.has(c.nom) && !pris.has(c.nom);
+  const paires = newItems.map(x0 => {
     let o = byN.get(x0.nom);
-    if (!o && byPropre.has(x0.nom) && !newN.has(byPropre.get(x0.nom).nom)) { o = byPropre.get(x0.nom); pris.add(o.nom); renommes.push(o.nom + ' → ' + x0.nom); }
+    if (!o && libre(byPropre.get(x0.nom))) o = byPropre.get(x0.nom);
+    if (!o && x0.dossier && libre(byDos.get(x0.type + '|' + x0.dossier))) o = byDos.get(x0.type + '|' + x0.dossier);
+    if (o) pris.add(o.nom);
+    return { x0, o };
+  });
+  /* parents renommés (tête de bus renommée dans le projet, ou modèle du catalogue changé) : les enfants suivent */
+  const ren = new Map(paires.filter(q => q.o && q.o.nom !== q.x0.nom && q.o.nomFixe).map(q => [q.x0.nom, q.o.nom]));
+  paires.forEach(q => { if (ren.has(q.x0.parent)) q.x0 = { ...q.x0, parent: ren.get(q.x0.parent) }; });
+  /* appareil sans nom de dossier (alimentation ajoutée par l'outil) : même type sous le même parent = le même */
+  const byTP = new Map(oldE.filter(x => !x.dossier).map(x => [x.type + '|' + x.parent, x]));
+  paires.forEach(q => { if (!q.o && !q.x0.dossier && libre(byTP.get(q.x0.type + '|' + q.x0.parent))) { q.o = byTP.get(q.x0.type + '|' + q.x0.parent); pris.add(q.o.nom); } });
+  const rows = paires.map(({ x0, o }) => {
     const k = o || manN.get(x0.nom), x = k ? hwKeep(k, x0) : x0;
-    return { ...x, etat: !o ? 'nouveau' : o.nom !== x0.nom || sig(o) !== sig(x) ? 'maj' : 'ok' };
+    if (o && o.nom !== x.nom) renommes.push(o.nom + ' → ' + x.nom);
+    return { ...x, etat: !o ? 'nouveau' : o.nom !== x.nom || sig(o) !== sig(x) ? 'maj' : 'ok' };
   });
   const retires = oldE.filter(x => !newN.has(x.nom) && !pris.has(x.nom)).map(x => x.nom);
   const remplaces = man.filter(x => newN.has(x.nom)).map(x => x.nom);
@@ -2546,24 +2649,26 @@ const HW_KEEP = ['params', 'optional'];
 function hwKeep(o, x) {
   const y = { ...x };
   HW_KEEP.forEach(k => { if (o[k] != null) y[k] = o[k]; });
+  if (o.nomFixe && o.nom) { y.nom = o.nom; y.nomFixe = true; }
   if (o.nodeIdManuel && o.nodeId != null) { y.nodeId = o.nodeId; y.nodeIdManuel = true; }
   return y;
 }
-const hwClean = x => { const o = { nom: x.nom, type: x.type, parent: x.parent }; ['ip', 'nodeId', 'nodeIdManuel', 'desc', 'ref', 'moteurRef', 'auto', ...HW_KEEP].forEach(k => { if (x[k] != null && x[k] !== '') o[k] = x[k]; }); return o; };
+const hwClean = x => { const o = { nom: x.nom, type: x.type, parent: x.parent }; ['ip', 'nodeId', 'nodeIdManuel', 'desc', 'ref', 'moteurRef', 'auto', 'dossier', 'nomFixe', ...HW_KEEP].forEach(k => { if (x[k] != null && x[k] !== '') o[k] = x[k]; }); return o; };
 function hwTable(list, withState, del) {
+  const ren = del && S.hwRen != null ? S.hwRen : -1;
   return `<div class="tblwrap elecwrap"><table><thead><tr><th>Appareil</th><th>Type</th><th>Famille</th><th>Sous</th><th>IP / Node-ID</th>${withState ? '<th>Action</th>' : ''}${del ? '<th></th>' : ''}</tr></thead><tbody>${list.map((x, k) => `<tr class="${withState ? 'el-' + x.etat : ''}">
-    <td><b>${esc(x.nom)}</b>${x.desc ? `<div class="el-sub">${esc(x.desc)}</div>` : ''}${x.src === 'manuel' ? '<div class="el-sub">ajouté à la main</div>' : ''}</td>
+    <td>${ren === k ? `<div class="inp text" style="min-width:150px"><input id="hwRenIn" value="${esc(x.nom)}" autocomplete="off" aria-label="Nouveau nom"></div><div class="el-sub"><button class="btn primary" id="hwRenOk">OK</button> <button class="btn ghost" id="hwRenNo">Annuler</button></div>` : `<b>${esc(x.nom)}</b>`}${x.desc ? `<div class="el-sub">${esc(x.desc)}</div>` : ''}${x.src === 'manuel' ? '<div class="el-sub">ajouté à la main</div>' : x.nomFixe ? `<div class="el-sub">renommé ici${x.dossier && hwName(x.dossier) !== x.nom ? ' · dossier : ' + esc(x.dossier) : ''}</div>` : x.dossier && !/\{dossier\}/i.test(hwNomAuto(x.type)) && hwName(x.dossier) !== x.nom ? `<div class="el-sub">nom du catalogue · dossier : ${esc(x.dossier)}</div>` : ''}</td>
     <td>${esc(x.type)}${!hwCat()[x.type] ? ` <span class="el-warn">hors catalogue</span> <button class="btn ghost" data-hwcat="${esc(x.type)}">Ajouter au catalogue</button>` : ''}</td><td>${esc(HW_FAM(x.type))}</td><td>${esc(x.parent || '')}</td>
     <td>${esc(x.ip || (x.nodeId != null ? 'Node-ID ' + x.nodeId : ''))}</td>
     ${withState ? `<td>${x.etat === 'nouveau' ? '<b>Nouveau</b>' : x.etat === 'maj' ? 'Modifié' : '<span class="el-sub">Inchangé</span>'}</td>` : ''}
-    ${del ? `<td>${x.src === 'manuel' ? `<button class="btn ghost" data-hwdel="${k}">Retirer</button>` : ''}</td>` : ''}</tr>`).join('')}</tbody></table></div>`;
+    ${del ? `<td class="hwact">${ren === k ? '' : `<button class="btn ghost" data-hwren="${k}" title="Nom de l’appareil dans Machine Expert, pour ce projet">Renommer</button>`}${x.src === 'manuel' ? ` <button class="btn ghost" data-hwdel="${k}">Retirer</button>` : ''}</td>` : ''}</tr>`).join('')}</tbody></table></div>`;
 }
 function hwPanel() {
   const cur = curProj(), L = cur.materiel || [], heads = L.filter(x => x.type === 'TM5NS31').map(x => x.nom);
   const f = S.hwForm || (S.hwForm = { nom: '', type: 'TM5SDI12D', val: '', parent: heads[heads.length - 1] || '' });
   const cat = hwCat(), isTm5 = sousTete(cat[f.type]?.parent);
   const nAx = pAxes().filter(a => a.gamme).length;
-  return `<div class="pform elecform"><div class="memsg"><b>Matériel du projet</b> : ${L.length} appareil${L.length > 1 ? 's' : ''} que le script crée dans l’arbre de Machine Expert (« Sous » = le parent dans l’arbre), repris du dossier élec ou ajoutés ici. ${nAx ? `Les variateurs DRV_, cartes IO_ et codeurs LE_ de ${nAx} axe${nAx > 1 ? 's' : ''} brushless sont réglés dans l’onglet Brushless, les ATV320 dans l’onglet ATV320.` : ''} Un appareil du dossier se change en réimportant le dossier ; ceux ajoutés à la main restent après chaque import.</div>
+  return `<div class="pform elecform"><div class="memsg"><b>Matériel du projet</b> : ${L.length} appareil${L.length > 1 ? 's' : ''} que le script crée dans l’arbre de Machine Expert (« Sous » = le parent dans l’arbre), repris du dossier élec ou ajoutés ici. ${nAx ? `Les variateurs DRV_, cartes IO_ et codeurs LE_ de ${nAx} axe${nAx > 1 ? 's' : ''} brushless sont réglés dans l’onglet Brushless, les ATV320 dans l’onglet ATV320.` : ''} Un appareil du dossier se change en réimportant le dossier ; ceux ajoutés à la main restent après chaque import. <b>Renommer</b> change le nom de l’appareil dans Machine Expert pour ce projet (gardé à la réimportation) ; pour tous les projets, le modèle de nom se règle dans Catalogue › Matériel (« Nom dans l’automate »).</div>
     ${(() => { const m = tm5SansAlim(L); return m.length ? `<div class="warnline" style="margin:0;flex-basis:100%">Tête${m.length > 1 ? 's' : ''} de bus TM5 sans carte d’alimentation en premier : ${m.map(esc).join(', ')}. Chaque îlot TM5 commence par une carte TM5SPS. <button class="btn" id="hwFixAlim" style="margin-left:8px">Ajouter les alimentations</button></div>` : ''; })()}
     ${L.length ? hwTable(L, false, true) : '<div class="memsg">Aucun matériel : importe le dossier élec ou ajoute un appareil.</div>'}
     <span class="addlab">Ajouter un appareil à la main</span><div class="inp text" style="min-width:150px"><input id="hwNom" placeholder="Nom (ex. DI6_1)" value="${esc(f.nom)}" autocomplete="off" aria-label="Nom de l’appareil"></div>
@@ -2798,6 +2903,22 @@ function renderProj() {
     $('#hwClose').onclick = () => { S.hwView = false; renderProj(); };
     const fx = $('#hwFixAlim'); if (fx) fx.onclick = () => { const w = []; const nl = tm5Alims(L.map(x => ({ ...x })), w).map(x => x.auto && !x.src ? { ...x, src: 'manuel', apres: x.parent } : x); hwSave(nl, w.join(' · ') || 'Alimentations en place.'); };
     document.querySelectorAll('[data-hwdel]').forEach(b => { b.onclick = () => { const x = L[+b.dataset.hwdel]; hwSave(L.filter((_, k) => k !== +b.dataset.hwdel), '« ' + x.nom + ' » retiré du matériel.'); }; });
+    document.querySelectorAll('[data-hwren]').forEach(b => { b.onclick = () => { S.hwRen = +b.dataset.hwren; renderProj(); const i = $('#hwRenIn'); if (i) { i.focus(); i.select(); } }; });
+    const rn = $('#hwRenNo'); if (rn) rn.onclick = () => { S.hwRen = null; renderProj(); };
+    const ro = $('#hwRenOk'), ri = $('#hwRenIn');
+    if (ro && ri) {
+      const ok = () => {
+        const x = L[S.hwRen], nom = hwName(ri.value); if (!x) return;
+        if (!nom) { setStatus('Donne un nom à l’appareil.', true); return; }
+        if (nom === x.nom) { S.hwRen = null; renderProj(); return; }
+        if (L.some(y => y.nom === nom) || pAxes().some(a => ['DRV_', 'IO_', 'LE_'].some(p => p + a.nom === nom))) { setStatus('« ' + nom + ' » existe déjà.', true); return; }
+        const old = x.nom, nl = L.map(y => { const z = { ...y }; if (z.parent === old) z.parent = nom; if (z.apres === old) z.apres = nom; return z; });
+        nl[S.hwRen] = { ...nl[S.hwRen], nom, ...(x.src === 'manuel' ? {} : { nomFixe: true }) };
+        S.hwRen = null;
+        hwSave(nl, '« ' + old + ' » renommé « ' + nom + ' » pour ce projet' + (nl.some(y => y.parent === nom) ? ' (et ses modules rattachés)' : '') + '. Dans Machine Expert, un appareil déjà présent sous l’ancien nom (même référence) est reconnu par le script.');
+      };
+      ro.onclick = ok; ri.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); ok(); } if (e.key === 'Escape') { S.hwRen = null; renderProj(); } };
+    }
     $('#hwAdd').onclick = () => {
       const nom = hwName(f.nom); if (!nom) { setStatus('Donne un nom à l’appareil.', true); return; }
       if (L.some(x => x.nom === nom) || pAxes().some(a => 'DRV_' + a.nom === nom)) { setStatus('« ' + nom + ' » existe déjà.', true); return; }
@@ -2813,7 +2934,7 @@ function renderProj() {
       const nl = L.slice(); if (at >= 0) nl.splice(at + 1, 0, x); else nl.push(x);
       S.hwForm = { ...f, nom: '', val: '' };
       if (f.type === 'TM5NS31') {
-        const t = ALIM_TM5_TYPE(); let pn = 'PS_' + (nl.filter(y => y.type === 'TM5NS31').length); while (nl.some(y => y.nom === pn)) pn += '_';
+        const t = ALIM_TM5_TYPE(), kh = nl.filter(y => y.type === 'TM5NS31').length, pn = hwUnique(hwNommer(t, { n: nl.filter(estAlimTm5).length + 1, ilot: kh }), new Set(nl.map(y => y.nom)));
         nl.splice(nl.indexOf(x) + 1, 0, { nom: pn, type: t, parent: nom, src: 'manuel', apres: nom, auto: true });
         hwSave(nl, '« ' + nom + ' » ajouté sous ' + x.parent + ', avec sa carte d’alimentation « ' + pn + ' » (' + t + ').'); return;
       }
@@ -3010,13 +3131,14 @@ function renderAtv() {
   $('#atvNode').oninput = e => { F.node = e.target.value; };
   $('#atvAdd').onclick = () => {
     let nom = hwName(F.nom); if (!nom) { setStatus('Donne un nom à l’ATV320 (son repère, ex. M9).', true); return; }
-    if (!/^ATV/i.test(nom)) nom = 'ATV320_' + nom;
-    const l = L(); if (l.some(x => x.nom === nom)) { setStatus('« ' + nom + ' » existe déjà.', true); return; }
+    const l = L(), dossier = nom;
+    if (!/^ATV/i.test(nom)) nom = hwNommer('ATV320', { dossier, n: l.filter(x => x.type === 'ATV320').length + 1 });
+    if (l.some(x => x.nom === nom)) { setStatus('« ' + nom + ' » existe déjà.', true); return; }
     const n = F.node !== '' ? Math.round(num(F.node)) : Math.max(0, ...A.map(o => num(o.x.nodeId) || 0)) + 1;
     if (!(n >= 1 && n <= 127)) { setStatus('Node-ID entre 1 et 127.', true); return; }
     if (!l.some(x => x.type === 'CAN_Layer')) l.unshift({ nom: 'CAN_Layer', type: 'CAN_Layer', parent: 'LMC_PacDrive', src: 'manuel' }, { nom: 'CAN_Manager', type: 'CAN_Manager', parent: 'CAN_Layer', src: 'manuel', apres: 'CAN_Layer' });
     const last = l.map(x => x.type).lastIndexOf('ATV320'), at = last >= 0 ? last + 1 : l.findIndex(x => x.type === 'CAN_Manager') + 1;
-    l.splice(at, 0, { nom, type: 'ATV320', parent: 'CAN_Manager', nodeId: n, nodeIdManuel: true, src: 'manuel', apres: l[at - 1]?.nom });
+    l.splice(at, 0, { nom, dossier, type: 'ATV320', parent: 'CAN_Manager', nodeId: n, nodeIdManuel: true, src: 'manuel', apres: l[at - 1]?.nom });
     S.atvForm = { ...F, nom: '', node: '' };
     projPatch({ materiel: l }, '« ' + nom + ' » ajouté (Node-ID ' + n + ').');
   };
@@ -3205,7 +3327,7 @@ function inputHtml(f, val, prefix) {
     return `<div class="field wide"><label for="${id}">${esc(f.l)}${tag}</label>${ctrl}${box}</div>`;
   }
   const txt = f.t === 'text';
-  ctrl = `<div class="inp ${txt ? 'text' : ''}"><input id="${id}" data-k="${f.k}" ${txt ? '' : 'inputmode="decimal"'} autocomplete="off" value="${esc(val == null ? '' : (txt ? val : String(val).replace('.', ',')))}">${f.u ? `<span class="u">${esc(f.u)}</span>` : ''}</div>`;
+  ctrl = `<div class="inp ${txt ? 'text' : ''}"><input id="${id}" data-k="${f.k}" ${txt ? '' : 'inputmode="decimal"'} autocomplete="off"${f.ph ? ` placeholder="${esc(f.ph)}"` : ''} value="${esc(val == null ? '' : (txt ? val : String(val).replace('.', ',')))}">${f.u ? `<span class="u">${esc(f.u)}</span>` : ''}</div>`;
   return `<div class="field ${txt ? 'wide' : ''}"${ga}><label for="${id}"><span${f.h ? ` class="hint" title="${esc(f.h)}"` : ''}>${esc(f.l)}</span>${tag}</label>${ctrl}${f.n ? `<div class="fnote">${esc(f.n)}</div>` : ''}${box}${f.conv ? `<div class="conv"><button type="button" class="convbtn" tabindex="-1">saisir en kg·m²</button><span class="convbox" hidden><input class="convin" data-for="${id}" inputmode="decimal" placeholder="valeur en kg·m²" aria-label="Valeur en kg·m², convertie en kg·cm²"><span>kg·m² → ×10 000</span></span></div>` : ''}</div>`;
 }
 function readInput(el) { if (el.type === 'checkbox') return el.checked; const k = el.dataset.k; return NUM_KEYS.has(k) ? (num(el.value)) : el.value; }
@@ -3501,9 +3623,9 @@ function renderLib(key) {
   const brands = isM || isH ? [] : [...new Set(S[key].map(x => x.marque || 'Autres'))].sort((a, b) => a.localeCompare(b, 'fr'));
   const inBrand = S[key].filter(x => !mq || (x.marque || 'Autres') === mq);
   const series = [...new Set(inBrand.map(x => x.serie || 'Autres'))];
-  const hay = x => isH ? [x.ref, x.serie, x.alias, x.devId, x.parent, x.notes].join(' ').toLowerCase() : [x.ref, x.serie, x.marque, x.ratio != null ? 'i=' + x.ratio + ' i=' + String(x.ratio).replace('.', ',') : '', x.typeMot === 'async' ? 'asynchrone' : x.typeMot === 'sync' || isM ? 'synchrone' : ''].join(' ').toLowerCase();
+  const hay = x => isH ? [x.ref, x.serie, x.alias, x.devId, x.parent, x.notes, hwNomAuto(x.ref)].join(' ').toLowerCase() : [x.ref, x.serie, x.marque, x.ratio != null ? 'i=' + x.ratio + ' i=' + String(x.ratio).replace('.', ',') : '', x.typeMot === 'async' ? 'asynchrone' : x.typeMot === 'sync' || isM ? 'synchrone' : ''].join(' ').toLowerCase();
   const list = inBrand.filter(x => (!ser || (x.serie || 'Autres') === ser) && (!words.length || (h => words.every(w => h.includes(w)))(hay(x))));
-  const cols = isH ? [['DeviceID', x => esc([x.devType, x.devId].filter(v => v != null && v !== '').join(' / ')), ''], ['Version', x => esc(x.devVer || ''), ''], ['Parent', x => esc(x.parent || ''), '']] : isM
+  const cols = isH ? [['Nom dans l’automate', x => `<span class="mono">${esc(hwNomAuto(x.ref))}</span>`, ''], ['DeviceID', x => esc([x.devType, x.devId].filter(v => v != null && v !== '').join(' / ')), ''], ['Version', x => esc(x.devVer || ''), ''], ['Parent', x => esc(x.parent || ''), '']] : isM
     ? [['Type', x => x.typeMot === 'async' ? 'Async.' + (x.tension ? ' ' + esc(x.tension) : '') : 'Sync.', ''], ['Kt', x => fmt(num(x.kt) ?? (num(x.m0) / num(x.i0)), 3), 'Nm/A'], ['Inertie', x => fmt(num(x.jMotor), 3), 'kg·cm²'], ['Imax', x => fmt(num(x.imax), 1), 'A']]
     : [['i', x => fmt(num(x.ratio), 3), ''], ['T2B', x => fmt(num(x.t2b), 0), 'Nm'], ['J_Gear', x => fmt(num(x.jGear), 3), 'kg·cm²']];
   const used = id => isH ? (t => S.projects.filter(p => (p.materiel || []).some(m => m.type === t)).map(p => p.nom))((S[key].find(x => x.id === id) || {}).ref) : S.axes.filter(a => (isM ? a.moteurId : a.reducteurId) === id).map(a => (projName(a.projetId) ? projName(a.projetId) + ' › ' : '') + a.nom);
@@ -3523,7 +3645,7 @@ function renderLib(key) {
       ${isM || isH ? '' : `<select id="libMarque" aria-label="Marque"><option value="">Toutes les marques</option>${brands.map(g => `<option ${g === mq ? 'selected' : ''}>${esc(g)}</option>`).join('')}</select>`}
       <select id="libSerie" aria-label="Série"><option value="">${isH ? 'Toutes les familles' : 'Toutes les séries'} (${inBrand.length})</option>${series.map(g => `<option ${g === ser ? 'selected' : ''}>${esc(g)}</option>`).join('')}</select>
       ${isH ? '<label class="btn" for="meJson" style="cursor:pointer" title="Fichier explo_materiel.json du script explorer_materiel.py">Importer depuis Machine Expert</label><input type="file" id="meJson" accept=".json,application/json" hidden>' : ''}<button class="btn primary" id="libNew">+ Ajouter</button>
-      <div class="libnote">${isH ? 'Chaque type dit au script comment créer l’appareil dans Machine Expert : DeviceID (type, identifiant, version), module et parent dans l’arbre. Les fiches intégrées viennent du dictionnaire de l’Auto_Pannel ; « Importer depuis Machine Expert » lit les DeviceID d’un projet existant avec explorer_materiel.py. « Utilisé par » = projets où ce type apparaît.' : isM ? 'Fiches moteurs communes à tous les projets : Kt, inertie et courants servent aux calculs des axes. Le catalogue intégré (Schneider SH3 / ILM, Interroll) se complète ou se corrige, une fiche modifiée est gardée à la mise à jour du catalogue. Clique sur une référence pour la voir ; le bouton ? dit où trouver chaque valeur.' : 'Fiches réducteurs communes à tous les projets : rapport, couples T2B / T2N / T2Not et J_Gear servent aux calculs. Pour SEW, GearIn / GearOut exacts viennent du tableau des dents. Clique sur une référence pour la voir ; le bouton ? dit où trouver chaque valeur.'}</div></div></div>
+      <div class="libnote">${isH ? 'Chaque type dit au script comment créer l’appareil dans Machine Expert : DeviceID (type, identifiant, version), module et parent dans l’arbre. « Nom dans l’automate » = modèle du nom donné à l’appareil dans Machine Expert ({dossier} = nom du dossier élec, {n} = n° d’ordre, {ilot} = n° d’îlot TM5). Les fiches intégrées viennent du dictionnaire de l’Auto_Pannel ; « Importer depuis Machine Expert » lit les DeviceID d’un projet existant avec explorer_materiel.py. « Utilisé par » = projets où ce type apparaît.' : isM ? 'Fiches moteurs communes à tous les projets : Kt, inertie et courants servent aux calculs des axes. Le catalogue intégré (Schneider SH3 / ILM, Interroll) se complète ou se corrige, une fiche modifiée est gardée à la mise à jour du catalogue. Clique sur une référence pour la voir ; le bouton ? dit où trouver chaque valeur.' : 'Fiches réducteurs communes à tous les projets : rapport, couples T2B / T2N / T2Not et J_Gear servent aux calculs. Pour SEW, GearIn / GearOut exacts viennent du tableau des dents. Clique sur une référence pour la voir ; le bouton ? dit où trouver chaque valeur.'}</div></div></div>
     ${isH ? meImpPanel() : ''}<div class="libgrid ${ed ? 'editing' : ''}" style="margin-top:14px"><section class="panel">${table}</section>${form}</div>`;
   const ls = $('#libSearch'); ls.oninput = () => { S.search[key] = ls.value; const pos = ls.selectionStart; render(); const n = $('#libSearch'); n.focus(); try { n.setSelectionRange(pos, pos); } catch (e) {} };
   $('#libSerie').onchange = e => { S.serie[key] = e.target.value; render(); };
@@ -3533,6 +3655,7 @@ function renderLib(key) {
   if (isH) bindMeImp();
   if (!ed) return;
   const lf = $('#libForm');
+  if (isH && ['Variateur Sercos', 'Carte IO', 'Codeur'].includes(ed.serie || HW_FAM0(ed.ref || ''))) { const i = $('#lib-nomAuto'); if (i) { i.readOnly = true; i.title = 'Fixé par le script : DRV_, IO_, LE_ + repère de l’axe'; } }
   const sync = e => { const el = e.target; if (!el.dataset.k) return; S.lib[key] = { ...(S.lib[key] || {}), [el.dataset.k]: readInput(el) }; if (el.dataset.k === 'typeMot' && e.type === 'change') render(); };
   lf.addEventListener('input', sync); lf.addEventListener('change', sync);
   $('#libCancel').onclick = () => { S.lib[key] = null; S.confirm = null; render(); };
