@@ -3,11 +3,12 @@ RÉGLAGES SERVO — version hors ligne
 
 Contenu
 -------
-index.html                  Le site complet (un seul fichier). La base est déjà dedans :
-                            17 moteurs SH3, 271 réducteurs (Neugart PLFN/PLN/PLE/PLQE 120,
-                            Atlanta, SEW KH49),
-                            5 variateurs LXM62, projet 250114_Popellier avec C1, P1, P2.
-base-reglages-servo.json    La même base en fichier séparé (sauvegarde / import).
+index.html                  Le site complet (un seul fichier). Le catalogue est déjà dedans :
+                            72 moteurs (Schneider SH3 / ILM, Interroll DM), 2271 réducteurs
+                            (Neugart, Atlanta, STOBER, SEW, Wittenstein…), 5 variateurs LXM62,
+                            et les types de matériel Machine Expert (Dico de l'Auto_Pannel).
+                            Aucun projet : chacun crée les siens.
+base-reglages-servo.json    Le même catalogue en fichier séparé (sauvegarde / import).
 LISEZMOI.txt                Ce fichier.
 
 Utilisation
@@ -15,19 +16,28 @@ Utilisation
 1. Dézipper le dossier où tu veux.
 2. Ouvrir index.html avec Chrome, Edge ou Firefox (double-clic). Pas besoin d'internet
    (sans internet, la police change, c'est tout).
-3. Tout ce que tu ajoutes ou modifies est enregistré dans le navigateur de ce PC.
+3. Dans la page, le bouton « ? Aide » en haut à droite explique le parcours :
+   projet → dossier élec → réglage des axes → hardware → script Machine Expert.
+   Le bouton « ? » à côté de chaque champ dit à quoi il sert et où trouver la valeur.
+4. Tout ce que tu ajoutes ou modifies est enregistré dans le navigateur de ce PC.
 
 Sauvegarde et autre poste
 -------------------------
 - Nouvelle version du fichier index.html : les nouvelles références du catalogue
-  (moteurs, réducteurs, variateurs) s'ajoutent toutes seules à ta base, sans toucher
-  à tes projets ni à tes modifications.
+  (moteurs, réducteurs, variateurs, matériel) s'ajoutent toutes seules à ta base, sans
+  toucher à tes projets ni aux fiches que tu as modifiées (« Mettre à jour le catalogue »).
 - La base vit dans le navigateur : si tu vides les données du navigateur, elle repart
-  de la base d'origine contenue dans index.html.
+  du catalogue d'origine contenu dans index.html.
 - En bas de page : « Exporter la base » télécharge un fichier .json avec tout
-  (projets, axes, moteurs, réducteurs). Fais-le régulièrement.
+  (projets, axes, catalogues). Fais-le régulièrement.
 - « Importer une base » recharge un fichier .json exporté (remplace la base actuelle).
 - Pour passer sur un autre PC : exporter ici, importer là-bas.
+
+Dossier électrique
+------------------
+« Importer le dossier élec » lit le classeur .xlsm dans le navigateur : il n'est ni
+enregistré ni envoyé. Seuls les axes (nom, désignation, moteur, variateur) et la liste
+du matériel (nom, type, IP, Node-ID) sont gardés dans la base.
 
 Mise en ligne (optionnel)
 -------------------------
@@ -43,6 +53,9 @@ Calcul de UserCurrentLimit
 --------------------------
 Courant limite = T2B ÷ i ÷ Kt × part autorisée (80 % par défaut)
 UserCurrentLimit (%) = Courant limite ÷ Imax moteur × 100 (arrondi en dessous)
-Exemple C1 : 500 ÷ 449 ÷ 1,208 × 0,8 = 0,74 A → 0,74 ÷ 17,1 = 4,3 %
+Exemple : 500 ÷ 449 ÷ 1,208 × 0,8 = 0,74 A → 0,74 ÷ 17,1 = 4,3 %
 
-Catalogue SEW : 1502 rapports (KH19/29/39/49, K, R, S, F, W serie 7) integres dans la page. Seul le T2B des KH est pre-rempli (Mamax). Pour les autres, ouvre le reducteur et saisis T2B, J_Gear, rendement : la fiche est alors enregistree dans ta base.
+Catalogue SEW : les rapports (KH19/29/39/49, K, R, S, F, W série 7) viennent du tableau
+des dents, ce qui donne GearIn / GearOut exacts. Seul le T2B des KH est pré-rempli (Mamax).
+Pour les autres, ouvre le réducteur et saisis T2B, J_Gear, rendement : la fiche est
+alors enregistrée dans ta base.
