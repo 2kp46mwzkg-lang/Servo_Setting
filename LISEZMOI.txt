@@ -6,7 +6,8 @@ Contenu
 index.html                  Le site complet (un seul fichier). Le catalogue est déjà dedans :
                             85 moteurs (Schneider SH3 / ILM / BMP, Interroll DM), 2271 réducteurs
                             (Neugart, Atlanta, STOBER, SEW, Wittenstein…), 5 variateurs LXM62,
-                            et les types de matériel Machine Expert (Dico de l'Auto_Pannel).
+                            et les types de matériel Machine Expert (Dico de l’Auto_Pannel), plus le dictionnaire
+                            des E/S (mots du dossier → noms des variables automate).
                             Aucun projet : chacun crée les siens.
 base-reglages-servo.json    Le même catalogue en fichier séparé (sauvegarde / import).
 LISEZMOI.txt                Ce fichier.

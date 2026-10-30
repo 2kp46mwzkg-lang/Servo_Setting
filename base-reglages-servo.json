@@ -1,5 +1,5 @@
 {
- "_version": "20261029-1800",
+ "_version": "20261029-1900",
  "motors": [
   {
    "id": "ilm0701p-frein",
@@ -1066,7 +1066,8 @@
    "nMax": 3600,
    "frein": false,
    "sonde": "PTC",
-   "notes": "0.37 kW, MN 1.18 Nm, nN 3000 tr/min, IN 0.8 A, Imax 2.3 A et Mmax 3.16 Nm avec ATV32H037N4 / ATV320U04N4 (400 V), Kt 1.48 Nm/A, J 0.59 kg·cm², masse 1.6 kg. Manuel moteur BMP Schneider V1.3 (01/2017), tableau « Motor data per drive ». Moteur synchrone à aimants, 5 paires de pôles, sans codeur, piloté par ATV32 / ATV320 (loi synchrone). M0 = couple nominal MN (le manuel ne donne pas de couple à l’arrêt), I0 = courant nominal IN. Imax = courant max avec le variateur indiqué, Mmax = couple max correspondant. Sans frein ; version avec frein : lettre F en 11e position, inertie un peu plus élevée."
+   "notes": "0.37 kW, MN 1.18 Nm, nN 3000 tr/min, IN 0.8 A, Imax 2.3 A et Mmax 3.16 Nm avec ATV32H037N4 / ATV320U04N4 (400 V), Kt 1.48 Nm/A, J 0.59 kg·cm², masse 1.6 kg. Manuel moteur BMP Schneider V1.3 (01/2017), tableau « Motor data per drive ». Moteur synchrone à aimants, 5 paires de pôles, sans codeur, piloté par ATV32 / ATV320 (loi synchrone). M0 = couple nominal MN (le manuel ne donne pas de couple à l’arrêt), I0 = courant nominal IN. Imax = courant max avec le variateur indiqué, Mmax = couple max correspondant. Sans frein ; version avec frein : lettre F en 11e position, inertie un peu plus élevée.",
+   "paires": 5
   },
   {
    "id": "bmp-bmp0701r",
@@ -1082,7 +1083,8 @@
    "nMax": 3600,
    "frein": false,
    "sonde": "PTC",
-   "notes": "0.37 kW, MN 1.18 Nm, nN 3000 tr/min, IN 1.45 A, Imax 5.0 A et Mmax 3.7 Nm avec ATV32H037M2 / ATV320U04M2 (230 V), Kt 0.81 Nm/A, J 0.59 kg·cm², masse 1.6 kg. Manuel moteur BMP Schneider V1.3 (01/2017), tableau « Motor data per drive ». Moteur synchrone à aimants, 5 paires de pôles, sans codeur, piloté par ATV32 / ATV320 (loi synchrone). M0 = couple nominal MN (le manuel ne donne pas de couple à l’arrêt), I0 = courant nominal IN. Imax = courant max avec le variateur indiqué, Mmax = couple max correspondant. Sans frein ; version avec frein : lettre F en 11e position, inertie un peu plus élevée."
+   "notes": "0.37 kW, MN 1.18 Nm, nN 3000 tr/min, IN 1.45 A, Imax 5.0 A et Mmax 3.7 Nm avec ATV32H037M2 / ATV320U04M2 (230 V), Kt 0.81 Nm/A, J 0.59 kg·cm², masse 1.6 kg. Manuel moteur BMP Schneider V1.3 (01/2017), tableau « Motor data per drive ». Moteur synchrone à aimants, 5 paires de pôles, sans codeur, piloté par ATV32 / ATV320 (loi synchrone). M0 = couple nominal MN (le manuel ne donne pas de couple à l’arrêt), I0 = courant nominal IN. Imax = courant max avec le variateur indiqué, Mmax = couple max correspondant. Sans frein ; version avec frein : lettre F en 11e position, inertie un peu plus élevée.",
+   "paires": 5
   },
   {
    "id": "bmp-bmp0702f",
@@ -1098,7 +1100,8 @@
    "nMax": 3600,
    "frein": false,
    "sonde": "PTC",
-   "notes": "0.55 kW, MN 1.75 Nm, nN 3000 tr/min, IN 1.16 A, Imax 2.9 A et Mmax 4.24 Nm avec ATV32H055N4 / ATV320U06N4 (400 V), Kt 1.51 Nm/A, J 1.13 kg·cm², masse 1.8 kg. Manuel moteur BMP Schneider V1.3 (01/2017), tableau « Motor data per drive ». Moteur synchrone à aimants, 5 paires de pôles, sans codeur, piloté par ATV32 / ATV320 (loi synchrone). M0 = couple nominal MN (le manuel ne donne pas de couple à l’arrêt), I0 = courant nominal IN. Imax = courant max avec le variateur indiqué, Mmax = couple max correspondant. Sans frein ; version avec frein : lettre F en 11e position, inertie un peu plus élevée."
+   "notes": "0.55 kW, MN 1.75 Nm, nN 3000 tr/min, IN 1.16 A, Imax 2.9 A et Mmax 4.24 Nm avec ATV32H055N4 / ATV320U06N4 (400 V), Kt 1.51 Nm/A, J 1.13 kg·cm², masse 1.8 kg. Manuel moteur BMP Schneider V1.3 (01/2017), tableau « Motor data per drive ». Moteur synchrone à aimants, 5 paires de pôles, sans codeur, piloté par ATV32 / ATV320 (loi synchrone). M0 = couple nominal MN (le manuel ne donne pas de couple à l’arrêt), I0 = courant nominal IN. Imax = courant max avec le variateur indiqué, Mmax = couple max correspondant. Sans frein ; version avec frein : lettre F en 11e position, inertie un peu plus élevée.",
+   "paires": 5
   },
   {
    "id": "bmp-bmp0702r",
@@ -1114,7 +1117,8 @@
    "nMax": 3600,
    "frein": false,
    "sonde": "PTC",
-   "notes": "0.55 kW, MN 1.75 Nm, nN 3000 tr/min, IN 2.08 A, Imax 5.6 A et Mmax 4.54 Nm avec ATV32H055M2 / ATV320U06M2 (230 V), Kt 0.84 Nm/A, J 1.13 kg·cm², masse 1.8 kg. Manuel moteur BMP Schneider V1.3 (01/2017), tableau « Motor data per drive ». Moteur synchrone à aimants, 5 paires de pôles, sans codeur, piloté par ATV32 / ATV320 (loi synchrone). M0 = couple nominal MN (le manuel ne donne pas de couple à l’arrêt), I0 = courant nominal IN. Imax = courant max avec le variateur indiqué, Mmax = couple max correspondant. Sans frein ; version avec frein : lettre F en 11e position, inertie un peu plus élevée."
+   "notes": "0.55 kW, MN 1.75 Nm, nN 3000 tr/min, IN 2.08 A, Imax 5.6 A et Mmax 4.54 Nm avec ATV32H055M2 / ATV320U06M2 (230 V), Kt 0.84 Nm/A, J 1.13 kg·cm², masse 1.8 kg. Manuel moteur BMP Schneider V1.3 (01/2017), tableau « Motor data per drive ». Moteur synchrone à aimants, 5 paires de pôles, sans codeur, piloté par ATV32 / ATV320 (loi synchrone). M0 = couple nominal MN (le manuel ne donne pas de couple à l’arrêt), I0 = courant nominal IN. Imax = courant max avec le variateur indiqué, Mmax = couple max correspondant. Sans frein ; version avec frein : lettre F en 11e position, inertie un peu plus élevée.",
+   "paires": 5
   },
   {
    "id": "bmp-bmp1001f",
@@ -1130,7 +1134,8 @@
    "nMax": 3600,
    "frein": false,
    "sonde": "PTC",
-   "notes": "0.75 kW, MN 2.39 Nm, nN 3000 tr/min, IN 1.4 A, Imax 3.5 A et Mmax 5.68 Nm avec ATV32H075N4 / ATV320U07N4 (400 V), Kt 1.71 Nm/A, J 3.19 kg·cm², masse 3.34 kg. Avec ATV32HU11N4 / ATV320U11N4 : Imax 4.5 A, Mmax 7.06 Nm. Manuel moteur BMP Schneider V1.3 (01/2017), tableau « Motor data per drive ». Moteur synchrone à aimants, 5 paires de pôles, sans codeur, piloté par ATV32 / ATV320 (loi synchrone). M0 = couple nominal MN (le manuel ne donne pas de couple à l’arrêt), I0 = courant nominal IN. Imax = courant max avec le variateur indiqué, Mmax = couple max correspondant. Sans frein ; version avec frein : lettre F en 11e position, inertie un peu plus élevée."
+   "notes": "0.75 kW, MN 2.39 Nm, nN 3000 tr/min, IN 1.4 A, Imax 3.5 A et Mmax 5.68 Nm avec ATV32H075N4 / ATV320U07N4 (400 V), Kt 1.71 Nm/A, J 3.19 kg·cm², masse 3.34 kg. Avec ATV32HU11N4 / ATV320U11N4 : Imax 4.5 A, Mmax 7.06 Nm. Manuel moteur BMP Schneider V1.3 (01/2017), tableau « Motor data per drive ». Moteur synchrone à aimants, 5 paires de pôles, sans codeur, piloté par ATV32 / ATV320 (loi synchrone). M0 = couple nominal MN (le manuel ne donne pas de couple à l’arrêt), I0 = courant nominal IN. Imax = courant max avec le variateur indiqué, Mmax = couple max correspondant. Sans frein ; version avec frein : lettre F en 11e position, inertie un peu plus élevée.",
+   "paires": 5
   },
   {
    "id": "bmp-bmp1001r",
@@ -1146,7 +1151,8 @@
    "nMax": 3600,
    "frein": false,
    "sonde": "PTC",
-   "notes": "0.75 kW, MN 2.39 Nm, nN 3000 tr/min, IN 2.7 A, Imax 7.2 A et Mmax 5.99 Nm avec ATV32H075M2 / ATV320U07M2 (230 V), Kt 0.884 Nm/A, J 3.19 kg·cm², masse 3.34 kg. Manuel moteur BMP Schneider V1.3 (01/2017), tableau « Motor data per drive ». Moteur synchrone à aimants, 5 paires de pôles, sans codeur, piloté par ATV32 / ATV320 (loi synchrone). M0 = couple nominal MN (le manuel ne donne pas de couple à l’arrêt), I0 = courant nominal IN. Imax = courant max avec le variateur indiqué, Mmax = couple max correspondant. Sans frein ; version avec frein : lettre F en 11e position, inertie un peu plus élevée."
+   "notes": "0.75 kW, MN 2.39 Nm, nN 3000 tr/min, IN 2.7 A, Imax 7.2 A et Mmax 5.99 Nm avec ATV32H075M2 / ATV320U07M2 (230 V), Kt 0.884 Nm/A, J 3.19 kg·cm², masse 3.34 kg. Manuel moteur BMP Schneider V1.3 (01/2017), tableau « Motor data per drive ». Moteur synchrone à aimants, 5 paires de pôles, sans codeur, piloté par ATV32 / ATV320 (loi synchrone). M0 = couple nominal MN (le manuel ne donne pas de couple à l’arrêt), I0 = courant nominal IN. Imax = courant max avec le variateur indiqué, Mmax = couple max correspondant. Sans frein ; version avec frein : lettre F en 11e position, inertie un peu plus élevée.",
+   "paires": 5
   },
   {
    "id": "bmp-bmp1002f",
@@ -1162,7 +1168,8 @@
    "nMax": 3600,
    "frein": false,
    "sonde": "PTC",
-   "notes": "1.5 kW, MN 4.77 Nm, nN 3000 tr/min, IN 3.05 A, Imax 6.2 A et Mmax 9.33 Nm avec ATV32HU15N4 / ATV320U15N4 (400 V), Kt 1.56 Nm/A, J 6.28 kg·cm², masse 4.92 kg. Manuel moteur BMP Schneider V1.3 (01/2017), tableau « Motor data per drive ». Moteur synchrone à aimants, 5 paires de pôles, sans codeur, piloté par ATV32 / ATV320 (loi synchrone). M0 = couple nominal MN (le manuel ne donne pas de couple à l’arrêt), I0 = courant nominal IN. Imax = courant max avec le variateur indiqué, Mmax = couple max correspondant. Sans frein ; version avec frein : lettre F en 11e position, inertie un peu plus élevée."
+   "notes": "1.5 kW, MN 4.77 Nm, nN 3000 tr/min, IN 3.05 A, Imax 6.2 A et Mmax 9.33 Nm avec ATV32HU15N4 / ATV320U15N4 (400 V), Kt 1.56 Nm/A, J 6.28 kg·cm², masse 4.92 kg. Manuel moteur BMP Schneider V1.3 (01/2017), tableau « Motor data per drive ». Moteur synchrone à aimants, 5 paires de pôles, sans codeur, piloté par ATV32 / ATV320 (loi synchrone). M0 = couple nominal MN (le manuel ne donne pas de couple à l’arrêt), I0 = courant nominal IN. Imax = courant max avec le variateur indiqué, Mmax = couple max correspondant. Sans frein ; version avec frein : lettre F en 11e position, inertie un peu plus élevée.",
+   "paires": 5
   },
   {
    "id": "bmp-bmp1002r",
@@ -1178,7 +1185,8 @@
    "nMax": 3600,
    "frein": false,
    "sonde": "PTC",
-   "notes": "1.5 kW, MN 4.77 Nm, nN 3000 tr/min, IN 5.72 A, Imax 12.0 A et Mmax 9.6 Nm avec ATV32HU15M2 / ATV320U15M2 (230 V), Kt 0.83 Nm/A, J 6.28 kg·cm², masse 4.92 kg. Avec ATV32HU11M2 : 1.1 kW, MN 3.50 Nm, IN 4.20 A, Imax 10.4 A, Mmax 8.43 Nm. Manuel moteur BMP Schneider V1.3 (01/2017), tableau « Motor data per drive ». Moteur synchrone à aimants, 5 paires de pôles, sans codeur, piloté par ATV32 / ATV320 (loi synchrone). M0 = couple nominal MN (le manuel ne donne pas de couple à l’arrêt), I0 = courant nominal IN. Imax = courant max avec le variateur indiqué, Mmax = couple max correspondant. Sans frein ; version avec frein : lettre F en 11e position, inertie un peu plus élevée."
+   "notes": "1.5 kW, MN 4.77 Nm, nN 3000 tr/min, IN 5.72 A, Imax 12.0 A et Mmax 9.6 Nm avec ATV32HU15M2 / ATV320U15M2 (230 V), Kt 0.83 Nm/A, J 6.28 kg·cm², masse 4.92 kg. Avec ATV32HU11M2 : 1.1 kW, MN 3.50 Nm, IN 4.20 A, Imax 10.4 A, Mmax 8.43 Nm. Manuel moteur BMP Schneider V1.3 (01/2017), tableau « Motor data per drive ». Moteur synchrone à aimants, 5 paires de pôles, sans codeur, piloté par ATV32 / ATV320 (loi synchrone). M0 = couple nominal MN (le manuel ne donne pas de couple à l’arrêt), I0 = courant nominal IN. Imax = courant max avec le variateur indiqué, Mmax = couple max correspondant. Sans frein ; version avec frein : lettre F en 11e position, inertie un peu plus élevée.",
+   "paires": 5
   },
   {
    "id": "bmp-bmp1401c",
@@ -1194,7 +1202,8 @@
    "nMax": 1800,
    "frein": false,
    "sonde": "PTC",
-   "notes": "1.1 kW, MN 7.0 Nm, nN 1500 tr/min, IN 2.29 A, Imax 4.5 A et Mmax 13.49 Nm avec ATV32HU11N4 / ATV320U11N4 (400 V), Kt 3.06 Nm/A, J 16.46 kg·cm², masse 8.0 kg. Avec ATV32HU15N4 : Imax 6.2 A, Mmax 18.05 Nm. Manuel moteur BMP Schneider V1.3 (01/2017), tableau « Motor data per drive ». Moteur synchrone à aimants, 5 paires de pôles, sans codeur, piloté par ATV32 / ATV320 (loi synchrone). M0 = couple nominal MN (le manuel ne donne pas de couple à l’arrêt), I0 = courant nominal IN. Imax = courant max avec le variateur indiqué, Mmax = couple max correspondant. Sans frein ; version avec frein : lettre F en 11e position, inertie un peu plus élevée."
+   "notes": "1.1 kW, MN 7.0 Nm, nN 1500 tr/min, IN 2.29 A, Imax 4.5 A et Mmax 13.49 Nm avec ATV32HU11N4 / ATV320U11N4 (400 V), Kt 3.06 Nm/A, J 16.46 kg·cm², masse 8.0 kg. Avec ATV32HU15N4 : Imax 6.2 A, Mmax 18.05 Nm. Manuel moteur BMP Schneider V1.3 (01/2017), tableau « Motor data per drive ». Moteur synchrone à aimants, 5 paires de pôles, sans codeur, piloté par ATV32 / ATV320 (loi synchrone). M0 = couple nominal MN (le manuel ne donne pas de couple à l’arrêt), I0 = courant nominal IN. Imax = courant max avec le variateur indiqué, Mmax = couple max correspondant. Sans frein ; version avec frein : lettre F en 11e position, inertie un peu plus élevée.",
+   "paires": 5
   },
   {
    "id": "bmp-bmp1401f",
@@ -1210,7 +1219,8 @@
    "nMax": 3600,
    "frein": false,
    "sonde": "PTC",
-   "notes": "2.0 kW, MN 6.37 Nm, nN 3000 tr/min, IN 4.12 A, Imax 8.3 A et Mmax 12.65 Nm avec ATV32HU22N4 / ATV320U22N4 (400 V, 3000 tr/min), Kt 1.55 Nm/A, J 16.46 kg·cm², masse 8.0 kg. Sur 230 V (ATV32HU11M2 / HU15M2) : 1.1 kW, MN 7.00 Nm à 1500 tr/min, IN 4.42 A, Imax 10.4 / 12.0 A, Mmax 15.95 / 18.15 Nm, Kt 1.58. Manuel moteur BMP Schneider V1.3 (01/2017), tableau « Motor data per drive ». Moteur synchrone à aimants, 5 paires de pôles, sans codeur, piloté par ATV32 / ATV320 (loi synchrone). M0 = couple nominal MN (le manuel ne donne pas de couple à l’arrêt), I0 = courant nominal IN. Imax = courant max avec le variateur indiqué, Mmax = couple max correspondant. Sans frein ; version avec frein : lettre F en 11e position, inertie un peu plus élevée."
+   "notes": "2.0 kW, MN 6.37 Nm, nN 3000 tr/min, IN 4.12 A, Imax 8.3 A et Mmax 12.65 Nm avec ATV32HU22N4 / ATV320U22N4 (400 V, 3000 tr/min), Kt 1.55 Nm/A, J 16.46 kg·cm², masse 8.0 kg. Sur 230 V (ATV32HU11M2 / HU15M2) : 1.1 kW, MN 7.00 Nm à 1500 tr/min, IN 4.42 A, Imax 10.4 / 12.0 A, Mmax 15.95 / 18.15 Nm, Kt 1.58. Manuel moteur BMP Schneider V1.3 (01/2017), tableau « Motor data per drive ». Moteur synchrone à aimants, 5 paires de pôles, sans codeur, piloté par ATV32 / ATV320 (loi synchrone). M0 = couple nominal MN (le manuel ne donne pas de couple à l’arrêt), I0 = courant nominal IN. Imax = courant max avec le variateur indiqué, Mmax = couple max correspondant. Sans frein ; version avec frein : lettre F en 11e position, inertie un peu plus élevée.",
+   "paires": 5
   },
   {
    "id": "bmp-bmp1401r",
@@ -1226,7 +1236,8 @@
    "nMax": 3600,
    "frein": false,
    "sonde": "PTC",
-   "notes": "2.0 kW, MN 6.37 Nm, nN 3000 tr/min, IN 7.74 A, Imax 16.5 A et Mmax 13.28 Nm avec ATV32HU22M2 / ATV320U22M2 (230 V), Kt 0.82 Nm/A, J 16.46 kg·cm², masse 8.0 kg. Manuel moteur BMP Schneider V1.3 (01/2017), tableau « Motor data per drive ». Moteur synchrone à aimants, 5 paires de pôles, sans codeur, piloté par ATV32 / ATV320 (loi synchrone). M0 = couple nominal MN (le manuel ne donne pas de couple à l’arrêt), I0 = courant nominal IN. Imax = courant max avec le variateur indiqué, Mmax = couple max correspondant. Sans frein ; version avec frein : lettre F en 11e position, inertie un peu plus élevée."
+   "notes": "2.0 kW, MN 6.37 Nm, nN 3000 tr/min, IN 7.74 A, Imax 16.5 A et Mmax 13.28 Nm avec ATV32HU22M2 / ATV320U22M2 (230 V), Kt 0.82 Nm/A, J 16.46 kg·cm², masse 8.0 kg. Manuel moteur BMP Schneider V1.3 (01/2017), tableau « Motor data per drive ». Moteur synchrone à aimants, 5 paires de pôles, sans codeur, piloté par ATV32 / ATV320 (loi synchrone). M0 = couple nominal MN (le manuel ne donne pas de couple à l’arrêt), I0 = courant nominal IN. Imax = courant max avec le variateur indiqué, Mmax = couple max correspondant. Sans frein ; version avec frein : lettre F en 11e position, inertie un peu plus élevée.",
+   "paires": 5
   },
   {
    "id": "bmp-bmp1402c",
@@ -1242,7 +1253,8 @@
    "nMax": 1800,
    "frein": false,
    "sonde": "PTC",
-   "notes": "2.2 kW, MN 14.01 Nm, nN 1500 tr/min, IN 4.83 A, Imax 8.3 A et Mmax 23.51 Nm avec ATV32HU22N4 / ATV320U22N4 (400 V), Kt 2.9 Nm/A, J 32.0 kg·cm², masse 12.0 kg. Le manuel indique nmax 3600 tr/min pour cette ligne (incohérent avec 1500 nominal) : 1800 retenu. Manuel moteur BMP Schneider V1.3 (01/2017), tableau « Motor data per drive ». Moteur synchrone à aimants, 5 paires de pôles, sans codeur, piloté par ATV32 / ATV320 (loi synchrone). M0 = couple nominal MN (le manuel ne donne pas de couple à l’arrêt), I0 = courant nominal IN. Imax = courant max avec le variateur indiqué, Mmax = couple max correspondant. Sans frein ; version avec frein : lettre F en 11e position, inertie un peu plus élevée."
+   "notes": "2.2 kW, MN 14.01 Nm, nN 1500 tr/min, IN 4.83 A, Imax 8.3 A et Mmax 23.51 Nm avec ATV32HU22N4 / ATV320U22N4 (400 V), Kt 2.9 Nm/A, J 32.0 kg·cm², masse 12.0 kg. Le manuel indique nmax 3600 tr/min pour cette ligne (incohérent avec 1500 nominal) : 1800 retenu. Manuel moteur BMP Schneider V1.3 (01/2017), tableau « Motor data per drive ». Moteur synchrone à aimants, 5 paires de pôles, sans codeur, piloté par ATV32 / ATV320 (loi synchrone). M0 = couple nominal MN (le manuel ne donne pas de couple à l’arrêt), I0 = courant nominal IN. Imax = courant max avec le variateur indiqué, Mmax = couple max correspondant. Sans frein ; version avec frein : lettre F en 11e position, inertie un peu plus élevée.",
+   "paires": 5
   },
   {
    "id": "bmp-bmp1402f",
@@ -1258,7 +1270,8 @@
    "nMax": 3600,
    "frein": false,
    "sonde": "PTC",
-   "notes": "3.0 kW, MN 9.55 Nm, nN 3000 tr/min, IN 6.45 A, Imax 10.7 A et Mmax 15.84 Nm avec ATV32HU30N4 / ATV320U30N4 (400 V, 3000 tr/min), Kt 1.48 Nm/A, J 32.0 kg·cm², masse 12.0 kg. Avec ATV32HU40N4 : Imax 14.3 A, Mmax 20.83 Nm. Sur 230 V (ATV32HU22M2) : 2.2 kW, MN 14.01 Nm à 1500 tr/min, IN 9.24 A, Imax 16.5 A, Mmax 24.34 Nm, Kt 1.52. Manuel moteur BMP Schneider V1.3 (01/2017), tableau « Motor data per drive ». Moteur synchrone à aimants, 5 paires de pôles, sans codeur, piloté par ATV32 / ATV320 (loi synchrone). M0 = couple nominal MN (le manuel ne donne pas de couple à l’arrêt), I0 = courant nominal IN. Imax = courant max avec le variateur indiqué, Mmax = couple max correspondant. Sans frein ; version avec frein : lettre F en 11e position, inertie un peu plus élevée."
+   "notes": "3.0 kW, MN 9.55 Nm, nN 3000 tr/min, IN 6.45 A, Imax 10.7 A et Mmax 15.84 Nm avec ATV32HU30N4 / ATV320U30N4 (400 V, 3000 tr/min), Kt 1.48 Nm/A, J 32.0 kg·cm², masse 12.0 kg. Avec ATV32HU40N4 : Imax 14.3 A, Mmax 20.83 Nm. Sur 230 V (ATV32HU22M2) : 2.2 kW, MN 14.01 Nm à 1500 tr/min, IN 9.24 A, Imax 16.5 A, Mmax 24.34 Nm, Kt 1.52. Manuel moteur BMP Schneider V1.3 (01/2017), tableau « Motor data per drive ». Moteur synchrone à aimants, 5 paires de pôles, sans codeur, piloté par ATV32 / ATV320 (loi synchrone). M0 = couple nominal MN (le manuel ne donne pas de couple à l’arrêt), I0 = courant nominal IN. Imax = courant max avec le variateur indiqué, Mmax = couple max correspondant. Sans frein ; version avec frein : lettre F en 11e position, inertie un peu plus élevée.",
+   "paires": 5
   }
  ],
  "reducers": [
