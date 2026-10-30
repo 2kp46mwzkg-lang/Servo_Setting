@@ -1,5 +1,5 @@
 {
- "_version": "20261029-1900",
+ "_version": "20261030-1200",
  "motors": [
   {
    "id": "ilm0701p-frein",
@@ -29067,6 +29067,336 @@
    "notes": "Catalogue PacDrive 3 (Schneider, 2018). Courant permanent à 8 kHz ; il baisse à 16 kHz. MaxDrivePeakCurrent du variateur fait foi.",
    "ref": "LXM62DU60",
    "serie": "Lexium 62"
+  },
+  {
+   "id": "atv320-u04n4",
+   "ref": "ATV320U04N4",
+   "serie": "ATV320",
+   "puissance": 0.37,
+   "tension": "380–500 V triphasé",
+   "iNom": 1.5,
+   "iPeak": 2.2,
+   "format": "Compact (C) ou Book (B) : même calibre",
+   "notes": "ATV320 U04 380–500 V triphasé : In 1.5 A (courant nominal de sortie), surcharge transitoire 150 % pendant 60 s -> Imax 2.2 A. Référence complète du dossier : + C (compact) ou B (book). Valeurs recoupées avec le tableau moteur BMP (Imax par variateur)."
+  },
+  {
+   "id": "atv320-u06n4",
+   "ref": "ATV320U06N4",
+   "serie": "ATV320",
+   "puissance": 0.55,
+   "tension": "380–500 V triphasé",
+   "iNom": 1.9,
+   "iPeak": 2.8,
+   "format": "Compact (C) ou Book (B) : même calibre",
+   "notes": "ATV320 U06 380–500 V triphasé : In 1.9 A (courant nominal de sortie), surcharge transitoire 150 % pendant 60 s -> Imax 2.8 A. Référence complète du dossier : + C (compact) ou B (book). Valeurs recoupées avec le tableau moteur BMP (Imax par variateur)."
+  },
+  {
+   "id": "atv320-u07n4",
+   "ref": "ATV320U07N4",
+   "serie": "ATV320",
+   "puissance": 0.75,
+   "tension": "380–500 V triphasé",
+   "iNom": 2.3,
+   "iPeak": 3.4,
+   "format": "Compact (C) ou Book (B) : même calibre",
+   "notes": "ATV320 U07 380–500 V triphasé : In 2.3 A (courant nominal de sortie), surcharge transitoire 150 % pendant 60 s -> Imax 3.4 A. Référence complète du dossier : + C (compact) ou B (book). Valeurs recoupées avec le tableau moteur BMP (Imax par variateur)."
+  },
+  {
+   "id": "atv320-u11n4",
+   "ref": "ATV320U11N4",
+   "serie": "ATV320",
+   "puissance": 1.1,
+   "tension": "380–500 V triphasé",
+   "iNom": 3.0,
+   "iPeak": 4.5,
+   "format": "Compact (C) ou Book (B) : même calibre",
+   "notes": "ATV320 U11 380–500 V triphasé : In 3.0 A (courant nominal de sortie), surcharge transitoire 150 % pendant 60 s -> Imax 4.5 A. Référence complète du dossier : + C (compact) ou B (book). Valeurs recoupées avec le tableau moteur BMP (Imax par variateur)."
+  },
+  {
+   "id": "atv320-u15n4",
+   "ref": "ATV320U15N4",
+   "serie": "ATV320",
+   "puissance": 1.5,
+   "tension": "380–500 V triphasé",
+   "iNom": 4.1,
+   "iPeak": 6.1,
+   "format": "Compact (C) ou Book (B) : même calibre",
+   "notes": "ATV320 U15 380–500 V triphasé : In 4.1 A (courant nominal de sortie), surcharge transitoire 150 % pendant 60 s -> Imax 6.1 A. Référence complète du dossier : + C (compact) ou B (book). Valeurs recoupées avec le tableau moteur BMP (Imax par variateur)."
+  },
+  {
+   "id": "atv320-u22n4",
+   "ref": "ATV320U22N4",
+   "serie": "ATV320",
+   "puissance": 2.2,
+   "tension": "380–500 V triphasé",
+   "iNom": 5.5,
+   "iPeak": 8.2,
+   "format": "Compact (C) ou Book (B) : même calibre",
+   "notes": "ATV320 U22 380–500 V triphasé : In 5.5 A (courant nominal de sortie), surcharge transitoire 150 % pendant 60 s -> Imax 8.2 A. Référence complète du dossier : + C (compact) ou B (book). Valeurs recoupées avec le tableau moteur BMP (Imax par variateur)."
+  },
+  {
+   "id": "atv320-u30n4",
+   "ref": "ATV320U30N4",
+   "serie": "ATV320",
+   "puissance": 3.0,
+   "tension": "380–500 V triphasé",
+   "iNom": 7.1,
+   "iPeak": 10.6,
+   "format": "Compact (C) ou Book (B) : même calibre",
+   "notes": "ATV320 U30 380–500 V triphasé : In 7.1 A (courant nominal de sortie), surcharge transitoire 150 % pendant 60 s -> Imax 10.6 A. Référence complète du dossier : + C (compact) ou B (book). Valeurs recoupées avec le tableau moteur BMP (Imax par variateur)."
+  },
+  {
+   "id": "atv320-u40n4",
+   "ref": "ATV320U40N4",
+   "serie": "ATV320",
+   "puissance": 4.0,
+   "tension": "380–500 V triphasé",
+   "iNom": 9.5,
+   "iPeak": 14.2,
+   "format": "Compact (C) ou Book (B) : même calibre",
+   "notes": "ATV320 U40 380–500 V triphasé : In 9.5 A (courant nominal de sortie), surcharge transitoire 150 % pendant 60 s -> Imax 14.2 A. Référence complète du dossier : + C (compact) ou B (book). Valeurs recoupées avec le tableau moteur BMP (Imax par variateur)."
+  },
+  {
+   "id": "atv320-u55n4",
+   "ref": "ATV320U55N4",
+   "serie": "ATV320",
+   "puissance": 5.5,
+   "tension": "380–500 V triphasé",
+   "iNom": 14.3,
+   "iPeak": 21.5,
+   "format": "Compact (C) ou Book (B) : même calibre",
+   "notes": "ATV320 U55 380–500 V triphasé : In 14.3 A (courant nominal de sortie), surcharge transitoire 150 % pendant 60 s -> Imax 21.5 A. Référence complète du dossier : + C (compact) ou B (book). Catalogue ATV320, à vérifier sur la plaque."
+  },
+  {
+   "id": "atv320-u75n4",
+   "ref": "ATV320U75N4",
+   "serie": "ATV320",
+   "puissance": 7.5,
+   "tension": "380–500 V triphasé",
+   "iNom": 17.0,
+   "iPeak": 25.5,
+   "format": "Compact (C) ou Book (B) : même calibre",
+   "notes": "ATV320 U75 380–500 V triphasé : In 17.0 A (courant nominal de sortie), surcharge transitoire 150 % pendant 60 s -> Imax 25.5 A. Référence complète du dossier : + C (compact) ou B (book). Catalogue ATV320, à vérifier sur la plaque."
+  },
+  {
+   "id": "atv320-d11n4",
+   "ref": "ATV320D11N4",
+   "serie": "ATV320",
+   "puissance": 11.0,
+   "tension": "380–500 V triphasé",
+   "iNom": 27.7,
+   "iPeak": 41.5,
+   "format": "Compact (C) ou Book (B) : même calibre",
+   "notes": "ATV320 D11 380–500 V triphasé : In 27.7 A (courant nominal de sortie), surcharge transitoire 150 % pendant 60 s -> Imax 41.5 A. Référence complète du dossier : + C (compact) ou B (book). Catalogue ATV320, à vérifier sur la plaque."
+  },
+  {
+   "id": "atv320-d15n4",
+   "ref": "ATV320D15N4",
+   "serie": "ATV320",
+   "puissance": 15.0,
+   "tension": "380–500 V triphasé",
+   "iNom": 33.0,
+   "iPeak": 49.5,
+   "format": "Compact (C) ou Book (B) : même calibre",
+   "notes": "ATV320 D15 380–500 V triphasé : In 33.0 A (courant nominal de sortie), surcharge transitoire 150 % pendant 60 s -> Imax 49.5 A. Référence complète du dossier : + C (compact) ou B (book). Catalogue ATV320, à vérifier sur la plaque."
+  },
+  {
+   "id": "atv320-u02m2",
+   "ref": "ATV320U02M2",
+   "serie": "ATV320",
+   "puissance": 0.18,
+   "tension": "200–240 V monophasé",
+   "iNom": 1.5,
+   "iPeak": 2.2,
+   "format": "Compact (C) ou Book (B) : même calibre",
+   "notes": "ATV320 U02 200–240 V monophasé : In 1.5 A (courant nominal de sortie), surcharge transitoire 150 % pendant 60 s -> Imax 2.2 A. Référence complète du dossier : + C (compact) ou B (book). Catalogue ATV320, à vérifier sur la plaque."
+  },
+  {
+   "id": "atv320-u04m2",
+   "ref": "ATV320U04M2",
+   "serie": "ATV320",
+   "puissance": 0.37,
+   "tension": "200–240 V monophasé",
+   "iNom": 3.3,
+   "iPeak": 4.9,
+   "format": "Compact (C) ou Book (B) : même calibre",
+   "notes": "ATV320 U04 200–240 V monophasé : In 3.3 A (courant nominal de sortie), surcharge transitoire 150 % pendant 60 s -> Imax 4.9 A. Référence complète du dossier : + C (compact) ou B (book). Valeurs recoupées avec le tableau moteur BMP (Imax par variateur)."
+  },
+  {
+   "id": "atv320-u06m2",
+   "ref": "ATV320U06M2",
+   "serie": "ATV320",
+   "puissance": 0.55,
+   "tension": "200–240 V monophasé",
+   "iNom": 3.7,
+   "iPeak": 5.6,
+   "format": "Compact (C) ou Book (B) : même calibre",
+   "notes": "ATV320 U06 200–240 V monophasé : In 3.7 A (courant nominal de sortie), surcharge transitoire 150 % pendant 60 s -> Imax 5.6 A. Référence complète du dossier : + C (compact) ou B (book). Valeurs recoupées avec le tableau moteur BMP (Imax par variateur)."
+  },
+  {
+   "id": "atv320-u07m2",
+   "ref": "ATV320U07M2",
+   "serie": "ATV320",
+   "puissance": 0.75,
+   "tension": "200–240 V monophasé",
+   "iNom": 4.8,
+   "iPeak": 7.2,
+   "format": "Compact (C) ou Book (B) : même calibre",
+   "notes": "ATV320 U07 200–240 V monophasé : In 4.8 A (courant nominal de sortie), surcharge transitoire 150 % pendant 60 s -> Imax 7.2 A. Référence complète du dossier : + C (compact) ou B (book). Valeurs recoupées avec le tableau moteur BMP (Imax par variateur)."
+  },
+  {
+   "id": "atv320-u11m2",
+   "ref": "ATV320U11M2",
+   "serie": "ATV320",
+   "puissance": 1.1,
+   "tension": "200–240 V monophasé",
+   "iNom": 6.9,
+   "iPeak": 10.4,
+   "format": "Compact (C) ou Book (B) : même calibre",
+   "notes": "ATV320 U11 200–240 V monophasé : In 6.9 A (courant nominal de sortie), surcharge transitoire 150 % pendant 60 s -> Imax 10.4 A. Référence complète du dossier : + C (compact) ou B (book). Valeurs recoupées avec le tableau moteur BMP (Imax par variateur)."
+  },
+  {
+   "id": "atv320-u15m2",
+   "ref": "ATV320U15M2",
+   "serie": "ATV320",
+   "puissance": 1.5,
+   "tension": "200–240 V monophasé",
+   "iNom": 8.0,
+   "iPeak": 12.0,
+   "format": "Compact (C) ou Book (B) : même calibre",
+   "notes": "ATV320 U15 200–240 V monophasé : In 8.0 A (courant nominal de sortie), surcharge transitoire 150 % pendant 60 s -> Imax 12.0 A. Référence complète du dossier : + C (compact) ou B (book). Valeurs recoupées avec le tableau moteur BMP (Imax par variateur)."
+  },
+  {
+   "id": "atv320-u22m2",
+   "ref": "ATV320U22M2",
+   "serie": "ATV320",
+   "puissance": 2.2,
+   "tension": "200–240 V monophasé",
+   "iNom": 11.0,
+   "iPeak": 16.5,
+   "format": "Compact (C) ou Book (B) : même calibre",
+   "notes": "ATV320 U22 200–240 V monophasé : In 11.0 A (courant nominal de sortie), surcharge transitoire 150 % pendant 60 s -> Imax 16.5 A. Référence complète du dossier : + C (compact) ou B (book). Valeurs recoupées avec le tableau moteur BMP (Imax par variateur)."
+  },
+  {
+   "id": "atv320-u02m3",
+   "ref": "ATV320U02M3",
+   "serie": "ATV320",
+   "puissance": 0.18,
+   "tension": "200–240 V triphasé",
+   "iNom": 1.5,
+   "iPeak": 2.2,
+   "format": "Compact (C) ou Book (B) : même calibre",
+   "notes": "ATV320 U02 200–240 V triphasé : In 1.5 A (courant nominal de sortie), surcharge transitoire 150 % pendant 60 s -> Imax 2.2 A. Référence complète du dossier : + C (compact) ou B (book). Catalogue ATV320, à vérifier sur la plaque."
+  },
+  {
+   "id": "atv320-u04m3",
+   "ref": "ATV320U04M3",
+   "serie": "ATV320",
+   "puissance": 0.37,
+   "tension": "200–240 V triphasé",
+   "iNom": 3.3,
+   "iPeak": 4.9,
+   "format": "Compact (C) ou Book (B) : même calibre",
+   "notes": "ATV320 U04 200–240 V triphasé : In 3.3 A (courant nominal de sortie), surcharge transitoire 150 % pendant 60 s -> Imax 4.9 A. Référence complète du dossier : + C (compact) ou B (book). Catalogue ATV320, à vérifier sur la plaque."
+  },
+  {
+   "id": "atv320-u06m3",
+   "ref": "ATV320U06M3",
+   "serie": "ATV320",
+   "puissance": 0.55,
+   "tension": "200–240 V triphasé",
+   "iNom": 3.7,
+   "iPeak": 5.6,
+   "format": "Compact (C) ou Book (B) : même calibre",
+   "notes": "ATV320 U06 200–240 V triphasé : In 3.7 A (courant nominal de sortie), surcharge transitoire 150 % pendant 60 s -> Imax 5.6 A. Référence complète du dossier : + C (compact) ou B (book). Catalogue ATV320, à vérifier sur la plaque."
+  },
+  {
+   "id": "atv320-u07m3",
+   "ref": "ATV320U07M3",
+   "serie": "ATV320",
+   "puissance": 0.75,
+   "tension": "200–240 V triphasé",
+   "iNom": 4.8,
+   "iPeak": 7.2,
+   "format": "Compact (C) ou Book (B) : même calibre",
+   "notes": "ATV320 U07 200–240 V triphasé : In 4.8 A (courant nominal de sortie), surcharge transitoire 150 % pendant 60 s -> Imax 7.2 A. Référence complète du dossier : + C (compact) ou B (book). Catalogue ATV320, à vérifier sur la plaque."
+  },
+  {
+   "id": "atv320-u11m3",
+   "ref": "ATV320U11M3",
+   "serie": "ATV320",
+   "puissance": 1.1,
+   "tension": "200–240 V triphasé",
+   "iNom": 6.9,
+   "iPeak": 10.4,
+   "format": "Compact (C) ou Book (B) : même calibre",
+   "notes": "ATV320 U11 200–240 V triphasé : In 6.9 A (courant nominal de sortie), surcharge transitoire 150 % pendant 60 s -> Imax 10.4 A. Référence complète du dossier : + C (compact) ou B (book). Catalogue ATV320, à vérifier sur la plaque."
+  },
+  {
+   "id": "atv320-u15m3",
+   "ref": "ATV320U15M3",
+   "serie": "ATV320",
+   "puissance": 1.5,
+   "tension": "200–240 V triphasé",
+   "iNom": 8.0,
+   "iPeak": 12.0,
+   "format": "Compact (C) ou Book (B) : même calibre",
+   "notes": "ATV320 U15 200–240 V triphasé : In 8.0 A (courant nominal de sortie), surcharge transitoire 150 % pendant 60 s -> Imax 12.0 A. Référence complète du dossier : + C (compact) ou B (book). Catalogue ATV320, à vérifier sur la plaque."
+  },
+  {
+   "id": "atv320-u22m3",
+   "ref": "ATV320U22M3",
+   "serie": "ATV320",
+   "puissance": 2.2,
+   "tension": "200–240 V triphasé",
+   "iNom": 11.0,
+   "iPeak": 16.5,
+   "format": "Compact (C) ou Book (B) : même calibre",
+   "notes": "ATV320 U22 200–240 V triphasé : In 11.0 A (courant nominal de sortie), surcharge transitoire 150 % pendant 60 s -> Imax 16.5 A. Référence complète du dossier : + C (compact) ou B (book). Catalogue ATV320, à vérifier sur la plaque."
+  },
+  {
+   "id": "atv320-u30m3",
+   "ref": "ATV320U30M3",
+   "serie": "ATV320",
+   "puissance": 3.0,
+   "tension": "200–240 V triphasé",
+   "iNom": 13.7,
+   "iPeak": 20.5,
+   "format": "Compact (C) ou Book (B) : même calibre",
+   "notes": "ATV320 U30 200–240 V triphasé : In 13.7 A (courant nominal de sortie), surcharge transitoire 150 % pendant 60 s -> Imax 20.5 A. Référence complète du dossier : + C (compact) ou B (book). Catalogue ATV320, à vérifier sur la plaque."
+  },
+  {
+   "id": "atv320-u40m3",
+   "ref": "ATV320U40M3",
+   "serie": "ATV320",
+   "puissance": 4.0,
+   "tension": "200–240 V triphasé",
+   "iNom": 17.5,
+   "iPeak": 26.2,
+   "format": "Compact (C) ou Book (B) : même calibre",
+   "notes": "ATV320 U40 200–240 V triphasé : In 17.5 A (courant nominal de sortie), surcharge transitoire 150 % pendant 60 s -> Imax 26.2 A. Référence complète du dossier : + C (compact) ou B (book). Catalogue ATV320, à vérifier sur la plaque."
+  },
+  {
+   "id": "atv320-u55m3",
+   "ref": "ATV320U55M3",
+   "serie": "ATV320",
+   "puissance": 5.5,
+   "tension": "200–240 V triphasé",
+   "iNom": 27.5,
+   "iPeak": 41.2,
+   "format": "Compact (C) ou Book (B) : même calibre",
+   "notes": "ATV320 U55 200–240 V triphasé : In 27.5 A (courant nominal de sortie), surcharge transitoire 150 % pendant 60 s -> Imax 41.2 A. Référence complète du dossier : + C (compact) ou B (book). Catalogue ATV320, à vérifier sur la plaque."
+  },
+  {
+   "id": "atv320-u75m3",
+   "ref": "ATV320U75M3",
+   "serie": "ATV320",
+   "puissance": 7.5,
+   "tension": "200–240 V triphasé",
+   "iNom": 33.0,
+   "iPeak": 49.5,
+   "format": "Compact (C) ou Book (B) : même calibre",
+   "notes": "ATV320 U75 200–240 V triphasé : In 33.0 A (courant nominal de sortie), surcharge transitoire 150 % pendant 60 s -> Imax 49.5 A. Référence complète du dossier : + C (compact) ou B (book). Catalogue ATV320, à vérifier sur la plaque."
   }
  ],
  "hwtypes": [
