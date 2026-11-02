@@ -21,7 +21,7 @@ reglages-servo/
 │   ├─ moteurs_brushless.js       Moteurs synchrones : Schneider SH3 / ILM (Lexium 62), BMP, tambours
 │   │                             NGI MTS62 et Interroll DM synchrones (sur ATV320). Onglet Brushless.
 │   ├─ moteurs_asynchrones.js     Moteurs asynchrones : SEW DRN (IE3, 2/4/6/8 pôles), Leroy-Somer LSES,
-│   │                             Interroll DM 0080. Onglet Asynchrones (plaque pour l'ATV320).
+│   │                             Interroll DM 0080 et DM 0113. Onglet Asynchrones (plaque pour l'ATV320).
 │   ├─ reducteurs.js              Réducteurs (Neugart, Atlanta, STOBER, Wittenstein, Interroll, NGI…).
 │   │                             Les SEW viennent du tableau des dents dans app.js (sewCatalog).
 │   ├─ variateurs.js              Variateurs : LXM62, ATV320 (In, Imax, puissance).
@@ -103,7 +103,18 @@ Courant limite = T2B ÷ i ÷ Kt × part autorisée (80 % par défaut)
 UserCurrentLimit (%) = Courant limite ÷ Imax moteur × 100 (arrondi en dessous)
 Exemple : 500 ÷ 449 ÷ 1,208 × 0,8 = 0,74 A → 0,74 ÷ 17,1 = 4,3 %
 
-Catalogue SEW : les rapports (KH19/29/39/49, K, R, S, F, W série 7) viennent du tableau
-des dents, ce qui donne GearIn / GearOut exacts. Seul le T2B des KH est pré-rempli (Mamax).
-Pour les autres, ouvre le réducteur et saisis T2B, J_Gear, rendement : la fiche est
-alors enregistrée dans ta base.
+Catalogue SEW (tableau SEW_CAT en tête de app/app.js, catalogue DRN.. 33346747/EN 02/2026) :
+les rapports (K19…K49 nommés KH, K37…K187, R07…R167, F27…F157, S37…S97, W10/20/30) viennent du
+tableau des dents, ce qui donne GearIn / GearOut exacts. Pour chaque rapport : T2B = Mamax à
+1400 tr/min, nombre d'étages et rendement (R/F/K selon les étages, S d'après les tableaux
+techniques, W..0 déduit des tableaux de sélection : approximatif). J_Gear n'est pas dans le
+catalogue : ouvre le réducteur et saisis-le si tu le connais, la fiche passe alors dans ta base.
+Recherche : WA10, WF10, KA37, KHF19… trouvent W10, K37, KH19 (même réducteur, autre forme).
+
+Asynchrone sur ATV320 : HSP et LSP se saisissent en Hz dans l'axe (50 / 10 Hz par défaut) ;
+l'outil donne les tr/min moteur, les tr/min de la virole et la vitesse de bande (mm/s et m/min)
+à ces deux fréquences, avec n = nN × f ÷ FRS. Pas de FeedConstant pour ces axes (pas d'axe
+Machine Expert) : seul le diamètre du rouleau compte.
+Tambours Interroll DM 0113 : moteurs (asynchrones 160 à 550 W, synchrones acier et sans huile)
+et réducteurs intégrés (un par puissance × rapport, avec la vitesse m/s de la plaque dans le nom)
+d'après la fiche technique Interroll DM_0113_EN.pdf.
