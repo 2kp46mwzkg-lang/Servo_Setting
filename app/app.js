@@ -1396,7 +1396,7 @@ async function hwSave(list, msg) {
 const ELEC_CHARGE = { MC: 'convoyeur', MR: 'rotatif', MT: 'lineaire', MP: 'bielle' };
 /* Repère du dossier élec sans le numéro de folio collé devant : 11M1 -> M1, 213M7A -> M7A, 15-MT1 -> MT1 */
 const sansFolio = s => String(s ?? '').trim().replace(/^(?:F(?:olio)?\s*)?\d+\s*[-./:_ ]?\s*(?=[A-Za-z])/i, '');
-function parseElec(sheets) {
+function parseElec(sheets, syncRefs) {
   const key = Object.keys(sheets).find(k => nrmE(k) === 'liste actionneurs');
   if (!key) throw new Error('onglet « Liste actionneurs » introuvable dans ce fichier');
   const rows = sheets[key];
@@ -1422,7 +1422,7 @@ function parseElec(sheets) {
     const drv = String(col(r, 'reference') || '').trim(), motRef = String(col(r, 'references') || '').trim(), desc = String(col(r, 'nom') || col(r, 'designation') || '').trim();
     /* moteur synchrone sur ATV320 (BMP, tambour NGI MTS62, Interroll DM synchrone) : axe avec réducteur, pas un simple asynchrone */
     const kM = refKey(motRef), fiche = kM ? S.motors.find(m => refKey(m.ref) === kM || (kM.length >= 5 && refKey(m.ref).startsWith(kM) && m.typeMot === 'sync')) : null;
-    const estBmp = /^BMP|^SYNC/.test(gamme) || /^BMP\d{4}|^MTS62/.test(kM) || /synchrone/i.test(desc + ' ' + gammeTxt) || (fiche && fiche.typeMot === 'sync' && /^ATV/i.test(gamme + drv));
+    const estBmp = /^BMP|^SYNC/.test(gamme) || /^BMP\d{4}|^MTS62/.test(kM) || /synchrone/i.test(desc + ' ' + gammeTxt) || (fiche && fiche.typeMot === 'sync' && /^ATV/i.test(gamme + drv)) || (syncRefs && kM && syncRefs.has(kM) && /^ATV/i.test(gamme + drv));
     if (estBmp) {
       /* l'ATV320 va dans le matériel (CANopen), l'axe (M1, M2…) dans les réglages avec son réducteur */
       asyn.push({ nom, brut, gamme: /^ATV320/i.test(drv) || !/^ATV/i.test(gamme) ? 'ATV320' : gamme, desc, ref: drv, moteurRef: motRef, bmp: true });
@@ -1592,9 +1592,10 @@ function elecPanel() {
   const ficheRows = fiches.map(f => { const m = f.fiche, ec = ecartF(f); return `<tr class="el-${m ? 'ok' : 'nouveau'}"><td><b>${esc(f.ref)}</b>${f.fab ? `<div class="el-sub">${esc(f.fab)}</div>` : ''}</td>
     <td>${m ? esc(m.ref) + `<div class="el-sub">${[num(m.pNom) != null ? fmt(num(m.pNom), 2) + ' kW' : '', num(m.i0) != null ? 'IN ' + fmt(num(m.i0), 2) + ' A' : '', num(m.nNom) != null ? fmt(num(m.nNom), 0) + ' tr/min' : '', m.tension ? esc(m.tension) : ''].filter(Boolean).join(' · ') || 'fiche à compléter'}${refKey(m.ref) !== refKey(f.ref) ? ' · rattachée par le début de la référence' : ''}</div>` : (ficheOn ? '<b>À créer</b> <span class="el-sub">(référence et fabricant seulement)</span>' : '<span class="el-warn">absente du catalogue</span>')}</td>
     <td>${[f.p != null ? fmt(f.p, 2) + ' kW' : '', f.iN != null ? 'IN ' + fmt(f.iN, 2) + ' A' : '', f.n != null ? fmt(f.n, 0) + ' tr/min' : '', f.u ? esc(f.u) : '', f.poles != null ? f.poles + ' pôles' : ''].filter(Boolean).join(' · ') || '<span class="el-sub">—</span>'}${ec.length ? `<div class="el-warn">écart avec la fiche : ${ec.join(', ')}</div>` : m && (f.p != null || f.iN != null || f.n != null) ? '<div class="el-sub">cohérent avec la fiche</div>' : ''}</td>
-    <td>${f.noms.map(esc).join(', ')}</td></tr>`; }).join('');
+    <td>${f.noms.map(esc).join(', ')}</td><td class="c"><input type="checkbox" data-syncref="${esc(refKey(f.ref))}" aria-label="Moteur synchrone : axe avec réducteur" title="Cocher si ce moteur est un synchrone (BMP, tambour…) piloté en loi SYN : il devient un axe avec réducteur (onglet Axes) au lieu d’une plaque asynchrone"></td></tr>`; }).join('');
   const fichesHtml = fiches.length ? `<h3 class="elech">Moteurs asynchrones sur ATV320 <span class="el-sub">le dossier donne la référence, la fiche du catalogue Moteurs donne les données constructeur (plaque à entrer dans l’ATV320 : NPR, UNS, NCR, FRS, NSP, COS, ITH)</span></h3>
-    <div class="tblwrap elecwrap"><table><thead><tr><th>Moteur (dossier)</th><th>Fiche catalogue (fait foi)</th><th>Indiqué dans le dossier <span class="el-sub" style="text-transform:none">contrôle seulement${D.plaques.length ? ' · colonnes ' + D.plaques.map(esc).join(', ') : ''}</span></th><th>ATV320</th></tr></thead><tbody>${ficheRows}</tbody></table></div>
+    <div class="tblwrap elecwrap"><table><thead><tr><th>Moteur (dossier)</th><th>Fiche catalogue (fait foi)</th><th>Indiqué dans le dossier <span class="el-sub" style="text-transform:none">contrôle seulement${D.plaques.length ? ' · colonnes ' + D.plaques.map(esc).join(', ') : ''}</span></th><th>ATV320</th><th class="c" title="Moteur synchrone piloté en loi SYN (BMP, tambour NGI / Interroll…) : en faire un axe avec réducteur">Axe synchrone ?</th></tr></thead><tbody>${ficheRows}</tbody></table></div>
+
     ${nFiches ? `<label class="chk"><input type="checkbox" id="elecFiches" ${E.ficheOn ? 'checked' : ''}> ${nFiches > 1 ? 'Créer les ' + nFiches + ' fiches absentes' : 'Créer la fiche absente'} dans Catalogue › Moteurs (référence et fabricant seulement : les données constructeur se saisissent depuis le catalogue ou la plaque, jamais depuis le dossier)</label>` : '<div class="memsg">Toutes les références ont leur fiche : la plaque de chaque ATV320 est dans l’onglet ATV320.</div>'}` : '';
   const diagHtml = D.onglets.length || D.inutilisees.length ? `<details class="tabmore" style="flex-basis:100%"><summary>Ce que le dossier contient d’autre (non lu par l’outil)</summary><ul>
     ${D.onglets.length ? `<li>Onglets non lus : ${D.onglets.map(esc).join(', ')}.</li>` : ''}
@@ -1614,28 +1615,39 @@ function elecPanel() {
       ${E.hwWarn.map(w => `<li class="el-warn">${esc(w)}</li>`).join('')}</ul>` : ''}
       ${hwTable(E.hw.rows, true)}
       <label class="chk"><input type="checkbox" id="elecHw" ${E.hwOn ? 'checked' : ''} ${E.hw.change ? '' : 'disabled'}> Mettre à jour le matériel du projet</label>` : ''}
+    ${E.syncRefs && E.syncRefs.size ? `<div class="memsg" style="flex-basis:100%">Moteurs déclarés synchrones, donc axes avec réducteur dans le tableau Axes (mémorisé pour les prochains imports de ce projet) : ${[...E.syncRefs].map(k => `<span class="mono">${esc(k)}</span> <button class="btn ghost" data-syncdel="${esc(k)}" title="Redevient un asynchrone (plaque dans l’onglet ATV320)">retirer</button>`).join(' · ')}</div>` : ''}
     ${fichesHtml}${diagHtml}
     <div class="actions">${btns}</div></div>`;
+}
+/* Panneau d'import construit depuis les feuilles lues (gardées en mémoire le temps du panneau, jamais enregistrées).
+   syncRefs = références moteur que l'utilisateur a déclarées synchrones (axe sur ATV320) ; mémorisées dans le projet (moteursSync) */
+function elecBuild(sheets, file, syncRefs) {
+  const P = parseElec(sheets, syncRefs);
+  if (!P.servo.length && !P.asyn.length) throw new Error('aucun axe (LXM62, ILM62, ATV320) trouvé dans « Liste actionneurs »');
+  const M = parseMateriel(sheets, P.asyn), hw = hwDiff(M.items), fiches = elecFiches(P.asyn);
+  const lus = ['liste actionneurs', 'materiels'], diag = { onglets: (sheets._onglets || []).filter(n => !lus.includes(nrmE(n))), inutilisees: P.inutilisees || [], plaques: P.plaques || [] };
+  const old = S.elec || {};
+  S.elec = { ...elecDiff(P, file), hw, hwWarn: M.warn, hwOn: hw.change, fiches, ficheOn: old.sheets === sheets ? old.ficheOn : fiches.some(x => !x.fiche), diag, sheets, file, syncRefs };
 }
 async function readElecFile(f) {
   try {
     setStatus('Lecture du dossier élec…');
     const sheets = await xlsxSheets(await f.arrayBuffer(), ['Liste actionneurs', 'Matériels']);
-    const P = parseElec(sheets);
-    if (!P.servo.length) throw new Error('aucun axe LXM62 / ILM62 trouvé dans « Liste actionneurs »');
-    const M = parseMateriel(sheets, P.asyn), hw = hwDiff(M.items), fiches = elecFiches(P.asyn);
-    const lus = ['liste actionneurs', 'materiels'], diag = { onglets: (sheets._onglets || []).filter(n => !lus.includes(nrmE(n))), inutilisees: P.inutilisees || [], plaques: P.plaques || [] };
-    S.projForm = null; S.meForm = null; S.hwView = false; S.elec = { ...elecDiff(P, f.name), hw, hwWarn: M.warn, hwOn: hw.change, fiches, ficheOn: fiches.some(x => !x.fiche), diag }; setStatus(''); renderProj();
+    S.projForm = null; S.meForm = null; S.hwView = false; S.elec = null;
+    elecBuild(sheets, f.name, new Set((curProj()?.moteursSync || []).map(refKey).filter(Boolean)));
+    setStatus(''); renderProj();
   } catch (e) { S.elec = null; setStatus('Dossier élec illisible : ' + (e.message || e), true); renderProj(); }
 }
 async function applyElec() {
   if (S.dirty) { setStatus('Enregistre ou annule l’axe en cours avant d’importer.', true); return; }
   const E = S.elec, todo = E.rows.filter(r => r.on && r.etat !== 'ok'); let n = 0, hwMsg = '';
   try {
-    if (E.hw && E.hw.change && E.hwOn) {
-      const cur = curProj();
-      await writeDoc('projects', cur.id, { ...strip(cur), materiel: mergeHw(E.hw.rows.map(x => ({ ...hwClean(x), src: 'elec' })), E.hw.man) });
-      hwMsg = ' Matériel mis à jour (' + (E.hw.rows.length + E.hw.man.length) + ' appareils).';
+    {
+      const cur = curProj(), patch = {};
+      if (E.hw && E.hw.change && E.hwOn) { patch.materiel = mergeHw(E.hw.rows.map(x => ({ ...hwClean(x), src: 'elec' })), E.hw.man); hwMsg = ' Matériel mis à jour (' + (E.hw.rows.length + E.hw.man.length) + ' appareils).'; }
+      const sr = E.syncRefs ? [...E.syncRefs].sort() : [];
+      if (sr.join('|') !== (cur.moteursSync || []).slice().sort().join('|')) patch.moteursSync = sr;
+      if (Object.keys(patch).length) await writeDoc('projects', cur.id, { ...strip(cur), ...patch });
     }
     for (const r of todo) {
       if (r.a) await writeDoc('axes', r.a.id, { ...strip(r.a), ...r.want });
@@ -1784,6 +1796,9 @@ function renderProj() {
     document.querySelectorAll('[data-eleccancel]').forEach(b => { b.onclick = () => { S.elec = null; renderProj(); }; });
     const eh = $('#elecHw'); if (eh) eh.onchange = () => { S.elec.hwOn = eh.checked; renderProj(); };
     const ef = $('#elecFiches'); if (ef) ef.onchange = () => { S.elec.ficheOn = ef.checked; renderProj(); };
+    const syncTo = (k, on) => { const E = S.elec; if (on) E.syncRefs.add(k); else E.syncRefs.delete(k); try { elecBuild(E.sheets, E.file, E.syncRefs); } catch (e) { setStatus('Import : ' + (e.message || e), true); } renderProj(); };
+    document.querySelectorAll('[data-syncref]').forEach(cb => { cb.onchange = () => syncTo(cb.dataset.syncref, cb.checked); });
+    document.querySelectorAll('[data-syncdel]').forEach(b => { b.onclick = () => syncTo(b.dataset.syncdel, false); });
     document.querySelectorAll('[data-elecok]').forEach(b => { b.onclick = () => applyElec(); });
   }
   const me = $('#projMe'); if (me) me.onclick = () => { S.projForm = null; S.elec = null; S.meForm = S.meForm ? null : { hw: true, meca: true, lim: true, stop: true, gains: true, liste: true, traces: false }; renderProj(); };
@@ -2664,6 +2679,18 @@ try { if (localStorage.getItem('servo-help') === '1') toggleHelp(true); } catch 
       catch (err) { setStatus('Import impossible : ' + err.message, true); }
     };
     onData(); return;
+  }
+  /* page Claude (base partagée) : « Exporter la base » donne un .json à reprendre dans la version GitHub / hors ligne (« Importer une base ») */
+  const lb = $('#localbar');
+  if (lb) {
+    lb.innerHTML = '<span><b>Page Claude</b> · la base (projets, axes, catalogues) est partagée dans cette page. « Exporter la base » télécharge tout en .json : la version GitHub / hors ligne le reprend avec « Importer une base » (qui remplace sa base).</span> <button class="btn" id="expBase">Exporter la base</button>';
+    lb.hidden = false;
+    $('#expBase').onclick = async () => {
+      const name = 'base-reglages-servo-' + new Date().toISOString().slice(0, 10) + '.json', txt = JSON.stringify(Object.fromEntries(KEYS.map(k => [k, S[k]])), null, 1);
+      if (S.dl) { try { await S.dl.save({ filename: name, data: new TextEncoder().encode(txt) }); setStatus('Base enregistrée : ' + name); } catch (e) { if (!(e && e.code === 'declined')) setStatus('Export impossible.', true); } return; }
+      const blob = new Blob([txt], { type: 'application/json' }), a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name;
+      document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+    };
   }
   KEYS.forEach(key => {
     db.collection(COLL[key]).onSnapshot(snap => { S[key] = snap.docs.map(d => ({ id: d.id, ...d.data() })); S.loaded[key] = true; onData(); },
