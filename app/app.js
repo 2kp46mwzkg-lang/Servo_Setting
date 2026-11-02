@@ -1527,7 +1527,8 @@ const plaqueTxt = (x, P) => !P || !P.m ? '' : [x.nom + (x.nodeId != null ? ' (No
   'NPR ' + (P.npr != null ? fmt(P.npr, 2) + ' kW' : '?'), 'UNS ' + P.uns + ' V', 'NCR ' + (P.ncr != null ? fmt(P.ncr, 2) + ' A' : '?'), 'FRS ' + fmt(P.frs, 0) + ' Hz',
   'NSP ' + (P.nsp != null ? fmt(P.nsp, 0) + ' tr/min' : '?'), 'COS ' + (P.cos != null ? fmt(P.cos, 2) : '?'), 'ITH ' + (P.ith != null ? fmt(P.ith, 2) + ' A' : '?')].join(' | ');
 /* ref = référence moteur du dossier ; frein = colonne Frein ; p = puissance du dossier en kW (pour départager les fiches qui commencent pareil) */
-function matchMotor(ref, frein, p) {
+/* drv = référence du variateur du dossier : sa tension réseau (ATV320…N4 = 400 V, M2 / M3 = 230 V) départage les bobinages d'une même fiche */
+function matchMotor(ref, frein, p, drv) {
   const R = refKey(ref);
   if (!R) return { m: null, why: 'pas de référence moteur dans le dossier' };
   const exact = S.motors.find(m => refKey(m.ref) === R); if (exact) return { m: exact };
@@ -1535,12 +1536,21 @@ function matchMotor(ref, frein, p) {
   if (!mm) {
     /* asynchrone ou tambour : fiche dont la référence est le début de celle du dossier (DRN80M4/TF), contenue dedans (R37 DRN80M4), ou qui commence par celle du dossier (DM0080 → DM 0080 …) */
     const am = asyncMotorOf(ref); if (am) return { m: am };
-    const cand = R.length >= 4 ? S.motors.filter(m => refKey(m.ref).startsWith(R)) : [];
+    let cand = R.length >= 4 ? S.motors.filter(m => refKey(m.ref).startsWith(R)) : [];
     if (cand.length > 1) {
-      const pk = num(p), proches = pk ? cand.filter(m => num(m.pNom) != null && Math.abs(num(m.pNom) - pk) <= Math.max(0.012, pk * 0.12)) : [];
-      if (proches.length === 1) return { m: proches[0], why: 'retenu d’après la puissance du dossier (' + fmt(pk, 3) + ' kW) parmi ' + cand.length + ' fiches ' + ref };
-      const L = (proches.length ? proches : cand).slice(0, 6).map(m => m.ref).join(' / ');
-      return { m: null, why: cand.length + ' fiches commencent par ' + ref + (pk ? ' ; ' + fmt(pk, 3) + ' kW dans le dossier' : '') + ' : à choisir (' + L + (cand.length > 6 ? '…' : '') + ')' };
+      const crit = [];
+      /* 1. tension réseau du variateur : on écarte les fiches données pour une autre tension (bobinage 230 V sur un ATV320 N4…) */
+      if (drv && /^ATV/i.test(drv)) { const u = atvTension(drv), c2 = cand.filter(m => { const v = (String(m.tension || '').match(/\d{3}/g) || []).map(Number); return !v.length || v.includes(u); }); if (c2.length && c2.length < cand.length) { cand = c2; crit.push(u + ' V (' + drv + ')'); } }
+      /* 2. puissance du dossier */
+      const pk = num(p), exactP = pk ? cand.filter(m => num(m.pNom) != null && Math.abs(num(m.pNom) - pk) <= pk * 0.02) : [];
+      const proches = exactP.length ? exactP : (pk ? cand.filter(m => num(m.pNom) != null && Math.abs(num(m.pNom) - pk) <= Math.max(0.012, pk * 0.12)) : []);
+      if (pk && proches.length && proches.length < cand.length) { cand = proches; crit.push(fmt(pk, 3) + ' kW'); }
+      if (cand.length === 1) return { m: cand[0], why: 'retenu d’après ' + crit.join(' et ') + ' parmi les fiches ' + ref };
+      /* 3. il reste une seule fiche asynchrone face à des synchrones (tambour Interroll) : l'asynchrone est retenu, le synchrone se choisit dans l'axe */
+      const asy = cand.filter(m => m.typeMot === 'async');
+      if (asy.length === 1) return { m: asy[0], why: 'asynchrone retenu' + (crit.length ? ' (' + crit.join(', ') + ')' : '') + ' ; variante synchrone possible : ' + cand.filter(m => m !== asy[0]).map(m => m.ref).join(' / ') + ' (à changer dans l’axe)' };
+      const L = cand.slice(0, 6).map(m => m.ref).join(' / ');
+      return { m: null, cand: cand.length, why: cand.length + ' fiches ' + ref + (crit.length ? ' en ' + crit.join(' / ') : '') + ' : à choisir (' + L + (cand.length > 6 ? '…' : '') + ')' };
     }
     return { m: null, why: 'référence non reconnue : moteur à choisir' };
   }
@@ -1557,7 +1567,7 @@ function elecDiff(P, file) {
   /* axe déjà créé avec le folio devant (ancien import) : retrouvé et renommé sans le folio */
   const byFolio = new Map(ex.filter(a => sansFolio(a.nom) !== String(a.nom).trim()).map(a => [nrmE(sansFolio(a.nom)), a]));
   const rows = P.servo.map(s => {
-    const mt = matchMotor(s.moteurRef, s.frein, s.p), a = byName.get(nrmE(s.nom)) || byFolio.get(nrmE(s.nom));
+    const mt = matchMotor(s.moteurRef, s.frein, s.p, s.variateur), a = byName.get(nrmE(s.nom)) || byFolio.get(nrmE(s.nom));
     const want = { desc: s.desc, gamme: s.gamme, variateur: s.variateur, moteurRef: s.moteurRef, ordre: s.ordre };
     if (a && nrmE(a.nom) !== nrmE(s.nom)) want.nom = s.nom;
     if (mt.m) want.moteurId = mt.m.id;
@@ -1576,7 +1586,7 @@ function elecFiches(asyn) {
   const by = new Map();
   asyn.filter(a => /^ATV320/i.test(a.gamme) && a.moteurRef).forEach(a => {
     const k = refKey(a.moteurRef); if (!k) return;
-    if (!by.has(k)) { const mt = matchMotor(a.moteurRef, false, a.p); by.set(k, { ref: a.moteurRef, fab: a.fab || '', p: a.p ?? null, iN: a.iN ?? null, n: a.n ?? null, u: a.u || '', poles: a.poles ?? null, noms: [], fiche: mt.m, cand: !mt.m && /fiches commencent/.test(mt.why || '') ? mt.why : '' }); }
+    if (!by.has(k)) { const mt = matchMotor(a.moteurRef, false, a.p, a.ref); by.set(k, { ref: a.moteurRef, fab: a.fab || '', p: a.p ?? null, iN: a.iN ?? null, n: a.n ?? null, u: a.u || '', poles: a.poles ?? null, noms: [], fiche: mt.m, cand: !mt.m && mt.cand ? mt.why : '' }); }
     const f = by.get(k); f.noms.push(a.nom);
     ['fab', 'u'].forEach(q => { if (!f[q] && a[q]) f[q] = a[q]; }); ['p', 'iN', 'n', 'poles'].forEach(q => { if (f[q] == null && a[q] != null) f[q] = a[q]; });
   });
@@ -1664,13 +1674,15 @@ async function applyElec() {
       if (E.hw && E.hw.change && E.hwOn) { patch.materiel = mergeHw(E.hw.rows.map(x => ({ ...hwClean(x), src: 'elec' })), E.hw.man); hwMsg = ' Matériel mis à jour (' + (E.hw.rows.length + E.hw.man.length) + ' appareils).'; }
       if (Object.keys(patch).length) await writeDoc('projects', cur.id, { ...strip(cur), ...patch });
     }
+    /* fiches moteur absentes du catalogue : créées d'abord (référence + fabricant), puis rattachées aux axes qui portent cette référence */
+    let nF = 0; const creees = new Map();
+    if (E.ficheOn) for (const f of (E.fiches || []).filter(x => !x.fiche && !x.cand)) { if (asyncMotorOf(f.ref)) continue; const id = newId('motors'); await writeDoc('motors', id, ficheAsync(f, E.file)); creees.set(refKey(f.ref), id); nF++; }
     for (const r of todo) {
-      if (r.a) await writeDoc('axes', r.a.id, { ...strip(r.a), ...r.want });
-      else await writeDoc('axes', newId('axes'), { nom: r.nom, ...r.want, ioCard: r.gamme === 'LXM62', typeCharge: r.typeCharge, marge: 80, tStop: 0.2, projetId: S.projId, source: 'dossier élec' });
+      const w = { ...r.want }; if (!w.moteurId && creees.has(refKey(r.moteurRef))) w.moteurId = creees.get(refKey(r.moteurRef));
+      if (r.a) await writeDoc('axes', r.a.id, { ...strip(r.a), ...w });
+      else await writeDoc('axes', newId('axes'), { nom: r.nom, ...w, ioCard: r.gamme === 'LXM62', typeCharge: r.typeCharge, marge: 80, tStop: 0.2, projetId: S.projId, source: 'dossier élec' });
       n++;
     }
-    let nF = 0;
-    if (E.ficheOn) for (const f of (E.fiches || []).filter(x => !x.fiche && !x.cand)) { if (asyncMotorOf(f.ref)) continue; await writeDoc('motors', newId('motors'), ficheAsync(f, E.file)); nF++; }
     if (nF) hwMsg += ' ' + nF + ' fiche' + (nF > 1 ? 's' : '') + ' moteur asynchrone créée' + (nF > 1 ? 's' : '') + ' dans le catalogue (à compléter depuis la plaque).';
     S.elec = null; setStatus((n ? n + ' axe' + (n > 1 ? 's' : '') + ' créé' + (n > 1 ? 's' : '') + ' ou mis à jour depuis le dossier élec. Complète le réducteur et la charge de chacun.' : '') + hwMsg); onData();
   } catch (e) { setStatus('Import arrêté après ' + n + ' axe(s) : ' + (e.message || e.code), true); }
