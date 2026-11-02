@@ -1,0 +1,116 @@
+RÉGLAGES SERVO — version hors ligne / GitHub Pages
+===================================================
+
+Où sont les fichiers
+--------------------
+reglages-servo/
+│
+├─ index.html                     LA PAGE. Seulement la structure HTML et la liste des fichiers
+│                                 qu'elle charge (en bas, dans l'ordre). À ouvrir par double-clic.
+│                                 On n'y touche que pour ajouter un fichier à charger.
+├─ LISEZMOI.txt                   Ce fichier.
+│
+├─ app/                           LE FONCTIONNEMENT DE LA PAGE
+│   ├─ style.css                  Mise en page, couleurs (variables :root en haut).
+│   ├─ app.js                     Tout le reste : base, projets, import du dossier élec, calculs
+│   │                             des axes, onglets, génération du script Machine Expert.
+│   └─ dictionnaire_es.js         Dictionnaire E/S livré (mots du dossier → noms automate,
+│                                 tableau IO_SEED en tête) + onglets E/S.
+│
+├─ catalogue/                     LES DONNÉES CONSTRUCTEUR LIVRÉES — une fiche par ligne (JSON)
+│   ├─ moteurs_brushless.js       Moteurs synchrones : Schneider SH3 / ILM (Lexium 62), BMP, tambours
+│   │                             NGI MTS62 et Interroll DM synchrones (sur ATV320). Onglet Brushless.
+│   ├─ moteurs_asynchrones.js     Moteurs asynchrones : SEW DRN (IE3, 2/4/6/8 pôles), Leroy-Somer LSES,
+│   │                             Interroll DM 0080. Onglet Asynchrones (plaque pour l'ATV320).
+│   ├─ reducteurs.js              Réducteurs (Neugart, Atlanta, STOBER, Wittenstein, Interroll, NGI…).
+│   │                             Les SEW viennent du tableau des dents dans app.js (sewCatalog).
+│   ├─ variateurs.js              Variateurs : LXM62, ATV320 (In, Imax, puissance).
+│   ├─ materiel.js                Types d'appareils Machine Expert en plus du dictionnaire intégré
+│   │                             (le dictionnaire de l'Auto_Pannel est dans app.js : HW_CAT).
+│   └─ version.js                 Date du catalogue, affichée en bas de page.
+│
+└─ machine-expert/                CE QUI PART DANS MACHINE EXPERT
+    ├─ modele_script.js           Corps du script Python généré (axes, réglages, paramètres).
+    ├─ modele_hardware.js         Partie « hardware » (appareils, Node-ID, heartbeat, Optional).
+    ├─ modele_traces.js           Partie « traces » (une trace et 4 diagrammes par axe).
+    │                             Ces trois fichiers sont du Python entre deux accents graves `…` :
+    │                             on modifie le Python, on ne touche pas à la 1re et à la dernière ligne.
+    ├─ explorer_materiel.py       Script à lancer dans Machine Expert pour lire les DeviceID et les
+    │                             paramètres d'un projet existant (→ explo_materiel.json à importer).
+    └─ supprimer_doublons.py      Script de nettoyage des appareils créés en double (ATV320_M1_1…).
+
+Il n'y a rien à compiler : la page charge directement ces fichiers. Modifier un seul
+fichier suffit, les autres ne bougent pas.
+
+Quoi modifier, où
+-----------------
+- Ajouter ou corriger un moteur (brushless ou asynchrone), un
+  réducteur, un variateur                                      → catalogue/*.js (une ligne par
+  fiche, même champs que dans la page ; le bouton ? de chaque champ dit où trouver la valeur).
+  Puis mettre la date du jour dans catalogue/version.js (facultatif, c'est l'affichage).
+- Ajouter un mot au dictionnaire E/S                           → app/dictionnaire_es.js (IO_SEED).
+- Changer le script Machine Expert généré                      → machine-expert/modele_*.js.
+- Changer un calcul, un onglet, l'import du dossier            → app/app.js.
+- Changer l'aspect                                             → app/style.css.
+Pour une modification faite dans la page (fiche ajoutée dans Catalogue › …), elle reste dans la
+base du navigateur ; pour la partager avec tout le monde, la recopier dans catalogue/*.js.
+
+Utilisation
+-----------
+1. Dézipper le dossier où tu veux, garder les sous-dossiers.
+2. Ouvrir index.html avec Chrome, Edge ou Firefox (double-clic). Pas besoin d'internet
+   (sans internet, la police change, c'est tout).
+3. Dans la page, « ? Aide » en haut à droite explique le parcours :
+   projet → dossier élec → réglage des axes → hardware → script Machine Expert.
+4. Tout ce que tu ajoutes ou modifies dans la page est enregistré dans le navigateur de ce PC.
+
+Sauvegarde et autre poste
+-------------------------
+- Nouvelle version des fichiers : les fiches nouvelles ou modifiées du catalogue s'ajoutent
+  toutes seules à ta base, sans toucher à tes projets ni aux fiches que tu as modifiées
+  (« Mettre à jour le catalogue » en bas de page le refait à la demande).
+- La base vit dans le navigateur : si tu vides les données du navigateur, elle repart
+  du catalogue livré.
+- En bas de page : « Exporter la base » télécharge un .json avec tout (projets, axes,
+  catalogues). Fais-le régulièrement. « Importer une base » le recharge (remplace la base).
+- Pour passer sur un autre PC : exporter ici, importer là-bas.
+
+Mise en ligne (GitHub Pages)
+----------------------------
+Déposer le dossier tel quel (index.html à la racine du site, avec app/, catalogue/ et
+machine-expert/). Modifier un fichier sur GitHub suffit : la page le charge au prochain
+rechargement (Ctrl+F5 si le navigateur garde l'ancien). Chaque navigateur a sa propre base :
+Exporter / Importer pour partager des projets.
+
+Dossier électrique
+------------------
+« Importer le dossier élec » lit le classeur .xlsm dans le navigateur : il n'est ni
+enregistré ni envoyé. Seuls les axes (nom, désignation, moteur, variateur), la liste
+du matériel (nom, type, IP, Node-ID) et la référence des moteurs asynchrones sur ATV320
+sont gardés dans la base. Les données constructeur (plaque moteur : puissance, tension,
+IN, vitesse, cos φ) viennent toujours du catalogue, jamais du dossier, qui peut se
+tromper : ce que le dossier indique ne sert qu'à signaler un écart.
+
+Attention
+---------
+Cette version et la page Claude (artefact) ont chacune leur base, elles ne se
+synchronisent pas. Choisir l'une des deux comme référence. La page Claude est un fichier
+unique fait des mêmes fichiers mis bout à bout.
+
+Calcul de UserCurrentLimit
+--------------------------
+Courant limite = T2B ÷ i ÷ Kt × part autorisée (80 % par défaut)
+UserCurrentLimit (%) = Courant limite ÷ Imax moteur × 100 (arrondi en dessous)
+Exemple : 500 ÷ 449 ÷ 1,208 × 0,8 = 0,74 A → 0,74 ÷ 17,1 = 4,3 %
+
+Catalogue SEW (tableau SEW_CAT en tête de app/app.js, catalogue DRN.. 33346747/EN 02/2026) :
+les rapports (K19…K49 nommés KH, K37…K187, R07…R167, F27…F157, S37…S97, W10/20/30) viennent du
+tableau des dents, ce qui donne GearIn / GearOut exacts. Pour chaque rapport : T2B = Mamax à
+1400 tr/min, nombre d'étages et rendement (R/F/K selon les étages, S d'après les tableaux
+techniques, W..0 déduit des tableaux de sélection : approximatif). J_Gear n'est pas dans le
+catalogue : ouvre le réducteur et saisis-le si tu le connais, la fiche passe alors dans ta base.
+Recherche : WA10, WF10, KA37, KHF19… trouvent W10, K37, KH19 (même réducteur, autre forme).
+
+Asynchrone sur ATV320 : HSP et LSP se saisissent en Hz dans l'axe (50 / 10 Hz par défaut) ;
+l'outil donne les tr/min moteur, la vitesse en sortie du réducteur et la vitesse de l'axe
+(FeedConstant) à ces deux fréquences, avec n = nN × f ÷ FRS.
