@@ -18,9 +18,11 @@ reglages-servo/
 │                                 tableau IO_SEED en tête) + onglets E/S.
 │
 ├─ catalogue/                     LES DONNÉES CONSTRUCTEUR LIVRÉES — une fiche par ligne (JSON)
-│   ├─ moteurs.js                 Moteurs : SH3 / ILM / BMP (synchrones), SEW DRN, Leroy-Somer
-│   │                             LSES, Interroll (asynchrones).
-│   ├─ reducteurs.js              Réducteurs (Neugart, Atlanta, STOBER, Wittenstein, Interroll…).
+│   ├─ moteurs_brushless.js       Moteurs synchrones : Schneider SH3 / ILM (Lexium 62), BMP, tambours
+│   │                             NGI MTS62 et Interroll DM synchrones (sur ATV320). Onglet Brushless.
+│   ├─ moteurs_asynchrones.js     Moteurs asynchrones : SEW DRN (IE3, 2/4/6/8 pôles), Leroy-Somer LSES,
+│   │                             Interroll DM 0080. Onglet Asynchrones (plaque pour l'ATV320).
+│   ├─ reducteurs.js              Réducteurs (Neugart, Atlanta, STOBER, Wittenstein, Interroll, NGI…).
 │   │                             Les SEW viennent du tableau des dents dans app.js (sewCatalog).
 │   ├─ variateurs.js              Variateurs : LXM62, ATV320 (In, Imax, puissance).
 │   ├─ materiel.js                Types d'appareils Machine Expert en plus du dictionnaire intégré
@@ -42,7 +44,8 @@ fichier suffit, les autres ne bougent pas.
 
 Quoi modifier, où
 -----------------
-- Ajouter ou corriger un moteur, un réducteur, un variateur    → catalogue/*.js (une ligne par
+- Ajouter ou corriger un moteur (brushless ou asynchrone), un
+  réducteur, un variateur                                      → catalogue/*.js (une ligne par
   fiche, même champs que dans la page ; le bouton ? de chaque champ dit où trouver la valeur).
   Puis mettre la date du jour dans catalogue/version.js (facultatif, c'est l'affichage).
 - Ajouter un mot au dictionnaire E/S                           → app/dictionnaire_es.js (IO_SEED).
