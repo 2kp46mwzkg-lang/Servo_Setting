@@ -34,9 +34,10 @@ const MOTOR_FIELDS = [
   { k: 'typeMot', l: 'Type de moteur', t: 'select', o: [['sync', 'Synchrone (brushless, sur variateur servo)'], ['async', 'Asynchrone (réseau ou variateur)']] },
   { k: 'marque', l: 'Fabricant', t: 'text', only: 'async', h: 'Plaque ou colonne Fabricant du dossier (Leroy-Somer, SEW, Nord, Bonfiglioli…)' },
   { k: 'tension', l: 'Tension (plaque)', t: 'text', only: 'async', h: 'ex. 230/400 V (Δ 230 V ou Y 400 V). Sur un ATV320 N4 (réseau 400 V) : UNS = 400 V ; sur un M2 / M3 : 230 V' },
-  { k: 'pNom', l: 'Puissance nominale', u: 'kW', only: 'async', h: 'Plaque : paramètre NPR de l’ATV320' },
+  { k: 'pNom', l: 'Puissance nominale', u: 'kW', h: 'Plaque. Asynchrone sur ATV320 : paramètre NPR' },
   { k: 'freq', l: 'Fréquence nominale', u: 'Hz', only: 'async', h: 'Plaque, en principe 50 Hz : paramètre FRS' },
   { k: 'kt', l: 'Kt (TorqueConstant)', u: 'Nm/A', only: 'sync', h: 'Vide : calculé avec M0 ÷ I0' },
+  { k: 'ke', l: 'Constante FCEM ke', u: 'V / 1000 tr/min', only: 'sync', h: 'Moteur synchrone sur ATV320 (loi SYN) : paramètre PHS. Catalogue : « FCEM », « back EMF constant » (BMP : manuel moteur)' },
   { k: 'jMotor', l: 'Inertie (MotorInertia)', u: 'kg·cm²', conv: true },
   { k: 'm0', l: 'Couple M0', la: 'Couple nominal MN', u: 'Nm', ha: 'Plaque ou catalogue. Vide : calculé avec P ÷ ω' },
   { k: 'i0', l: 'Courant I0', la: 'Courant nominal IN (couplage 400 V)', u: 'A', ha: 'Plaque, colonne 400 V (couplage Y) : paramètre NCR et ITH de l’ATV320' },
@@ -137,7 +138,7 @@ const AXIS_GROUPS = [
   { t: 'Contrôle réducteur', f: [
     { k: 'marge', l: 'Part de T2B autorisée', u: '%', h: 'Part du couple max du réducteur que le moteur a le droit de demander. 80 % = marge de 20 %. Fixe aussi le seuil vert / orange des jauges', g: ['lim'] } ] },
   { adv: true, t: 'Variateur dans Machine Expert', note: 'Aussi dans l’onglet Brushless, où se règlent l’ordre Sercos, le codeur et la carte IO.', f: [
-    { k: 'gamme', l: 'Variateur', t: 'select', o: [['', 'Aucun (axe virtuel : Master, MC_Cut…)'], ['LXM62', 'LXM62 (module en armoire)'], ['ILM62', 'ILM62 (intégré au moteur)'], ['BMP', 'BMP sur ATV320 (synchrone, CANopen, pas de Sercos)']], h: 'Dit au script ce qu’il crée pour cet axe : le variateur DRV_, le codeur LE_ et la carte IO_. « Aucun » : rien n’est créé' },
+    { k: 'gamme', l: 'Variateur', t: 'select', o: [['', 'Aucun (axe virtuel : Master, MC_Cut…)'], ['LXM62', 'LXM62 (module en armoire)'], ['ILM62', 'ILM62 (intégré au moteur)'], ['BMP', 'Synchrone sur ATV320 : BMP, tambour NGI MTS62 ou Interroll DM (CANopen, pas de Sercos)']], h: 'Dit au script ce qu’il crée pour cet axe : le variateur DRV_, le codeur LE_ et la carte IO_. « Aucun » : rien n’est créé' },
     { k: 'variateur', l: 'Référence', t: 'text', h: 'Référence complète du dossier élec (ex. LXM62DD15C21000). Vide pour un ILM62' },
     { k: 'ioCard', l: 'Carte IO_ sur le variateur', t: 'bool', h: 'Le script crée la carte IO sous le variateur et renomme ses voies TP_, DQ_, DI_ + nom de l’axe' } ] },
   { t: 'ATV320', bmp: true, note: 'LSP, HSP et ITH sont calculés à partir du moteur, du rapport et des vitesses du cycle (Vitesse max du cycle ci-dessus).', f: [
@@ -324,7 +325,8 @@ function compute(a) {
     if (drv && iDrv && imax && iDrv < imax) C.push(['info', `Imax limité par l’ATV320 ${drv.ref} : ${fmt(iDrv, 1)} A (150 % de In ${fmt(R.iDrvNom, 1)} A), le moteur accepterait ${fmt(imax, 1)} A.`]);
     if (R.lsp != null && R.hsp != null && R.lsp > R.hsp) C.push(['warn', `La vitesse basse (${fmt(num(a.vMin), 0)} Units/s) dépasse la vitesse max du cycle : LSP > HSP.`]);
     if (ithPct > 100) C.push(['warn', `ITH réglé à ${fmt(ithPct, 0)} % de IN : au-dessus du courant nominal, la protection thermique du moteur n’est plus assurée.`]);
-    if (!/^BMP/i.test(refKey(m.ref))) C.push(['warn', 'Axe « BMP sur ATV320 » mais le moteur choisi n’est pas un BMP (' + m.ref + ') : vérifier la fiche moteur.']);
+    if (m.typeMot === 'async') C.push(['crit', 'Axe « synchrone sur ATV320 » mais le moteur choisi est un asynchrone (' + m.ref + ') : un asynchrone n’est pas un axe, il se règle dans l’onglet ATV320 (plaque NPR, NCR…).']);
+    else if (!/^BMP/i.test(refKey(m.ref)) && !/synchrone|MTS62/i.test(m.ref + ' ' + (m.serie || ''))) C.push(['warn', 'Axe « synchrone sur ATV320 » : vérifie que ' + m.ref + ' est bien un moteur synchrone (BMP, NGI MTS62, Interroll DM synchrone).']);
     if (Iacc != null && Iref && Iacc > Iref) C.push(['crit', `Le courant d’accélération (${fmt(Iacc, 2)} A) dépasse le courant max du moteur avec son ATV320 (${fmt(Iref, 1)} A) : réduire l’accélération, la charge ou prendre un rapport plus grand.`]);
     if (Iacc != null && R.i0 && Iacc > R.i0) C.push(['info', `Courant d’accélération ${fmt(Iacc, 2)} A au-dessus du courant nominal IN (${fmt(R.i0, 2)} A) : admissible en pointe, pas en continu (vérifier le cycle).`]);
     if (vertical && Ihold && R.i0 && Ihold > R.i0) C.push(['warn', `Le maintien de la charge (${fmt(Ihold, 2)} A) dépasse le courant nominal IN du moteur (${fmt(R.i0, 2)} A) : échauffement en continu.`]);
@@ -1002,7 +1004,7 @@ function buildMeScript(o) {
   pAxes().forEach(a => {
     const nom = String(a.nom || '').trim();
     if (!nom) { ign.push(['(sans nom)', 'axe sans nom']); return; }
-    if (a.gamme === 'BMP') { ign.push([nom, 'moteur BMP sur ATV320 : pas de DRV_, reglages du variateur en Modbus']); return; }
+    if (a.gamme === 'BMP') { ign.push([nom, 'moteur synchrone sur ATV320 : pas de DRV_, reglages du variateur en Modbus']); return; }
     const R = compute(a);
     if (R.missing) { ign.push([nom, R.why || 'moteur ou reducteur manquant']); return; }
     const L = [], skip = [];
@@ -1418,9 +1420,11 @@ function parseElec(sheets) {
     if (!nom) { const t = col(r, 'type'), n = col(r, 'n°'); if (t && n != null) nom = String(t).trim() + String(n).trim(); }
     if (!nom || !gamme) continue;
     const drv = String(col(r, 'reference') || '').trim(), motRef = String(col(r, 'references') || '').trim(), desc = String(col(r, 'nom') || col(r, 'designation') || '').trim();
-    const estBmp = /^BMP/.test(gamme) || /^BMP\d{4}/.test(refKey(motRef));
+    /* moteur synchrone sur ATV320 (BMP, tambour NGI MTS62, Interroll DM synchrone) : axe avec réducteur, pas un simple asynchrone */
+    const kM = refKey(motRef), fiche = kM ? S.motors.find(m => refKey(m.ref) === kM || (kM.length >= 5 && refKey(m.ref).startsWith(kM) && m.typeMot === 'sync')) : null;
+    const estBmp = /^BMP|^SYNC/.test(gamme) || /^BMP\d{4}|^MTS62/.test(kM) || /synchrone/i.test(desc + ' ' + gammeTxt) || (fiche && fiche.typeMot === 'sync' && /^ATV/i.test(gamme + drv));
     if (estBmp) {
-      /* moteur synchrone BMP sur ATV320 : l'ATV320 va dans le matériel (CANopen), l'axe (M1, M2…) dans les réglages avec son réducteur */
+      /* l'ATV320 va dans le matériel (CANopen), l'axe (M1, M2…) dans les réglages avec son réducteur */
       asyn.push({ nom, brut, gamme: /^ATV320/i.test(drv) || !/^ATV/i.test(gamme) ? 'ATV320' : gamme, desc, ref: drv, moteurRef: motRef, bmp: true });
       servo.push({ ligne: i + 1, ordre: servo.length + 1, nom, brut, desc, moteurRef: motRef, frein: /^o(ui)?$/i.test(String(col(r, 'frein') || '').trim()), gamme: 'BMP', variateur: drv, i: pos(col(r, 'i')), feed: pos(col(r, 'feed constant')) });
       continue;
@@ -1671,7 +1675,7 @@ function projLine(cur) {
   const hw = A.filter(a => a.gamme === 'LXM62' || a.gamme === 'ILM62').length, nBmp = A.filter(a => a.gamme === 'BMP').length, atvs = (cur.materiel || []).filter(x => x.type === 'ATV320'), atv = atvs.length;
   const nodes = atvs.map(x => num(x.nodeId)).filter(x => x != null), dupN = [...new Set(nodes.filter((x, i) => nodes.indexOf(x) !== i))];
   const lst = (L, n = 6) => L.slice(0, n).join(', ') + (L.length > n ? ' et ' + (L.length - n) + ' autre' + (L.length - n > 1 ? 's' : '') : '');
-  return `<div class="pline"><b>${A.length} axe${A.length > 1 ? 's' : ''}</b> · ${st.length - todo.length} réglé${st.length - todo.length > 1 ? 's' : ''}${todo.length ? ` · <span class="pl-todo">${todo.length} à compléter (moteur ou réducteur) : ${esc(lst(todo))}</span>` : ''}${crit.length ? ` · <span class="pl-todo">alerte sur ${esc(lst(crit))}</span>` : ''}${hw ? ` · ${hw} brushless dans le hardware` : ''}${atv ? ` · ${atv} ATV320${nBmp ? ' (dont ' + nBmp + ' BMP)' : ''}` : ''}${dupN.length ? ` · <span class="pl-todo">Node-ID en double : ${dupN.join(', ')}</span>` : ''}</div>`;
+  return `<div class="pline"><b>${A.length} axe${A.length > 1 ? 's' : ''}</b> · ${st.length - todo.length} réglé${st.length - todo.length > 1 ? 's' : ''}${todo.length ? ` · <span class="pl-todo">${todo.length} à compléter (moteur ou réducteur) : ${esc(lst(todo))}</span>` : ''}${crit.length ? ` · <span class="pl-todo">alerte sur ${esc(lst(crit))}</span>` : ''}${hw ? ` · ${hw} brushless dans le hardware` : ''}${atv ? ` · ${atv} ATV320${nBmp ? ' (dont ' + nBmp + ' synchrone' + (nBmp > 1 ? 's' : '') + ')' : ''}` : ''}${dupN.length ? ` · <span class="pl-todo">Node-ID en double : ${dupN.join(', ')}</span>` : ''}</div>`;
 }
 function renderProj() {
   const b = $('#projbar'); if (!b) return;
@@ -1831,11 +1835,11 @@ function renderBrushless() {
   const ords = L.filter(a => (a.gamme === 'LXM62' || a.gamme === 'ILM62') && num(a.ordre) != null).map(a => num(a.ordre)), dup = [...new Set(ords.filter((o, i) => ords.indexOf(o) !== i))];
   const rows = L.map((a, i) => {
     const g = a.gamme || '', bmp = g === 'BMP', card = !!g && !bmp && ioCardOf(a), m = ioModesOf(a);
-    const crees = !g ? 'rien (axe virtuel)' : bmp ? 'rien ici : moteur BMP sur ATV320 (onglet ATV320, réglages en Modbus)' : [a.leEnc !== false ? 'LE_' + a.nom : null, 'DRV_' + a.nom, card ? 'IO_' + a.nom : null].filter(Boolean).join(' · ');
+    const crees = !g ? 'rien (axe virtuel)' : bmp ? 'rien ici : moteur synchrone sur ATV320 (onglet ATV320, réglages en Modbus)' : [a.leEnc !== false ? 'LE_' + a.nom : null, 'DRV_' + a.nom, card ? 'IO_' + a.nom : null].filter(Boolean).join(' · ');
     return `<tr data-bl="${esc(a.id)}" class="${g ? '' : 'bl-virt'}">
     <td class="ordcell"><input type="number" min="1" step="1" class="w-s" data-f="ordre" value="${esc(a.ordre ?? '')}" aria-label="Ordre Sercos de ${esc(a.nom)}"><span class="ordbtns"><button type="button" class="ordbtn" data-move="-1" title="Monter" aria-label="Monter ${esc(a.nom)}" ${i === 0 ? 'disabled' : ''}>▲</button><button type="button" class="ordbtn" data-move="1" title="Descendre" aria-label="Descendre ${esc(a.nom)}" ${i === L.length - 1 ? 'disabled' : ''}>▼</button></span></td>
     <td><button class="linkbtn" data-open="${esc(a.id)}" title="Ouvrir le réglage de l’axe">${esc(a.nom || 'Sans nom')}</button>${a.desc ? `<div class="el-sub">${esc(a.desc)}</div>` : ''}<div class="el-sub mono" style="font-size:11px" title="Ce que le script crée dans Machine Expert">${esc(crees)}</div></td>
-    <td><select class="w-g" data-f="gamme" aria-label="Variateur de ${esc(a.nom)}">${optH('', g, 'Aucun (virtuel)')}${optH('LXM62', g)}${optH('ILM62', g)}${optH('BMP', g, 'BMP sur ATV320')}</select></td>
+    <td><select class="w-g" data-f="gamme" aria-label="Variateur de ${esc(a.nom)}">${optH('', g, 'Aucun (virtuel)')}${optH('LXM62', g)}${optH('ILM62', g)}${optH('BMP', g, 'Synchrone sur ATV320')}</select></td>
     <td><input type="text" class="w-m" data-f="variateur" value="${esc(a.variateur || '')}" placeholder="${g === 'ILM62' ? 'intégré au moteur' : 'référence'}" aria-label="Référence du variateur de ${esc(a.nom)}" ${g ? '' : 'disabled'}></td>
     <td class="el-sub">${esc(motorRefOf(a) || '—')}</td>
     <td class="c"><input type="checkbox" data-f="leEnc" ${a.leEnc !== false && !bmp ? 'checked' : ''} ${g && !bmp ? '' : 'disabled'} aria-label="Codeur LE_ de ${esc(a.nom)}"></td>
@@ -1843,11 +1847,11 @@ function renderBrushless() {
     ${IO_MODES.map(k => `<td class="c"><select data-io="${k}" ${card ? '' : 'disabled'} aria-label="${k} de ${esc(a.nom)}">${optH(0, m[k])}${optH(1, m[k])}</select></td>`).join('')}
     </tr>`;
   }).join('');
-  v.innerHTML = projTop() + `<div class="panel" style="margin-top:14px"><div class="panel-h"><h2>Variateurs brushless · ${nHw} axe${nHw > 1 ? 's' : ''} Sercos sur ${L.length}${nBmp ? ` · ${nBmp} BMP sur ATV320` : ''}</h2></div>
+  v.innerHTML = projTop() + `<div class="panel" style="margin-top:14px"><div class="panel-h"><h2>Variateurs brushless · ${nHw} axe${nHw > 1 ? 's' : ''} Sercos sur ${L.length}${nBmp ? ` · ${nBmp} synchrone${nBmp > 1 ? 's' : ''} sur ATV320` : ''}</h2></div>
     <div class="tabnote">Ce que le script crée dans Machine Expert pour chaque axe, dans l’ordre Sercos : codeur LE_, variateur DRV_, carte IO_. Chaque modification est enregistrée aussitôt. Le réglage du moteur (réducteur, charge, gains) se fait dans l’onglet Axes.
       <details class="tabmore"><summary>Détail des colonnes</summary><ul>
         <li><b>Ordre</b> : position sur l’anneau Sercos, celle du dossier élec au départ. Les flèches ▲▼ déplacent un axe (les numéros sont refaits 1, 2, 3…), ou tape un numéro.</li>
-        <li><b>Variateur</b> : LXM62 (module en armoire) ou ILM62 (intégré au moteur). « Aucun » = axe virtuel (Master, MC_Cut…), rien n’est créé. <b>BMP sur ATV320</b> : moteur synchrone BMP piloté par un ATV320 (CANopen) ; l’axe sert au calcul avec son réducteur, le variateur est dans l’onglet ATV320 et se règle en Modbus.</li>
+        <li><b>Variateur</b> : LXM62 (module en armoire) ou ILM62 (intégré au moteur). « Aucun » = axe virtuel (Master, MC_Cut…), rien n’est créé. <b>Synchrone sur ATV320</b> : moteur synchrone (BMP, tambour NGI MTS62, Interroll DM) piloté par un ATV320 en loi SYN (CANopen) ; l’axe sert au calcul avec son réducteur, le variateur est dans l’onglet ATV320 et se règle en Modbus.</li>
         <li><b>Référence</b> : celle du dossier élec (pour information). Un module double Lexium 62 se déclare dans Machine Expert comme deux variateurs : rien de particulier à faire.</li>
         <li><b>LE_</b> : codeur logique, créé sous l’automate. <b>IO_</b> : carte IO sous le variateur, ses voies renommées TP_, DQ_, DI_ + nom de l’axe.</li>
         <li><b>IO0, IO1, IO4, IO5</b> : modes des voies de la carte IO, écrits à chaque lancement (valeurs de l’Auto_Pannel : 1, 1, 0, 0). Absents sur une carte : laissés.</li></ul></details></div>
@@ -1855,7 +1859,7 @@ function renderBrushless() {
     ${L.length ? `<div class="tblwrap" style="margin-top:10px"><table class="gtbl"><thead><tr><th>Ordre</th><th>Axe · dans Machine Expert</th><th>Variateur</th><th>Référence</th><th>Moteur</th><th class="c" title="Codeur LE_">LE_</th><th class="c" title="Carte IO_">IO_</th>${IO_MODES.map(k => `<th class="c">${k.replace('_Mode', '')}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table></div>`
       : '<div class="empty"><b>Aucun axe dans ce projet</b><span>Importe le dossier élec (bandeau du projet) ou ajoute un axe ci-dessous.</span></div>'}
     <div class="pform addline"><span class="addlab">Ajouter un axe à la main</span><input type="text" id="blNom" placeholder="Nom (ex. MT9)" value="${esc(F.nom)}" autocomplete="off" aria-label="Nom du nouvel axe">
-      <select id="blGamme" aria-label="Variateur du nouvel axe">${optH('LXM62', F.gamme)}${optH('ILM62', F.gamme)}${optH('BMP', F.gamme, 'BMP sur ATV320')}</select><button class="btn" id="blAdd">+ Axe</button></div></div>`;
+      <select id="blGamme" aria-label="Variateur du nouvel axe">${optH('LXM62', F.gamme)}${optH('ILM62', F.gamme)}${optH('BMP', F.gamme, 'Synchrone sur ATV320')}</select><button class="btn" id="blAdd">+ Axe</button></div></div>`;
   renderProj();
   v.querySelectorAll('tr[data-bl]').forEach(tr => {
     const A = () => S.axes.find(x => x.id === tr.dataset.bl);
@@ -1934,21 +1938,31 @@ function renderAtv() {
   /* Plaque moteur de chaque ATV320 (asynchrone : fiche du catalogue Moteurs ; BMP : réglé dans l'axe) */
   const asyncs = S.motors.filter(estAsync), axesBmp = pAxes().filter(a => a.gamme === 'BMP');
   const bmpAxe = x => axesBmp.find(a => nrmE(a.nom) === nrmE(x.dossier || x.nom.replace(/^ATV320_/, ''))) || (x.bmp || /^BMP\d{4}/.test(refKey(x.moteurRef)) ? { nom: x.dossier || '?' } : null);
-  const PL = A.map(({ x, k }) => { const ba = bmpAxe(x), m = ba ? null : atvMotorOf(x), d = driveOf(x.ref); return { x, k, ba, m, d, P: ba ? null : atvPlaque(x, m, d) }; });
+  /* synchrone (BMP, tambour NGI / Interroll) : fiche et réglages de l'axe (loi SYN de l'ATV320 : NCRS, NSPS, PPNS, PHS ; ITH, HSP, LSP et CLI calculés dans l'axe) */
+  const PL = A.map(({ x, k }) => { const ba = bmpAxe(x), d = driveOf(x.ref);
+    if (ba && ba.id) { const m = S.motors.find(mm => mm.id === ba.moteurId) || null, R = m ? compute(ba) : null; return { x, k, ba, m, d, R, sync: true, P: null }; }
+    const m = ba ? null : atvMotorOf(x); return { x, k, ba, m, d, P: ba ? null : atvPlaque(x, m, d) }; });
   const TAG = { crit: 'crit', warn: 'warn', info: 'ok' };
   const nv = (v, dec, u) => v == null ? '<span class="el-sub">?</span>' : fmt(v, dec) + (u ? ' <span class="el-sub">' + u + '</span>' : '');
   const grpM = (() => { const g = new Map(); asyncs.forEach(m => { const s = m.serie || 'Autres'; if (!g.has(s)) g.set(s, []); g.get(s).push(m); }); return [...g]; })();
-  const plRows = PL.map(({ x, k, ba, m, d, P }) => `<tr data-atvm="${k}"><td><b>${esc(x.nom)}</b></td>
+  const plRows = PL.map(({ x, k, ba, m, d, P, R, sync }) => `<tr data-atvm="${k}"><td><b>${esc(x.nom)}</b></td>
     <td>${x.moteurRef ? `<span class="mono">${esc(x.moteurRef)}</span>` : '<span class="el-sub">pas de référence moteur dans le dossier</span>'}${x.moteurFab || x.moteurP != null || x.moteurI != null || x.moteurN != null ? `<div class="el-sub">${[x.moteurFab, x.moteurP != null ? fmt(x.moteurP, 2) + ' kW' : '', x.moteurI != null ? 'IN ' + fmt(x.moteurI, 2) + ' A' : '', x.moteurN != null ? fmt(x.moteurN, 0) + ' tr/min' : '', x.moteurU].filter(Boolean).map(esc).join(' · ')}</div>` : ''}</td>
-    ${ba ? `<td colspan="10"><span class="el-sub">Moteur BMP synchrone : réglages de l’ATV320 (limite de courant, HSP, LSP, ITH) dans l’axe <b>${esc(ba.nom)}</b>, onglet Axes.</span></td>`
+    ${sync ? (m ? `<td>${esc(m.ref)}<div class="el-sub">synchrone (loi SYN) · axe <b>${esc(ba.nom)}</b>, onglet Axes${d && num(m.i0) != null && num(d.iNom) != null && num(m.i0) > num(d.iNom) ? ' · <span class="el-warn">IN moteur > In ATV320</span>' : ''}</div></td>
+      <td class="n">${num(m.pNom) != null ? nv(num(m.pNom), 2, 'kW') : num(m.m0) != null && num(m.nNom) ? nv(num(m.m0) * num(m.nNom) * 2 * Math.PI / 60 / 1000, 2, 'kW') : ''}</td><td class="n">${(() => { const v = (String(m.tension || '').match(/\d{3}/g) || []).map(Number); return v.length === 1 ? nv(v[0], 0, 'V') : v.length ? '<span class="el-sub">' + v.join('/') + ' V</span>' : '<span class="el-sub">?</span>'; })()}</td>
+      <td class="n">${nv(num(m.i0), 2, 'A')}<div class="el-sub">NCRS</div></td><td class="n">${R && R.hsp != null ? nv(R.hsp, 1, 'Hz') : '<span class="el-sub">—</span>'}<div class="el-sub">HSP${R && R.lsp != null && R.pp ? ' · LSP ' + fmt(R.lsp, 1) : ''}</div></td>
+      <td class="n">${nv(num(m.nNom), 0, 'tr/min')}<div class="el-sub">NSPS${R && R.nAtVmax ? ' · ' + fmt(R.nAtVmax, 0) + ' à Vmax' : ''}</div></td><td class="n">${(pp => pp ? fmt(pp, 0) + ' <span class="el-sub">p.</span>' : '<span class="el-sub">?</span>')(R && R.pp ? R.pp : (num(m.paires) ?? (/^BMP/i.test(refKey(m.ref)) ? 5 : null)))}<div class="el-sub">PPNS${num(m.ke) != null ? ' · PHS ' + fmt(num(m.ke), 1) : ''}</div></td>
+      <td class="n">${R && R.ith != null ? nv(R.ith, 2, 'A') : nv(num(m.i0), 2, 'A')}<div class="el-sub">${R && R.ithPct != null ? fmt(R.ithPct, 0) + ' % de IN' : 'IN'}${R && R.pct != null ? ' · CLI ' + fmt(R.pct, 0) + ' %' : ''}</div></td>`
+      : `<td colspan="8"><span class="el-sub">Moteur synchrone : ${ba.id ? 'choisis le moteur dans l’axe <b>' + esc(ba.nom) + '</b> (onglet Axes) pour voir NCRS, NSPS, PPNS, PHS, ITH, HSP et LSP.' : 'l’axe <b>' + esc(ba.nom) + '</b> n’existe pas dans l’onglet Axes (réimporte le dossier ou crée-le).'}</span></td>`) + (m ? `<td>${d ? 'In ' + fmt(num(d.iNom), 1) + ' A · Imax ' + fmt(num(d.iPeak), 1) + ' A' : x.ref ? '<span class="el-warn">réf. absente du catalogue Variateurs</span>' : '<span class="el-sub">réf. inconnue</span>'}</td><td>${R ? (R.checks || []).filter(c => c[0] !== 'info').slice(0, 3).map(c => `<div><span class="tag ${TAG[c[0]]}">${c[0] === 'crit' ? 'Alerte' : 'À vérifier'}</span> <span class="el-sub">${esc(c[1]).slice(0, 110)}</span></div>`).join('') || '<span class="tag ok">OK</span>' : ''}</td>` : '<td></td><td></td>')
+      : ba ? `<td colspan="10"><span class="el-sub">Moteur synchrone : réglages de l’ATV320 dans l’axe <b>${esc(ba.nom)}</b>, onglet Axes.</span></td>`
       : `<td><select data-mot aria-label="Fiche moteur de ${esc(x.nom)}"><option value="">${esc(x.moteurId ? '— d’après la référence du dossier —' : m ? 'auto : ' + m.ref : '— à choisir —')}</option>${grpM.map(([s, L]) => `<optgroup label="${esc(s)}">${L.map(mm => `<option value="${esc(mm.id)}" ${x.moteurId === mm.id ? 'selected' : ''}>${esc(mm.ref)}${num(mm.pNom) != null ? ' · ' + fmt(num(mm.pNom), 2) + ' kW' : ''}</option>`).join('')}</optgroup>`).join('')}</select>${!m && x.moteurRef ? `<div class="el-sub"><span class="el-warn">absente du catalogue</span> <button class="btn ghost" data-motnew="${k}" title="Référence et fabricant seulement : les données constructeur se saisissent depuis le catalogue ou la plaque">Créer la fiche</button></div>` : m && x.moteurId ? `<div class="el-sub">choisie ici</div>` : m && refKey(m.ref) !== refKey(x.moteurRef) ? `<div class="el-sub">${esc(m.ref)} (début de référence commun)</div>` : ''}</td>
     <td class="n">${m ? nv(P.npr, 2, 'kW') : ''}</td><td class="n">${m ? nv(P.uns, 0, 'V') : ''}</td><td class="n">${m ? nv(P.ncr, 2, 'A') : ''}</td><td class="n">${m ? nv(P.frs, 0, 'Hz') : ''}</td><td class="n">${m ? nv(P.nsp, 0, 'tr/min') : ''}</td><td class="n">${m ? nv(P.cos, 2, '') : ''}</td><td class="n">${m ? nv(P.ith, 2, 'A') : ''}</td>
     <td>${d ? 'In ' + fmt(num(d.iNom), 1) + ' A · Imax ' + fmt(num(d.iPeak), 1) + ' A' + (num(d.puissance) != null ? ' · ' + fmt(num(d.puissance), 2) + ' kW' : '') : x.ref ? '<span class="el-warn">réf. absente du catalogue Variateurs</span>' : '<span class="el-sub">réf. inconnue</span>'}</td>
     <td>${(P.checks || []).map(c => `<div><span class="tag ${TAG[c[0]]}">${c[0] === 'crit' ? 'Alerte' : c[0] === 'warn' ? 'À vérifier' : 'Info'}</span> <span class="el-sub">${esc(c[1])}</span></div>`).join('') || (m ? '<span class="tag ok">OK</span>' : '')}</td>`}</tr>`).join('');
-  const plaquesTxt = PL.filter(r => r.P && r.P.m).map(r => plaqueTxt(r.x, r.P)).join('\n');
-  const plaquesHtml = A.length ? `<h3 class="elech" style="margin-top:14px">Moteurs des ATV320 · plaque signalétique <span class="el-sub">ce que le programme écrit en Modbus dans chaque ATV320 (menu Contrôle moteur). Les valeurs viennent de la fiche constructeur (Catalogue › Moteurs), retrouvée d’après la référence du dossier ; ce que le dossier indique sert seulement de contrôle (écart signalé)</span></h3>
-    <div class="tblwrap"><table class="gtbl"><thead><tr><th>ATV320</th><th>Moteur (dossier)</th><th>Fiche moteur</th><th class="n" title="Rated motor power">NPR</th><th class="n" title="Rated motor voltage">UNS</th><th class="n" title="Rated motor current">NCR</th><th class="n" title="Rated motor frequency">FRS</th><th class="n" title="Rated motor speed">NSP</th><th class="n" title="Motor cos φ">COS</th><th class="n" title="Motor thermal current = NCR">ITH</th><th>ATV320</th><th>Contrôles</th></tr></thead><tbody>${plRows}</tbody></table></div>
-    <div class="pform addline">${plaquesTxt ? `<button class="btn" id="atvPlCopy">Copier les plaques</button><span class="el-sub">une ligne par ATV320 : NPR | UNS | NCR | FRS | NSP | COS | ITH, à coller dans la liste des paramètres Modbus</span>` : '<span class="el-sub">Aucune fiche moteur rattachée : choisis-la dans la colonne « Fiche moteur » ou crée-la (les fiches se créent aussi à l’import du dossier).</span>'}</div>` : '';
+  const plaqueSyncTxt = r => { const m = r.m, R = r.R, v = (String(m.tension || '').match(/\d{3}/g) || []); return r.x.nom + (r.x.nodeId != null ? ' (Node-ID ' + r.x.nodeId + ')' : '') + ' · ' + m.ref + ' · synchrone (loi SYN) | NCRS ' + (num(m.i0) != null ? fmt(num(m.i0), 2) + ' A' : '?') + ' | NSPS ' + (num(m.nNom) != null ? fmt(num(m.nNom), 0) + ' tr/min' : '?') + ' | PPNS ' + ((pp => pp ? fmt(pp, 0) : '?')(R && R.pp ? R.pp : (num(m.paires) ?? (/^BMP/i.test(refKey(m.ref)) ? 5 : null)))) + ' | PHS ' + (num(m.ke) != null ? fmt(num(m.ke), 1) + ' V/krpm' : '?') + (v.length ? ' | UNS ' + v.join('/') + ' V' : '') + ' | ITH ' + (R && R.ith != null ? fmt(R.ith, 2) + ' A' : '?') + ' | HSP ' + (R && R.hsp != null ? fmt(R.hsp, 1) + ' Hz' : '?') + ' | LSP ' + (R && R.lsp != null && R.pp ? fmt(R.lsp, 1) + ' Hz' : '?') + (R && R.pct != null ? ' | CLI ' + fmt(R.pct, 0) + ' %' : ''); };
+  const plaquesTxt = PL.filter(r => (r.P && r.P.m) || (r.sync && r.m)).map(r => r.sync ? plaqueSyncTxt(r) : plaqueTxt(r.x, r.P)).join('\n');
+  const plaquesHtml = A.length ? `<h3 class="elech" style="margin-top:14px">Moteurs des ATV320 · plaque signalétique <span class="el-sub">ce que le programme écrit en Modbus dans chaque ATV320 (menu Contrôle moteur). Les valeurs viennent de la fiche constructeur (Catalogue › Moteurs), retrouvée d’après la référence du dossier ; ce que le dossier indique sert seulement de contrôle (écart signalé). Moteur synchrone (BMP, tambour NGI MTS62 ou Interroll DM) : loi SYN, NCRS / NSPS (tr/min) / PPNS / PHS d’après la fiche, ITH, HSP, LSP et limite de courant d’après l’axe (onglet Axes)</span></h3>
+    <div class="tblwrap"><table class="gtbl"><thead><tr><th>ATV320</th><th>Moteur (dossier)</th><th>Fiche moteur</th><th class="n" title="Rated motor power">NPR</th><th class="n" title="Rated motor voltage">UNS</th><th class="n" title="Rated motor current (synchrone : NCRS)">NCR</th><th class="n" title="Rated motor frequency (synchrone : HSP / LSP)">FRS</th><th class="n" title="Rated motor speed (synchrone : NSPS)">NSP</th><th class="n" title="Motor cos φ (synchrone : paires de pôles PPNS et FCEM PHS)">COS</th><th class="n" title="Motor thermal current">ITH</th><th>ATV320</th><th>Contrôles</th></tr></thead><tbody>${plRows}</tbody></table></div>
+    <div class="pform addline">${plaquesTxt ? `<button class="btn" id="atvPlCopy">Copier les plaques</button><span class="el-sub">une ligne par ATV320 : asynchrone NPR | UNS | NCR | FRS | NSP | COS | ITH, synchrone NCRS | NSPS | PPNS | PHS | ITH | HSP | LSP | CLI, à coller dans la liste des paramètres Modbus</span>` : '<span class="el-sub">Aucune fiche moteur rattachée : choisis-la dans la colonne « Fiche moteur » ou crée-la (les fiches se créent aussi à l’import du dossier).</span>'}</div>` : '';
   const allRow = A.length > 1 ? `<tr class="all"><td><b>Tous</b></td><td class="el-sub">valeur mise sur tous les ATV320</td><td></td>
     <td class="c"><input type="checkbox" id="atvOptAll" ${allOpt ? 'checked' : ''} aria-label="Optional device pour tous"></td>${cols.map((c, j) => `<td>${cell(c, '', `data-all="${j}" aria-label="${esc(c.n)} pour tous"`)}</td>`).join('')}<td></td></tr>` : '';
   v.innerHTML = projTop() + meImpPanel() + `<div class="panel" style="margin-top:14px"><div class="panel-h"><h2>ATV320 · ${A.length} variateur${A.length > 1 ? 's' : ''} sur le CANopen</h2>
@@ -1981,7 +1995,7 @@ function renderAtv() {
   v.querySelectorAll('tr[data-atvm]').forEach(tr => {
     const k = +tr.dataset.atvm, x0 = (curProj().materiel || [])[k] || {}, nom = x0.nom;
     const sm = tr.querySelector('[data-mot]'); if (sm) sm.onchange = () => { const id = sm.value; setItem(k, x => { const y = { ...x }; if (id) y.moteurId = id; else delete y.moteurId; return y; }, nom + ' : fiche moteur ' + (id ? (S.motors.find(m => m.id === id) || {}).ref : 'd’après la référence du dossier') + '.'); };
-    const nb = tr.querySelector('[data-motnew]'); if (nb) nb.onclick = () => { S.lib.motors = ficheAsync({ ref: x0.moteurRef, fab: x0.moteurFab || '', p: x0.moteurP ?? null, iN: x0.moteurI ?? null, n: x0.moteurN ?? null, u: x0.moteurU || '', poles: x0.moteurPoles ?? null, noms: [nom] }, ''); S.confirm = null; goTab('motors'); setStatus('Fiche pré-remplie avec la référence et le fabricant du dossier : saisis les données constructeur (catalogue ou plaque) puis « Ajouter ». Elle sera rattachée à ' + nom + ' par sa référence.'); };
+    const nb = tr.querySelector('[data-motnew]'); if (nb) nb.onclick = () => { S.lib.motors = ficheAsync({ ref: x0.moteurRef, fab: x0.moteurFab || '', p: x0.moteurP ?? null, iN: x0.moteurI ?? null, n: x0.moteurN ?? null, u: x0.moteurU || '', poles: x0.moteurPoles ?? null, noms: [nom] }, ''); S.confirm = null; goTab('asyncs'); setStatus('Fiche pré-remplie avec la référence et le fabricant du dossier : saisis les données constructeur (catalogue ou plaque) puis « Ajouter ». Elle sera rattachée à ' + nom + ' par sa référence.'); };
   });
   const pc = $('#atvPlCopy'); if (pc) pc.onclick = () => { (navigator.clipboard ? navigator.clipboard.writeText(plaquesTxt) : Promise.reject()).then(() => { pc.textContent = 'Copié'; setTimeout(() => { pc.textContent = 'Copier les plaques'; }, 1500); }).catch(() => { pc.textContent = 'Copie refusée'; }); };
   const hb = $('#atvHb'); if (hb) hb.onchange = () => { const n = Math.round(num(hb.value) ?? 0); if (!(n >= 0)) { setStatus('Producer time : un nombre de ms (0 = ne pas toucher).', true); return; } projPatch({ atvHeartbeat: n }, n ? 'Producer time ' + n + ' ms sur tous les ATV320 (arrondi au multiple du cycle par le script).' : 'Producer time : le script n’y touche plus.'); };
@@ -2104,7 +2118,7 @@ const confirm_ = () => { setStatus('Modifications non enregistrées : enregistre
 function render() {
   S.lastTab = { ...(S.lastTab || {}), [grpOf(S.tab).k]: S.tab };
   renderNav();
-  if (S.tab === 'axes') renderAxes(); else if (S.tab === 'brushless') renderBrushless(); else if (S.tab === 'atv') renderAtv(); else if (S.tab === 'es') renderIo(); else if (S.tab === 'iodict') renderIoDict(); else renderLib(S.tab);
+  if (S.tab === 'axes') renderAxes(); else if (S.tab === 'brushless') renderBrushless(); else if (S.tab === 'atv') renderAtv(); else if (S.tab === 'es') renderIo(); else if (S.tab === 'iodict') renderIoDict(); else if (S.tab === 'asyncs') renderLib('motors', 'async'); else renderLib(S.tab);
 }
 
 
@@ -2120,6 +2134,7 @@ const WHERE = {
   'motors.iNom230': 'Plaque : courant nominal dans la colonne 230 V (couplage triangle Δ). Sert si l’ATV320 est un M2 / M3 (réseau 230 V). Vide : IN 400 V × √3.',
   'motors.cosPhi': 'Plaque : cos φ (facteur de puissance), entre 0,7 et 0,9. Dans l’ATV320 : [Cos. phi moteur] COS.',
   'motors.rendement': 'Plaque ou catalogue : rendement nominal en %. Information (classe IE), pas un paramètre de l’ATV320.',
+  'motors.ke': 'Catalogue du moteur synchrone : constante de FCEM (force contre-électromotrice) en V pour 1000 tr/min, entre phases. Dans l’ATV320, menu [Moteur synchrone] : [Const. FEM sync] PHS. Tambours Interroll DM : colonne ke du tableau « Données électriques pour moteurs synchrones » ; NGI MTS62 : « Tension constante ».',
   'motors.serie': 'Les premiers caractères de la référence (ex. SH3 100 pour SH31004P). Sert seulement à ranger la liste.',
   'motors.kt': 'Catalogue / manuel du moteur, tableau des données techniques : « Torque constant kt » en Nm/A. Si la valeur n’est pas donnée, laisse vide : le site calcule M0 ÷ I0. Dans Machine Expert : paramètre TorqueConstant du dossier Motor du moteur réel.',
   'motors.jMotor': 'Catalogue, tableau « Rotor inertia » (kg·cm²) : prends la ligne AVEC frein si le moteur en a un. Dans Machine Expert : MotorInertia (dossier Motor), à privilégier car c’est la valeur lue sur le moteur réel.',
@@ -2178,7 +2193,7 @@ const WHERE = {
   gamme: 'Dossier élec, colonne « Gamme » : LXM62 ou ILM62. Les ATV320 et TeSys ne sont pas des axes : ils vont dans le matériel du projet.',
   ioCard: 'Dossier élec : coché quand le variateur est un LXM62 (carte IO montée dans le module). Un ILM62 n’a pas de carte IO.'
 };
-function whereOf(f, prefix) { const w = (prefix === 'lib-' ? (WHERE[S.tab + '.' + f.k] || WHERE[f.k]) : WHERE[f.k]) || ''; return w && f.h && !w.includes(f.h) ? f.h + '. ' + w : (w || f.h || ''); }
+function whereOf(f, prefix) { const tab = S.tab === 'asyncs' ? 'motors' : S.tab; const w = (prefix === 'lib-' ? (WHERE[tab + '.' + f.k] || WHERE[f.k]) : WHERE[f.k]) || ''; return w && f.h && !w.includes(f.h) ? f.h + '. ' + w : (w || f.h || ''); }
 const whBtn = w => w ? `<button type="button" class="whbtn" tabindex="-1" aria-label="Aide sur ce champ" title="Aide : à quoi sert ce champ, où trouver la valeur">?</button>` : '';
 const whBox = w => w ? `<div class="where" hidden>${esc(w)}</div>` : '';
 document.addEventListener('click', e => {
@@ -2344,7 +2359,7 @@ function renderResults() {
     ${keyt(R.ratioTot == null ? 'none' : R.ratioTot > 30 ? 'crit' : R.ratioTot > 10 ? 'warn' : 'ok', 'Rapport d’inertie', R.ratioTot != null ? fmt(R.ratioTot, R.ratioTot < 10 ? 1 : 0) : '—', '', 'charge ramenée ÷ (moteur + réducteur) · visé : 10 ou moins', ' g2')}
     ${keyt('acc', 'Inertie vue par le moteur', fmt(R.Jtot, 2), 'kg·cm²', `moteur ${fmt(R.Jm, 2)} · réducteur ${fmt(R.Jg, 2)} · charge ramenée ${fmt(R.JLm, 2)}`, ' g2')}
   </div>`;
-  box.innerHTML = `<div class="panel-h"><div class="ph-t"><h2>${R.atv ? 'Données de l’axe · BMP sur ATV320' : 'À saisir dans le variateur'}</h2><div class="el-sub">${R.atv ? 'Moteur synchrone BMP piloté par un ATV320 : rien à saisir dans Machine Expert, le variateur se règle en Modbus. Ici : limite de courant à prévoir, tenue du réducteur, inertie et vitesse.' : 'Rangé comme dans Machine Expert, dossier du variateur ' + esc('DRV_' + (S.draft.nom || '')) + ' : Mechanic, Control loop, General. Les jauges disent ce que le réducteur encaisse.'}</div></div><button class="btn" id="copyP" title="Copie la liste des paramètres et leurs valeurs (texte), à coller dans un mail ou un rapport">Copier</button></div>
+  box.innerHTML = `<div class="panel-h"><div class="ph-t"><h2>${R.atv ? 'Données de l’axe · synchrone sur ATV320' : 'À saisir dans le variateur'}</h2><div class="el-sub">${R.atv ? 'Moteur synchrone (BMP, tambour NGI MTS62 ou Interroll DM) piloté par un ATV320 en loi SYN : rien à saisir dans Machine Expert, le variateur se règle en Modbus. Ici : limite de courant, HSP / LSP / ITH, tenue du réducteur, inertie et vitesse ; la plaque (NCRS, NSPS, PPNS, PHS) est dans l’onglet ATV320.' : 'Rangé comme dans Machine Expert, dossier du variateur ' + esc('DRV_' + (S.draft.nom || '')) + ' : Mechanic, Control loop, General. Les jauges disent ce que le réducteur encaisse.'}</div></div><button class="btn" id="copyP" title="Copie la liste des paramètres et leurs valeurs (texte), à coller dans un mail ou un rapport">Copier</button></div>
   <div class="panel-b">
     ${keys}
     ${groups}
@@ -2512,22 +2527,28 @@ function bindAxes() {
   };
 }
 
-function renderLib(key) {
+/* key = collection ; typ (moteurs seulement) = 'sync' (onglet Brushless) ou 'async' (onglet Asynchrones) : même collection, deux listes */
+function renderLib(key, typ) {
   const v = $('#view'); if (!allLoaded()) { v.innerHTML = ''; return; }
-  const isM = key === 'motors', isH = key === 'hwtypes', isD = key === 'drives', FIELDS = isM ? MOTOR_FIELDS : isH ? HWTYPE_FIELDS : isD ? DRIVE_FIELDS : REDUCER_FIELDS, noun = isM ? 'moteur' : isH ? 'type de matériel' : isD ? 'variateur' : 'réducteur';
+  const isM = key === 'motors', isH = key === 'hwtypes', isD = key === 'drives', FIELDS = isM ? MOTOR_FIELDS : isH ? HWTYPE_FIELDS : isD ? DRIVE_FIELDS : REDUCER_FIELDS;
+  const typ2 = isM ? (typ || 'sync') : null, isA = typ2 === 'async', sk = isA ? 'asyncs' : key;   // sk : clé des filtres (recherche, série) propre à chaque onglet
+  const noun = isA ? 'moteur asynchrone' : isM ? 'moteur brushless' : isH ? 'type de matériel' : isD ? 'variateur' : 'réducteur';
   S.marque = S.marque || {};
-  const q = (S.search[key] || '').toLowerCase().trim(), ser = S.serie[key] || '', mq = isM || isH || isD ? '' : (S.marque[key] || '');
+  const q = (S.search[sk] || '').toLowerCase().trim(), ser = S.serie[sk] || '', mq = isM || isH || isD ? '' : (S.marque[sk] || '');
   const words = q.split(/\s+/).filter(Boolean);
-  const brands = isM || isH || isD ? [] : [...new Set(S[key].map(x => x.marque || 'Autres'))].sort((a, b) => a.localeCompare(b, 'fr'));
-  const inBrand = S[key].filter(x => !mq || (x.marque || 'Autres') === mq);
+  const pool = isM ? S.motors.filter(x => (x.typeMot === 'async') === isA) : S[key];
+  const brands = isM || isH || isD ? [] : [...new Set(pool.map(x => x.marque || 'Autres'))].sort((a, b) => a.localeCompare(b, 'fr'));
+  const inBrand = pool.filter(x => !mq || (x.marque || 'Autres') === mq);
   const series = [...new Set(inBrand.map(x => x.serie || 'Autres'))];
   const hay = x => isH ? [x.ref, x.serie, x.alias, x.devId, x.parent, x.notes, hwNomAuto(x.ref)].join(' ').toLowerCase() : isD ? [x.ref, x.serie, x.tension, x.puissance != null ? x.puissance + ' kw' : '', x.notes].join(' ').toLowerCase() : [x.ref, x.serie, x.marque, x.ratio != null ? 'i=' + x.ratio + ' i=' + String(x.ratio).replace('.', ',') : '', x.pNom != null ? x.pNom + ' kw ' + String(x.pNom).replace('.', ',') + ' kw' : '', x.typeMot === 'async' ? 'asynchrone' : x.typeMot === 'sync' || isM ? 'synchrone' : ''].join(' ').toLowerCase();
   const list = inBrand.filter(x => (!ser || (x.serie || 'Autres') === ser) && (!words.length || (h => words.every(w => h.includes(w)))(hay(x))));
   const cols = isD ? [['Puissance', x => x.puissance != null ? fmt(num(x.puissance), 2) : '', 'kW'], ['In', x => fmt(num(x.iNom), 1), 'A'], ['Imax', x => fmt(num(x.iPeak), 1), 'A'], ['Tension', x => esc(x.tension || ''), '']] : isH ? [['Nom dans l’automate', x => `<span class="mono">${esc(hwNomAuto(x.ref))}</span>`, ''], ['DeviceID', x => esc([x.devType, x.devId].filter(v => v != null && v !== '').join(' / ')), ''], ['Version', x => esc(x.devVer || ''), ''], ['Parent', x => esc(x.parent || ''), '']] : isM
-    ? [['Type', x => x.typeMot === 'async' ? 'Async.' + (x.tension ? ' ' + esc(x.tension) : '') : 'Sync.', ''], ['Kt · P', x => x.typeMot === 'async' ? (num(x.pNom) != null ? fmt(num(x.pNom), 2) + ' kW' : '') : fmt(num(x.kt) ?? (num(x.m0) / num(x.i0)), 3), 'Nm/A'], ['Inertie', x => fmt(num(x.jMotor), 3), 'kg·cm²'], ['Imax · IN', x => x.typeMot === 'async' ? (num(x.i0) != null ? 'IN ' + fmt(num(x.i0), 2) : '') : fmt(num(x.imax), 1), 'A']]
+    ? (isA ? [['Puissance', x => num(x.pNom) != null ? fmt(num(x.pNom), 2) : '', 'kW'], ['IN', x => fmt(num(x.i0), 2), 'A'], ['Vitesse', x => num(x.nNom) != null ? fmt(num(x.nNom), 0) : '', 'tr/min'], ['cos φ', x => num(x.cosPhi) != null ? fmt(num(x.cosPhi), 2) : '', ''], ['Tension', x => esc(x.tension || ''), '']]
+      : [['Kt', x => fmt(num(x.kt) ?? (num(x.m0) / num(x.i0)), 3), 'Nm/A'], ['Inertie', x => fmt(num(x.jMotor), 3), 'kg·cm²'], ['IN / I0', x => fmt(num(x.i0), 2), 'A'], ['Imax', x => fmt(num(x.imax), 1), 'A'], ['Vitesse', x => num(x.nNom) != null ? fmt(num(x.nNom), 0) : '', 'tr/min']])
     : [['i', x => fmt(num(x.ratio), 3), ''], ['T2B', x => fmt(num(x.t2b), 0), 'Nm'], ['J_Gear', x => fmt(num(x.jGear), 3), 'kg·cm²']];
   const used = id => isH ? (t => S.projects.filter(p => (p.materiel || []).some(m => m.type === t)).map(p => p.nom))((S[key].find(x => x.id === id) || {}).ref) : isD ? S.axes.filter(a => a.variateur && driveOf(a.variateur)?.id === id).map(a => (projName(a.projetId) ? projName(a.projetId) + ' › ' : '') + a.nom) : S.axes.filter(a => (isM ? a.moteurId : a.reducteurId) === id).map(a => (projName(a.projetId) ? projName(a.projetId) + ' › ' : '') + a.nom);
-  const ed = S.lib[key];
+  let ed = S.lib[key];
+  if (isM && ed && ed.id && ((ed.typeMot === 'async') !== isA)) ed = null;   // fiche de l'autre onglet : pas ici
   let body = '', last = null;
   list.forEach(x => {
     const g = x.serie || 'Autres';
@@ -2539,16 +2560,16 @@ function renderLib(key) {
   const form = ed ? `<section class="panel edit sticky"><div class="panel-h"><h2>${ed.id ? esc(ed.ref || '') : 'Nouveau ' + noun}</h2><button class="btn ghost" id="libCancel">Fermer</button></div>
     <div class="panel-b" id="libForm"><fieldset>${FIELDS.filter(f => !f.only || f.only === (ed.typeMot || 'sync')).map(f => inputHtml(isM && ed.typeMot === 'async' && (f.la || f.ha) ? { ...f, l: f.la || f.l, h: f.ha || f.h } : f, f.k === 'integre' ? isIntegre(ed) : ed[f.k], 'lib-')).join('')}</fieldset>
     <div class="actions"><button class="btn primary" id="libSave">${ed.id ? 'Enregistrer' : 'Ajouter'}</button>${ed.id ? `<button class="btn ghost" id="libDup">Dupliquer</button>${ed._cat ? '' : `<button class="btn ghost ${S.confirm === ed.id ? 'danger armed' : ''}" id="libDel">${S.confirm === ed.id ? 'Confirmer la suppression' : 'Supprimer'}</button>`}` : ''}</div></div></section>` : '';
-  v.innerHTML = `<div class="panel" style="padding:10px 12px"><div class="libbar"><div class="inp text"><input id="libSearch" placeholder="${isH ? 'Rechercher : type, famille, référence du dossier…' : 'Rechercher : référence, i=7…'}" value="${esc(S.search[key])}" autocomplete="off"></div>
+  v.innerHTML = `<div class="panel" style="padding:10px 12px"><div class="libbar"><div class="inp text"><input id="libSearch" placeholder="${isH ? 'Rechercher : type, famille, référence du dossier…' : isA ? 'Rechercher : référence, fabricant, 0,75 kw…' : 'Rechercher : référence, i=7…'}" value="${esc(S.search[sk] || '')}" autocomplete="off"></div>
       ${isM || isH || isD ? '' : `<select id="libMarque" aria-label="Marque"><option value="">Toutes les marques</option>${brands.map(g => `<option ${g === mq ? 'selected' : ''}>${esc(g)}</option>`).join('')}</select>`}
       <select id="libSerie" aria-label="Série"><option value="">${isH ? 'Toutes les familles' : 'Toutes les séries'} (${inBrand.length})</option>${series.map(g => `<option ${g === ser ? 'selected' : ''}>${esc(g)}</option>`).join('')}</select>
       ${isH ? '<label class="btn" for="meJson" style="cursor:pointer" title="Fichier explo_materiel.json du script explorer_materiel.py">Importer depuis Machine Expert</label><input type="file" id="meJson" accept=".json,application/json" hidden>' : ''}<button class="btn primary" id="libNew">+ Ajouter</button>
-      <div class="libnote">${isD ? 'Fiches variateurs : courant nominal In et courant max Imax, communes à tous les projets. Une référence du dossier (ATV320U06N4C, LXM62DU60C21000) est rattachée à la fiche dont la référence est le début de la sienne. Pour un axe BMP, l’Imax de l’ATV320 borne la limite de courant ; pour un Lexium 62, c’est le moteur qui fait référence (MaxDrivePeakCurrent à vérifier). « Utilisé par » = axes dont le variateur est rattaché à cette fiche.' : isH ? 'Chaque type dit au script comment créer l’appareil dans Machine Expert : DeviceID (type, identifiant, version), module et parent dans l’arbre. « Nom dans l’automate » = modèle du nom donné à l’appareil dans Machine Expert ({dossier} = nom du dossier élec, {n} = n° d’ordre, {ilot} = n° d’îlot TM5). Les fiches intégrées viennent du dictionnaire de l’Auto_Pannel ; « Importer depuis Machine Expert » lit les DeviceID d’un projet existant avec explorer_materiel.py. « Utilisé par » = projets où ce type apparaît.' : isM ? 'Fiches moteurs communes à tous les projets. Synchrones (brushless, BMP) : Kt, inertie et courants servent aux calculs des axes. Asynchrones (sur ATV320 ou direct réseau) : la plaque (puissance, tension, IN, fréquence, vitesse, cos φ) donne les paramètres NPR, UNS, NCR, FRS, NSP, COS et ITH de l’ATV320, affichés dans l’onglet ATV320 du projet ; mets la puissance dans la référence (« LS80L 0,75 kW ») pour qu’une référence du dossier commençant pareil soit rattachée à la bonne fiche. L’import du dossier élec ne crée les fiches asynchrones absentes qu’avec la référence et le fabricant : les données constructeur se saisissent depuis le catalogue ou la plaque, jamais depuis le dossier (qui peut se tromper ; l’écart est signalé dans l’onglet ATV320). Le catalogue intégré (Schneider SH3 / ILM / BMP, Interroll) se complète ou se corrige, une fiche modifiée est gardée à la mise à jour du catalogue. Clique sur une référence pour la voir ; le bouton ? dit où trouver chaque valeur.' : 'Fiches réducteurs communes à tous les projets : rapport, couples T2B / T2N / T2Not et J_Gear servent aux calculs. Pour SEW, GearIn / GearOut exacts viennent du tableau des dents. Clique sur une référence pour la voir ; le bouton ? dit où trouver chaque valeur.'}</div></div></div>
+      <div class="libnote">${isD ? 'Fiches variateurs : courant nominal In et courant max Imax, communes à tous les projets. Une référence du dossier (ATV320U06N4C, LXM62DU60C21000) est rattachée à la fiche dont la référence est le début de la sienne. Pour un axe BMP, l’Imax de l’ATV320 borne la limite de courant ; pour un Lexium 62, c’est le moteur qui fait référence (MaxDrivePeakCurrent à vérifier). « Utilisé par » = axes dont le variateur est rattaché à cette fiche.' : isH ? 'Chaque type dit au script comment créer l’appareil dans Machine Expert : DeviceID (type, identifiant, version), module et parent dans l’arbre. « Nom dans l’automate » = modèle du nom donné à l’appareil dans Machine Expert ({dossier} = nom du dossier élec, {n} = n° d’ordre, {ilot} = n° d’îlot TM5). Les fiches intégrées viennent du dictionnaire de l’Auto_Pannel ; « Importer depuis Machine Expert » lit les DeviceID d’un projet existant avec explorer_materiel.py. « Utilisé par » = projets où ce type apparaît.' : isA ? 'Moteurs asynchrones (fichier catalogue/moteurs_asynchrones.js), communs à tous les projets : la plaque (puissance, tension, IN, fréquence, vitesse, cos φ) donne les paramètres NPR, UNS, NCR, FRS, NSP, COS et ITH de l’ATV320, affichés dans l’onglet ATV320 du projet. Mets la puissance dans la référence (« LSES 90 LU 1,5 kW ») quand le type seul ne suffit pas, pour qu’une référence du dossier commençant pareil soit rattachée à la bonne fiche. L’import du dossier élec ne crée les fiches absentes qu’avec la référence et le fabricant : les données constructeur se saisissent depuis le catalogue ou la plaque, jamais depuis le dossier (qui peut se tromper ; l’écart est signalé dans l’onglet ATV320). Catalogue livré : SEW DRN (IE3, 2 / 4 / 6 / 8 pôles), Leroy-Somer LSES (IE3), Interroll DM 0080. Clique sur une référence pour la voir ; le bouton ? dit où trouver chaque valeur.' : isM ? 'Moteurs synchrones (fichier catalogue/moteurs_brushless.js), communs à tous les projets : Kt, inertie et courants servent aux calculs des axes (Lexium 62) ; pour un synchrone sur ATV320 (BMP, tambour NGI MTS62 ou Interroll DM) s’ajoutent les paires de pôles et la constante ke (PHS). Le catalogue livré (Schneider SH3 / ILM / BMP, NGI, Interroll) se complète ou se corrige, une fiche modifiée est gardée à la mise à jour du catalogue. Clique sur une référence pour la voir ; le bouton ? dit où trouver chaque valeur.' : 'Fiches réducteurs communes à tous les projets : rapport, couples T2B / T2N / T2Not et J_Gear servent aux calculs. Pour SEW, GearIn / GearOut exacts viennent du tableau des dents. Clique sur une référence pour la voir ; le bouton ? dit où trouver chaque valeur.'}</div></div></div>
     ${isH ? meImpPanel() : ''}<div class="libgrid ${ed ? 'editing' : ''}" style="margin-top:14px"><section class="panel">${table}</section>${form}</div>`;
-  const ls = $('#libSearch'); ls.oninput = () => { S.search[key] = ls.value; const pos = ls.selectionStart; render(); const n = $('#libSearch'); n.focus(); try { n.setSelectionRange(pos, pos); } catch (e) {} };
-  $('#libSerie').onchange = e => { S.serie[key] = e.target.value; render(); };
-  const lm = $('#libMarque'); if (lm) lm.onchange = e => { S.marque[key] = e.target.value; S.serie[key] = ''; render(); };
-  $('#libNew').onclick = () => { S.lib[key] = {}; S.confirm = null; render(); };
+  const ls = $('#libSearch'); ls.oninput = () => { S.search[sk] = ls.value; const pos = ls.selectionStart; render(); const n = $('#libSearch'); n.focus(); try { n.setSelectionRange(pos, pos); } catch (e) {} };
+  $('#libSerie').onchange = e => { S.serie[sk] = e.target.value; render(); };
+  const lm = $('#libMarque'); if (lm) lm.onchange = e => { S.marque[sk] = e.target.value; S.serie[sk] = ''; render(); };
+  $('#libNew').onclick = () => { S.lib[key] = isM ? { typeMot: typ2 } : {}; S.confirm = null; render(); };
   v.querySelectorAll('tr[data-edit]').forEach(b => b.onclick = () => { S.lib[key] = { ...S[key].find(x => x.id === b.dataset.edit) }; S.confirm = null; render(); });
   if (isH) bindMeImp();
   if (!ed) return;
@@ -2579,7 +2600,7 @@ function renderLib(key) {
 /* Barre d'onglets : le groupe de l'onglet actif est déplié, l'autre est un menu déroulant */
 const TAB_GROUPS = [
   { k: 'projet', l: 'Projet', tabs: [['axes', 'Axes', 'Réglage de chaque axe : moteur, réducteur, charge → valeurs à saisir dans le variateur'], ['brushless', 'Brushless', 'Variateurs Lexium 62 : ordre Sercos, LXM62 / ILM62, codeur, carte IO'], ['atv', 'ATV320', 'Variateurs ATV320 sur CANopen : Node-ID, Optional device, paramètres'], ['es', 'E/S', 'Entrées / sorties du projet : désignations du dossier et noms des variables automate']] },
-  { k: 'catalogue', l: 'Catalogue', tabs: [['motors', 'Moteurs', 'Fiches moteurs (Kt, inertie, courants), communes à tous les projets'], ['reducers', 'Réducteurs', 'Fiches réducteurs (rapport, T2B, J_Gear), communes à tous les projets'], ['hwtypes', 'Matériel', 'Types d’appareils que le script sait créer dans Machine Expert (DeviceID)'], ['drives', 'Variateurs', 'Fiches variateurs : In et Imax des ATV320 et des Lexium 62'], ['iodict', 'Dictionnaire E/S', 'Mots du dossier → noms des variables automate (vérin → V, monter → raisingUp…)']] }
+  { k: 'catalogue', l: 'Catalogue', tabs: [['motors', 'Brushless', 'Moteurs synchrones (SH3 / ILM, BMP, tambours synchrones) : Kt, inertie, courants'], ['asyncs', 'Asynchrones', 'Moteurs asynchrones (sur ATV320 ou direct réseau) : plaque (puissance, IN, vitesse, cos φ)'], ['reducers', 'Réducteurs', 'Fiches réducteurs (rapport, T2B, J_Gear), communes à tous les projets'], ['hwtypes', 'Matériel', 'Types d’appareils que le script sait créer dans Machine Expert (DeviceID)'], ['drives', 'Variateurs', 'Fiches variateurs : In et Imax des ATV320 et des Lexium 62'], ['iodict', 'Dictionnaire E/S', 'Mots du dossier → noms des variables automate (vérin → V, monter → raisingUp…)']] }
 ];
 /* Ligne 1 : Projet | Catalogue. Ligne 2 : les onglets de la section active. */
 const grpOf = tab => TAB_GROUPS.find(g => g.tabs.some(t => t[0] === tab)) || TAB_GROUPS[0];
@@ -2609,7 +2630,7 @@ function toggleHelp(on) {
   if (!h.hidden) h.scrollIntoView({ block: 'nearest' });
 }
 $('#helpClose').onclick = () => toggleHelp(false);
-try { const t = localStorage.getItem('servo-tab'); if (t && ['axes', 'brushless', 'atv', 'es', 'motors', 'reducers', 'hwtypes', 'drives', 'iodict'].includes(t)) S.tab = t; } catch (e) {}
+try { const t = localStorage.getItem('servo-tab'); if (t && ['axes', 'brushless', 'atv', 'es', 'motors', 'asyncs', 'reducers', 'hwtypes', 'drives', 'iodict'].includes(t)) S.tab = t; } catch (e) {}
 renderNav();
 try { if (localStorage.getItem('servo-help') === '1') toggleHelp(true); } catch (e) {}
 
