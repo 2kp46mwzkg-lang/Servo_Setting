@@ -1,3 +1,3 @@
 // Réglages Servo — date du catalogue livré, affichée en bas de la page (mode hors ligne). À changer quand on modifie un fichier de ce dossier.
 window.CATALOGUE = window.CATALOGUE || {};
-CATALOGUE._version = "20261103-1000";
+CATALOGUE._version = "20261103-1700";

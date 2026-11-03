@@ -371,3 +371,4 @@ td.used{color:var(--muted);font-size:12px}
 .bilan .kvcell{font-family:var(--mono);font-size:12px;white-space:normal}
 .bilan .kvcell span{display:inline-block;margin:1px 10px 1px 0;white-space:nowrap}
 .bilan .kvcell small{display:block;font-family:var(--sans);font-size:10.5px;color:var(--muted);line-height:1.1}
+.copt.cnew small{white-space:normal;text-align:right;max-width:60%}

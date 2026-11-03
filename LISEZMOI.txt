@@ -111,12 +111,21 @@ tableau des dents, ce qui donne GearIn / GearOut exacts. Pour chaque rapport : T
 1400 tr/min, nombre d'étages et rendement (R/F/K selon les étages, S d'après les tableaux
 techniques, W..0 déduit des tableaux de sélection : approximatif). J_Gear n'est pas dans le
 catalogue : ouvre le réducteur et saisis-le si tu le connais, la fiche passe alors dans ta base.
-Recherche : WA10, WF10, KA37, KHF19… trouvent W10, K37, K19 (même réducteur, autre forme), les
-fiches qui portent exactement le mot tapé passant en premier. Désignation exacte absente du
-catalogue (ex. KHF19 AQSH80/1 i=15,84 tapée dans le choix du réducteur) : l'outil propose de
-créer la fiche à ce nom d'après la fiche de base de même taille et même rapport (rapport exact,
-T2B, rendement repris ; T2B à confirmer avec un adaptateur servo). À l'import, la désignation
-du réducteur est lue dans Réf2 (réducteur séparé) ou en tête de la référence du motoréducteur.
+Fiches produit du configurateur SEW (KH19/TAQSH80/2 et KH19BAQSH80/2, rapports 4,5 · 6,91 ·
+14,69 · 21,98 · 29,29 · 40,63) : elles donnent le Ma max de la configuration réelle (l'adaptateur
+AQSH80/2 le limite à 41 Nm en i=4,5 et 49 Nm en i=6,91 là où le catalogue K19 annonce 80 Nm),
+le J_Gear (0,53 à 0,77 kg·cm² rapportés côté entrée, réducteur + adaptateur), la masse (6,7 à
+7,0 kg) et le lubrifiant. Les fiches sont dans le catalogue à leur désignation exacte, et le
+J_Gear est repris sur la fiche de base K19 du même rapport.
+Formes de montage (notice SEW 31988628/FR §3.11, tableau SEW_FORMES dans app.js) : la fiche de
+base porte le nom de la taille (K19, K37, F47, W10…) ; KA, KF, KAF, KH, KHF, KV, KT, KZ, KM…
+(et FA, FAF, FH…, SA, SAF…, WA, WAF…, suffixe B, options /T /R /G, adaptateurs AQSH, AQSA, AM…)
+sont le même réducteur avec une autre sortie. Dans le choix du réducteur d'un axe, taper la
+désignation de la plaque (KHF19, KA37B, KHF19 AQSH80/1, avec ou sans i=…) affiche les fiches de
+base de cette taille sous ce nom : en choisir une crée la fiche à ce nom (rapport exact, T2B,
+rendement repris, forme décrite dans les notes ; T2B à confirmer avec un adaptateur servo). À
+l'import du dossier, la désignation du réducteur est lue dans Réf2 (réducteur séparé) ou en tête
+de la référence du motoréducteur, et la fiche au nom exact est créée de la même façon.
 
 Asynchrone sur ATV320 : HSP et LSP se saisissent en Hz dans l'axe (50 / 10 Hz par défaut) ;
 l'outil donne les tr/min moteur, les tr/min de la virole et la vitesse de bande (mm/s et m/min)
