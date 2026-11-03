@@ -563,7 +563,7 @@ if LISTE_PARAMETRES:
 # @@TRACES@@
 
 for axe, raison in AXES_IGNORES:
-    dire("%s : reglages non generes par l'outil (%s)" % (PREFIXE + axe, raison))
+    dire(("%s : reglages non generes par l'outil (%s)" % (PREFIXE + axe, raison)) if axe else raison)
 if AXES_IGNORES:
     dire("")
 dire("Bilan : %d %s, %d inchanges, %d refuses, %d a regler a la main, %d erreurs, %d variateurs introuvables"
@@ -572,10 +572,26 @@ if SIMULATION:
     dire("Rien n'a ete modifie (SIMULATION = True). Mets SIMULATION = False pour ecrire.")
 else:
     dire("Termine. Verifie quelques valeurs dans Machine Expert puis enregistre le projet.")
+rapport_ok = False
 try:
     with codecs.open(FICHIER_RAPPORT, "w", "utf-8") as f:
         f.write(u"\n".join(lignes))
     print("\nRapport ecrit : " + FICHIER_RAPPORT)
+    rapport_ok = True
 except Exception as ex:
     print("\nRapport non ecrit (%s)" % ex)
+# le meme bilan dans une fenetre, avec le chemin du rapport, puis ouverture du rapport (Bloc-notes)
+try:
+    bilan = [l for l in lignes if l.startswith("Bilan")]
+    msg = u"\n".join(bilan) + u"\n\nRapport : " + (FICHIER_RAPPORT if rapport_ok else u"non ecrit") + u"\n(le detail est aussi dans la vue Messages de Machine Expert)"
+    ui = safe(lambda: system.ui, None)
+    if ui is not None:
+        ui.info(msg)
+except Exception:
+    pass
+if rapport_ok and globals().get("OUVRIR_RAPPORT", True):
+    try:
+        os.startfile(FICHIER_RAPPORT)
+    except Exception:
+        pass
 `;

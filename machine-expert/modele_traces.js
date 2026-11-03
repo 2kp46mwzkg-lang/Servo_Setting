@@ -316,16 +316,9 @@ def traces_axes():
         except Exception as e:
             log("   ! {} : tache '{}' refusee : {}".format(nom, TACHE_TRACE, e), "warn")
         chercher_reglage_legacy(tr)
-        # 1) Diagrammes crees AVANT les variables (une trace sans diagramme peut passer en legacy mode)
+        # 1) Diagrammes : Machine Expert refuse diagrams.add() sur une trace sans variable (« legacy mode ») et add() ne prend pas
+        #    d'argument : les diagrammes sont donc crees APRES les variables (etape 3), sans argument, puis nommes et remplis.
         diagrammes = []
-        for (titre, courbes) in plan:
-            try:
-                d = tr.diagrams.add()
-            except Exception as e:
-                log("   {} : diagrams.add() refuse avant les variables ({})".format(nom, e))
-                break
-            essayer(d, "name", titre)
-            diagrammes.append(d)
         # 2) Variables : une couleur par axe, consignes en plus clair
         couleurs = {}
         for i, drv in enumerate(axes):
@@ -343,24 +336,35 @@ def traces_axes():
                 except Exception as e:
                     variables[cle] = None
                     log("   ! variable '{}' non ajoutee : {}".format(expr, e), "warn")
-        # 3) Courbes dans les diagrammes ; sinon 2e methode diagrams.add(variable)
+        # 3) Diagrammes (apres les variables) : add() sans argument, nom, puis les courbes par la methode que l'API accepte
         nb_diag = 0
         refus = None
+        def mettre_courbe(d, v):
+            erreurs = []
+            for f in (lambda: d.add_diagram_variable(v), lambda: d.variables.add(v), lambda: d.add_variable(v), lambda: d.add(v), lambda: d.variable_list.add(v)):
+                try:
+                    f()
+                    return None
+                except Exception as e:
+                    erreurs.append(unicode(e) if 'unicode' in globals() else str(e))
+            return erreurs[-1] if erreurs else "aucune methode"
         for i, (titre, courbes) in enumerate(plan):
             vs = [variables[(drv, param)] for (drv, param, consigne) in courbes]
             vs = [v for v in vs if v is not None]
             if not vs:
                 continue
             try:
-                if i < len(diagrammes):
-                    d = diagrammes[i]
-                    for v in vs:
-                        d.add_diagram_variable(v)
-                else:
-                    d = tr.diagrams.add(vs[0])
-                    essayer(d, "name", titre)
-                    for v in vs[1:]:
-                        d.add_diagram_variable(v)
+                d = tr.diagrams.add()
+                essayer(d, "name", titre)
+                if nb_diag == 0:
+                    log("API trace - diagramme : " + noms_publics(d), "api")
+                manque = 0
+                for v in vs:
+                    err = mettre_courbe(d, v)
+                    if err is not None:
+                        manque += 1
+                        if manque == 1:
+                            log("   ! {} : courbe non placee dans '{}' : {}".format(nom, titre, err), "warn")
                 nb_diag += 1
             except Exception as e:
                 if nb_diag == 0 or "legacy" in str(e).lower():

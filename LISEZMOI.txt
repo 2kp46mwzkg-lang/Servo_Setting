@@ -19,9 +19,9 @@ reglages-servo/
 │
 ├─ catalogue/                     LES DONNÉES CONSTRUCTEUR LIVRÉES — une fiche par ligne (JSON)
 │   ├─ moteurs_brushless.js       Moteurs synchrones : Schneider SH3 / ILM (Lexium 62), BMP, tambours
-│   │                             NGI MTS62 et Interroll DM synchrones (sur ATV320). Onglet Brushless.
+│   │                             NGI MTS62 et Interroll DM synchrones (sur ATV320). Catalogue › Brushless.
 │   ├─ moteurs_asynchrones.js     Moteurs asynchrones : SEW DRN (IE3, 2/4/6/8 pôles), Leroy-Somer LSES,
-│   │                             Interroll DM 0080 et DM 0113. Onglet Asynchrones (plaque pour l'ATV320).
+│   │                             Interroll DM 0080 et DM 0113. Catalogue › Asynchrones (plaque ATV320).
 │   ├─ reducteurs.js              Réducteurs (Neugart, Atlanta, STOBER, Wittenstein, Interroll, NGI…).
 │   │                             Les SEW viennent du tableau des dents dans app.js (sewCatalog).
 │   ├─ variateurs.js              Variateurs : LXM62, ATV320 (In, Imax, puissance).
@@ -60,8 +60,10 @@ Utilisation
 1. Dézipper le dossier où tu veux, garder les sous-dossiers.
 2. Ouvrir index.html avec Chrome, Edge ou Firefox (double-clic). Pas besoin d'internet
    (sans internet, la police change, c'est tout).
-3. Dans la page, « ? Aide » en haut à droite explique le parcours :
-   projet → dossier élec → réglage des axes → hardware → script Machine Expert.
+3. Dans la page, « ? Aide » en haut à droite explique le parcours, un onglet par étape :
+   projet → Importer le dossier élec → Axes (tous les axes, Lexium 62 et ATV320, liste à gauche,
+   formulaire au milieu, réglages à droite) → Machine Expert (ordre Sercos, ATV320, matériel)
+   → Bilan & script (relecture, script Machine Expert, export Excel). E/S à part.
 4. Tout ce que tu ajoutes ou modifies dans la page est enregistré dans le navigateur de ce PC.
 
 Sauvegarde et autre poste
@@ -109,12 +111,30 @@ tableau des dents, ce qui donne GearIn / GearOut exacts. Pour chaque rapport : T
 1400 tr/min, nombre d'étages et rendement (R/F/K selon les étages, S d'après les tableaux
 techniques, W..0 déduit des tableaux de sélection : approximatif). J_Gear n'est pas dans le
 catalogue : ouvre le réducteur et saisis-le si tu le connais, la fiche passe alors dans ta base.
-Recherche : WA10, WF10, KA37, KHF19… trouvent W10, K37, KH19 (même réducteur, autre forme).
+Recherche : WA10, WF10, KA37, KHF19… trouvent W10, K37, K19 (même réducteur, autre forme), les
+fiches qui portent exactement le mot tapé passant en premier. Désignation exacte absente du
+catalogue (ex. KHF19 AQSH80/1 i=15,84 tapée dans le choix du réducteur) : l'outil propose de
+créer la fiche à ce nom d'après la fiche de base de même taille et même rapport (rapport exact,
+T2B, rendement repris ; T2B à confirmer avec un adaptateur servo). À l'import, la désignation
+du réducteur est lue dans Réf2 (réducteur séparé) ou en tête de la référence du motoréducteur.
 
 Asynchrone sur ATV320 : HSP et LSP se saisissent en Hz dans l'axe (50 / 10 Hz par défaut) ;
 l'outil donne les tr/min moteur, les tr/min de la virole et la vitesse de bande (mm/s et m/min)
-à ces deux fréquences, avec n = nN × f ÷ FRS. Pas de FeedConstant pour ces axes (pas d'axe
-Machine Expert) : seul le diamètre du rouleau compte.
+à ces deux fréquences, avec n = nN × f ÷ FRS. Pas de FeedConstant, de masse ni de vitesse de
+cycle pour ces axes (pas d'axe Machine Expert) : seul le diamètre du rouleau compte. Le panneau
+de droite donne HSP / LSP / ITH / CLI / TLIM et la plaque moteur (NPR, UNS, NCR, FRS, NSP, COS).
+
+Version 119 : réorganisation. 4 onglets projet (Axes, Machine Expert, E/S, Bilan & script) à la
+place de 5 onglets et 3 panneaux ; liste des axes en colonne (point vert / orange / rouge) ;
+panneau de droite d'un axe brushless = blocs Machine Expert + 3 voyants (couple réducteur,
+rapport d'inertie, limite de courant) + alertes, le reste dans « Détail des calculs » ;
+formulaires allégés (désignation, variateur, accélération, inertie ajoutée, part de T2B et notes
+dans « Plus d'options » ; période d'oscillation et transposition des gains supprimées) ; catalogues
+repliés par marque et par série (un clic déplie, une recherche déplie tout). Les anciens axes
+gardent toutes leurs valeurs. Export Excel du bilan (onglet Bilan & script) : Synthèse de tous
+les axes, Lexium 62 (paramètres Machine Expert), ATV320 (réglages Modbus, plaque, vitesses),
+Machine Expert (ordre Sercos, ATV320 du CANopen, matériel), E/S, puis une fiche par axe
+(matériel, charge, réglages, voyants, contrôle du réducteur, alertes, détail des calculs).
 Tambours Interroll DM 0113 : moteurs (asynchrones 160 à 550 W, synchrones acier et sans huile)
 et réducteurs intégrés (un par puissance × rapport, avec la vitesse m/s de la plaque dans le nom)
 d'après la fiche technique Interroll DM_0113_EN.pdf.

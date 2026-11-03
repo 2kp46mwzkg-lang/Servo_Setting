@@ -42,6 +42,17 @@ function sewAlias(x) {
 }
 // Mot tapé « WA10/T » (bras de réaction) ou « K37/..» : on garde la désignation avant la barre
 const qTok = t => t.replace(/^([a-z]{1,3}\d{2,3})\/[a-z0-9]*$/, '$1');
+/* Désignation SEW d'un réducteur dans un texte (« KHF19 AQSH80/1 », « WA10/T DRN71M4 », « K37AMS63 ») :
+   { forme: 'KHF', taille: '19', base: 'K19', desig: 'KHF19 AQSH80/1' } — desig = forme+taille et l'adaptateur servo (AQSH.., AQSE.., AMS.., AM..) s'il suit, sans le moteur */
+const SEW_FORME = /^(KHF|KH|KAF|KA|KF|KV|K|RXF|RX|RF|RM|R|FAF|FA|FF|FH|FV|F|SAF|SA|SF|SH|S|WAF|WA|WF|WH|W)(\d{2,3})(?=[^0-9]|$)/;
+function sewDesig(txt) {
+  const t = String(txt || '').trim().toUpperCase(); if (!t) return null;
+  const head = t.split(/[\s,]+/)[0].split('/')[0], m = SEW_FORME.exec(head); if (!m) return null;
+  const reste = t.slice(head.length), ad = /^\s*\/?[A-Z]*\s*((?:AQSH|AQSE|AQH|AQA|AQ|AMS|AM|AR|BM)[A-Z]*\d+(?:\/\d+)?)/.exec(reste), inHead = /^(KHF|KH|KAF|KA|KF|KV|K|R[A-Z]*|F[A-Z]*|S[A-Z]*|W[A-Z]*)\d{2,3}((?:AQSH|AQSE|AQH|AQA|AQ|AMS|AM)[A-Z]*\d+(?:\/\d+)?)/.exec(t.split(/[\s,]+/)[0]);
+  const adapt = ad ? ad[1] : inHead ? inHead[2] : '';
+  const base = (/^KH/.test(m[1]) || m[1][0] === 'K' ? 'K' : m[1][0]) + m[2];
+  return { forme: m[1], taille: m[2], base, adapt, desig: m[1] + m[2] + (adapt ? ' ' + adapt : '') };
+}
 const KEYS = ['motors', 'reducers', 'drives', 'axes', 'projects', 'hwtypes', 'iodict'];
 const S = { db: null, motors: [], reducers: [], drives: [], axes: [], projects: [], hwtypes: [], iodict: [], projId: null, projForm: null, loaded: { motors: false, reducers: false, drives: false, axes: false, projects: false, hwtypes: false, iodict: false }, search: { motors: '', reducers: '', drives: '', hwtypes: '', iodict: '' }, serie: { motors: '', reducers: '', hwtypes: '', iodict: '' }, advOpen: false,
   tab: 'axes', axisId: null, draft: null, dirty: false, justSaved: false, lib: { motors: null, reducers: null, drives: null, hwtypes: null, iodict: null }, confirm: null };
@@ -131,50 +142,52 @@ const GAUGES = {
   hold: { l: 'Maintien de la charge', dep: 'Masse · FeedConstant · Axe vertical · Réducteur' },
   stop: { l: 'Arrêt d’urgence', dep: 'Courant d’arrêt imposé · Moteur · Réducteur' }
 };
+/* Groupes du formulaire d'un axe. lx = axes Lexium 62 seulement, bmp = axes sur ATV320 seulement ; adv = dans « Plus d'options ».
+   Champ : show = types de charge, mot = 'sync' / 'async' (moteur de l'axe), noasync = masqué pour un asynchrone sur ATV320
+   (il n'a ni inertie ni vitesse de cycle : seul le diamètre du rouleau sert, pour les vitesses à HSP / LSP). */
 const AXIS_GROUPS = [
   { t: 'Axe', f: [
-    { k: 'nom', l: 'Nom de l’axe', t: 'text' },
-    { k: 'desc', l: 'Désignation', t: 'text', h: 'Ce que fait l’axe sur la machine (du dossier élec). Affichée sous le nom dans les listes' } ] },
+    { k: 'nom', l: 'Nom de l’axe', t: 'text' } ] },
   { t: 'Moteur et réducteur', f: [
     { k: 'moteurId', l: 'Moteur', t: 'motor', g: ['lim', 'ucl', 'stop'] },
     { k: 'reducteurId', l: 'Réducteur', t: 'reducer', g: ['lim', 'ucl', 'hold', 'stop'] } ] },
   { t: 'Charge', f: [
     { k: 'typeCharge', l: 'Type de charge', t: 'select', o: [['lineaire', 'Linéaire (courroie, bande, crémaillère)'], ['convoyeur', 'Convoyeur (rouleau d’entraînement)'], ['rotatif', 'Rotative (plateau, pivot)'], ['bielle', 'Bielle-manivelle (rotation continue)']] },
+    { k: 'unite', l: 'Unité de l’axe (Units)', t: 'select', noasync: true, o: [['', 'non précisée (Units)'], ['mm', 'mm'], ['cm', 'cm'], ['m', 'm'], ['°', '° (degrés)'], ['tr', 'tr (tours)']], h: 'L’unité de l’axe dans Machine Expert (celle du FeedConstant et des vitesses du cycle). Sert seulement à l’affichage : vitesses en mm/s, °/s… avec la conversion en m/min ou tr/min' },
     { k: 'dRouleau', l: 'Diamètre du rouleau d’entraînement', u: 'mm', show: 'convoyeur', h: 'Donne le FeedConstant théorique : π × diamètre, en mm par tour de sortie du réducteur', n: 'FeedConstant laissé vide : π × diamètre', g: ['hold'] },
     { k: 'feed', l: 'FeedConstant', u: 'Units/tr', h: 'Déplacement par tour de sortie du réducteur (360 pour un axe en degrés)', g: ['hold'] },
-    { k: 'masse', l: 'Masse en mouvement', u: 'kg', show: ['lineaire', 'convoyeur'], g: ['hold'] },
-    { k: 'jLoadDirect', l: 'Inertie de la charge', u: 'kg·cm²', show: 'rotatif', h: 'Côté sortie du réducteur', conv: true },
+    { k: 'masse', l: 'Masse en mouvement', u: 'kg', show: ['lineaire', 'convoyeur'], g: ['hold'], noasync: true },
+    { k: 'jLoadDirect', l: 'Inertie de la charge', u: 'kg·cm²', show: 'rotatif', h: 'Côté sortie du réducteur', conv: true, noasync: true },
     { k: 'rManiv', l: 'Rayon de la manivelle', u: 'mm', show: 'bielle', h: 'Distance entre l’axe moteur et le maneton. Course de la plaque = 2 × rayon' },
     { k: 'lBielle', l: 'Longueur de la bielle', u: 'mm', show: 'bielle', h: 'Entraxe maneton / articulation de la plaque. Vide : bielle très longue (sans correction)' },
     { k: 'mPlaque', l: 'Masse de la plaque et de ce qu’elle porte', u: 'kg', show: 'bielle', h: 'Tout ce qui coulisse sur les rails' },
     { k: 'mBielle', l: 'Masse de la bielle', u: 'kg', show: 'bielle', h: 'Vide : bielle négligée. La moitié tourne avec le maneton, l’autre moitié suit la plaque' },
     { k: 'jManiv', l: 'Inertie de la manivelle', u: 'kg·cm²', show: 'bielle', h: 'Bras, contrepoids, maneton, côté sortie du réducteur. Vide : négligée', conv: true },
-    { k: 'jSupp', l: 'Inertie ajoutée', u: 'kg·cm²', h: 'Poulies, rouleaux, accouplement… côté sortie du réducteur. Vide : rien', conv: true },
-    { k: 'vertical', l: 'Axe vertical (charge qui tombe)', t: 'bool', show: 'lineaire', g: ['hold'] } ] },
-  { t: 'Arrêt d’urgence', f: [
+    { k: 'vertical', l: 'Axe vertical (charge qui tombe)', t: 'bool', show: 'lineaire', g: ['hold'], noasync: true } ] },
+  { t: 'Arrêt d’urgence', lx: true, f: [
     { k: 'vMax', l: 'Vitesse max du cycle', u: 'Units/s', h: 'Vitesse la plus élevée atteinte par le mouvement programmé. Sert à calculer ControllerStopDec, ControllerStopJerk et StopTimeLim', n: 'Celle du mouvement, pas du moteur' },
-    { k: 'tStop', l: 'Durée d’arrêt visée', u: 's', h: '0,15 à 0,2 s en général' } ] },
-  { t: 'Contrôle réducteur', f: [
-    { k: 'marge', l: 'Part de T2B autorisée', u: '%', h: 'Part du couple max du réducteur que le moteur a le droit de demander. 80 % = marge de 20 %. Fixe aussi le seuil vert / orange des jauges', g: ['lim'] } ] },
-  { adv: true, t: 'Variateur dans Machine Expert', note: 'Aussi dans l’onglet Brushless, où se règlent l’ordre Sercos, le codeur et la carte IO.', f: [
-    { k: 'gamme', l: 'Variateur', t: 'select', o: [['', 'Aucun (axe virtuel : Master, MC_Cut…)'], ['LXM62', 'LXM62 (module en armoire)'], ['ILM62', 'ILM62 (intégré au moteur)'], ['BMP', 'Sur ATV320 : asynchrone, BMP, tambour NGI / Interroll (CANopen, pas de Sercos)']], h: 'Dit au script ce qu’il crée pour cet axe : le variateur DRV_, le codeur LE_ et la carte IO_. « Aucun » : rien n’est créé' },
-    { k: 'variateur', l: 'Référence', t: 'text', h: 'Référence complète du dossier élec (ex. LXM62DD15C21000). Vide pour un ILM62' },
-    { k: 'ioCard', l: 'Carte IO_ sur le variateur', t: 'bool', h: 'Le script crée la carte IO sous le variateur et renomme ses voies TP_, DQ_, DI_ + nom de l’axe' } ] },
-  { t: 'ATV320', bmp: true, note: d => (S.motors.find(x => x.id === d.moteurId) || {}).typeMot === 'async' ? 'Moteur asynchrone : HSP et LSP se règlent en Hz (50 et 10 Hz en général). L’outil en déduit les tr/min du moteur, la vitesse en sortie du réducteur et la vitesse de l’axe. ITH d’après IN du moteur.' : 'LSP, HSP et ITH sont calculés à partir du moteur, du rapport et des vitesses du cycle (Vitesse max du cycle ci-dessus).', f: [
+    { k: 'tStop', l: 'Durée d’arrêt visée', u: 's', h: '0,15 à 0,2 s en général', ph: '0,2' } ] },
+  { t: 'ATV320', bmp: true, note: d => (S.motors.find(x => x.id === d.moteurId) || {}).typeMot === 'async' ? 'Réglages du variateur (Modbus). Vides : 50 Hz, 10 Hz et 100 % de IN. L’outil en déduit les tr/min du moteur et la vitesse de la bande.' : 'HSP, LSP et ITH sont calculés à partir du moteur, du rapport et des vitesses du cycle.', f: [
+    { k: 'vMax', l: 'Vitesse max du cycle', u: 'Units/s', mot: 'sync', h: 'Vitesse la plus élevée atteinte par le mouvement : donne HSP en Hz', n: 'Celle du mouvement, pas du moteur' },
     { k: 'vMin', l: 'Vitesse basse du cycle', u: 'Units/s', mot: 'sync', h: 'Petite vitesse utilisée par le cycle (approche, jog, vitesse lente) : donne LSP en Hz. Vide ou 0 : LSP = 0' },
-    { k: 'hspHz', l: 'HSP · grande vitesse', u: 'Hz', mot: 'async', h: 'Réglage de l’ATV320 (fréquence max). 50 Hz en général = fréquence nominale FRS du moteur ; au-dessus, défluxage et couple réduit. Vide : 50 Hz' },
-    { k: 'lspHz', l: 'LSP · petite vitesse', u: 'Hz', mot: 'async', h: 'Réglage de l’ATV320 (fréquence mini). 10 Hz en général. Vide : 10 Hz' },
-    { k: 'ithPct', l: 'ITH', u: '% de IN', h: 'Courant thermique moteur réglé dans l’ATV320, en % du courant nominal IN du moteur. 100 % = IN (valeur usuelle). Baisser si le moteur est mal ventilé ou tourne lentement en continu' } ] },
-  { adv: true, t: 'Mouvement', f: [
-    { k: 'acc', l: 'Accélération programmée', u: 'Units/s²' },
-    { k: 'periode', l: 'Période d’oscillation', u: 's', h: 'Donne le jerk du mouvement' } ] },
+    { k: 'hspHz', l: 'HSP · grande vitesse', u: 'Hz', mot: 'async', ph: '50', h: 'Réglage de l’ATV320 (fréquence max). 50 Hz en général = fréquence nominale FRS du moteur ; au-dessus, défluxage et couple réduit. Vide : 50 Hz' },
+    { k: 'lspHz', l: 'LSP · petite vitesse', u: 'Hz', mot: 'async', ph: '10', h: 'Réglage de l’ATV320 (fréquence mini). 10 Hz en général. Vide : 10 Hz' },
+    { k: 'ithPct', l: 'ITH', u: '% de IN', ph: '100', h: 'Courant thermique moteur réglé dans l’ATV320, en % du courant nominal IN du moteur. 100 % = IN (valeur usuelle). Baisser si le moteur est mal ventilé ou tourne lentement en continu' } ] },
   { t: 'Gains retenus après essais', lx: true, f: [
     { k: 'velPRetenu', l: 'Vel_P_Gain retenu', u: '', h: 'Valeur gardée après les essais sur la machine. Vide : l’outil propose une valeur de départ' },
     { k: 'velIRetenu', l: 'Vel_I_Gain retenu', u: '', h: 'Valeur gardée après les essais sur la machine. Vide : l’outil propose une valeur de départ' } ] },
-  { adv: true, lx: true, t: 'Transposer des gains existants', f: [
-    { k: 'velPActuel', l: 'Vel_P_Gain actuel', u: '', h: 'Avec J_Load et J_Gear actuels : propose un Vel_P_Gain adapté à la nouvelle inertie' },
-    { k: 'jLoadActuel', l: 'J_Load actuel', u: 'kg·cm²', conv: true },
-    { k: 'jGearActuel', l: 'J_Gear actuel', u: 'kg·cm²', conv: true } ] },
+  { adv: true, t: 'Identification', f: [
+    { k: 'desc', l: 'Désignation', t: 'text', h: 'Ce que fait l’axe sur la machine (du dossier élec). Affichée sous le nom dans les listes' } ] },
+  { adv: true, t: 'Variateur', note: 'Ce que le script crée dans Machine Expert pour cet axe. L’ordre Sercos, le codeur et la carte IO se règlent dans l’onglet Machine Expert.', f: [
+    { k: 'gamme', l: 'Variateur', t: 'select', o: [['', 'Aucun (axe virtuel : Master, MC_Cut…)'], ['LXM62', 'LXM62 (module en armoire)'], ['ILM62', 'ILM62 (intégré au moteur)'], ['BMP', 'Sur ATV320 : asynchrone, BMP, tambour NGI / Interroll (CANopen, pas de Sercos)']], h: 'Dit au script ce qu’il crée pour cet axe : le variateur DRV_, le codeur LE_ et la carte IO_. « Aucun » : rien n’est créé' },
+    { k: 'variateur', l: 'Référence', t: 'text', h: 'Référence complète du dossier élec (ex. LXM62DD15C21000, ATV320U04N4C). Vide pour un ILM62. Pour un ATV320, sa fiche (Catalogue › Variateurs) borne la limite de courant' },
+    { k: 'ioCard', l: 'Carte IO_ sur le variateur', t: 'bool', lx: true, h: 'Le script crée la carte IO sous le variateur et renomme ses voies TP_, DQ_, DI_ + nom de l’axe' } ] },
+  { adv: true, t: 'Mouvement et inertie', noasync: true, f: [
+    { k: 'acc', l: 'Accélération programmée', u: 'Units/s²', h: 'Accélération du mouvement programmé : donne le courant d’accélération, comparé à la limite' },
+    { k: 'jSupp', l: 'Inertie ajoutée', u: 'kg·cm²', h: 'Poulies, rouleaux, accouplement… côté sortie du réducteur. Vide : rien', conv: true },
+    { k: 'marge', l: 'Part de T2B autorisée', u: '%', ph: '80', h: 'Part du couple max du réducteur que le moteur a le droit de demander. 80 % = marge de 20 %. Fixe aussi le seuil vert / orange de la jauge', g: ['lim'] } ] },
+  { adv: true, t: 'Réducteur', onlyasync: true, f: [
+    { k: 'marge', l: 'Part de T2B autorisée', u: '%', ph: '80', h: 'Part du couple max du réducteur que le moteur a le droit de demander. 80 % = marge de 20 %. Fixe aussi le seuil vert / orange de la jauge', g: ['lim'] } ] },
   { adv: true, t: 'Notes', f: [{ k: 'notes', l: 'Notes', t: 'area' }] }
 ];
 const NUM_KEYS = new Set();
@@ -214,6 +227,8 @@ function compute(a) {
   /* axe sur ATV320 sans réducteur (tambour sans réduction, entraînement direct) : rapport 1, rien à contrôler côté réducteur */
   if (!r) { if (a.gamme !== 'BMP') return { missing: true }; r = { ratio: 1, rendement: 100, ref: 'sans réducteur (i = 1)', _virt: true }; }
   const R = { m, r, checks: [], calc: [], atv: a.gamme === 'BMP', async: m.typeMot === 'async', sansRed: !!r._virt };
+  /* asynchrone sur ATV320 : ni inertie ni vitesse de cycle (le formulaire ne les propose plus ; d'anciennes saisies sont ignorées) */
+  if (R.atv && R.async) a = { ...a, vMax: null, vMin: null, acc: null, masse: null, jSupp: null, jLoadDirect: null, vertical: false };
   const i = num(r.ratio), eta = (num(r.rendement) ?? 100) / 100;
   // asynchrone : Kt équivalent = MN ÷ IN (couple nominal sur courant nominal, loi vectorielle de l'ATV320)
   const kt = num(m.kt) ?? ((num(m.m0) && num(m.i0)) ? num(m.m0) / num(m.i0) : null);
@@ -225,7 +240,10 @@ function compute(a) {
   /* asynchrone sur ATV320 (pas d'axe Machine Expert) : pas de FeedConstant, seulement le diamètre du rouleau → vitesses en mm/s */
   const asyncConv = R.atv && R.async && conv;
   const feed = asyncConv ? feedTheo : (num(a.feed) ?? feedTheo ?? (lin ? null : 360));
-  R.asyncConv = asyncConv; R.uV = asyncConv ? 'mm/s' : 'Units/s';
+  R.asyncConv = asyncConv; R.uU = asyncConv ? 'mm' : (String(a.unite || '').trim() || 'Units'); R.uV = R.uU + '/s';
+  /* conversion d'une vitesse en unité/s vers l'unité « parlante » (m/min pour un axe en mm / cm / m, tr/min pour un axe en ° ou en tours) */
+  R.altOf = v => v == null ? null : R.uU === 'mm' ? { v: v * 0.06, u: 'm/min', d: 2 } : R.uU === 'cm' ? { v: v * 0.6, u: 'm/min', d: 2 } : R.uU === 'm' ? { v: v * 60, u: 'm/min', d: 1 } : R.uU === '°' ? { v: v / 6, u: 'tr/min', d: 1 } : R.uU === 'tr' ? { v: v * 60, u: 'tr/min', d: 0 } : null;
+  R.altTxt = v => { const o = R.altOf(v); return o ? ' (' + fmt(o.v, o.d) + ' ' + o.u + ')' : ''; };
   if (!i || !kt) { R.missing = true; R.why = !i ? 'Le réducteur n’a pas de rapport.' : 'Le moteur n’a ni Kt ni M0/I0.'; return R; }
   const rmm = feed ? feed / (2 * Math.PI) : null;
   const masse = num(a.masse) ?? 0, jSupp = num(a.jSupp) ?? 0;
@@ -260,8 +278,10 @@ function compute(a) {
   const vMax = num(a.vMax), acc = num(a.acc);
   const accMax = kAcc && Ilim ? (Ilim - Ihold) / kAcc : null;
   const Iacc = kAcc && acc ? Ihold + kAcc * acc : null;
-  const vPhys = num(m.nMax) && feed ? num(m.nMax) / 60 / i * feed : null;
-  Object.assign(R, { vertical, Ihold, kAcc, accMax, Iacc, vPhys, vMax, acc });
+  const vPhys = num(m.nMax) && feed ? num(m.nMax) / 60 / i * feed : null;   // vitesse de l'axe à la vitesse max du moteur
+  const vNomAx = num(m.nNom) && feed ? num(m.nNom) / 60 / i * feed : null;   // à la vitesse nominale du moteur (au-dessus : couple réduit)
+  const nAtVmaxAx = vMax && feed ? vMax / feed * i * 60 : null;              // tr/min moteur à la vitesse max du cycle
+  Object.assign(R, { vertical, Ihold, kAcc, accMax, Iacc, vPhys, vNomAx, nAtVmaxAx, vMax, acc });
 
   // Arrêt d'urgence
   const tStop = num(a.tStop) ?? 0.2;
@@ -298,22 +318,10 @@ function compute(a) {
   TR.forEach(x => { x.tm = x.t != null ? x.t / i / etaT : null; x.pc = pctOf(x.I) != null ? Math.floor(pctOf(x.I) * 10 + 1e-9) / 10 : null; x.pT2B = t2b && x.t != null ? x.t / t2b * 100 : null; });
   Object.assign(R, { TR, ucl, Iucl, Tucl: Tout(Iucl), t2n, t2b, t2not, Tlim: Tout(Ilim) });
 
-  // Jerk du mouvement
-  const per = num(a.periode);
-  R.jerkMove = per && acc ? nice(acc / per) : null;
-
   // Gains proposés : base Schneider réduite selon le rapport d'inertie charge/moteur (valable si J_Load et J_Gear sont saisis comme calculés)
   const rr = Math.max(0, R.ratioIn ?? 0);
   R.velPSugg = Math.min(GAIN_BASE.p, Math.max(1, Math.round(GAIN_BASE.p / Math.pow(1 + rr, GAIN_BASE.expP) * 2) / 2));
   R.velISugg = Math.min(GAIN_BASE.i, Math.max(0.2, Math.round(GAIN_BASE.i / Math.pow(1 + rr, GAIN_BASE.expI) * 10) / 10));
-
-  // Transposition des gains
-  const vpA = num(a.velPActuel);
-  if (vpA != null && (a.jLoadActuel !== '' && a.jLoadActuel != null)) {
-    const Jold = Jm + (num(a.jGearActuel) ?? 0) + (num(a.jLoadActuel) ?? 0) / (i * i);
-    R.gainFactor = Jold / Jtot; R.Jold = Jold;
-    R.velPTransp = Math.round(vpA * R.gainFactor * 10) / 10;
-  }
 
   // Vérifications
   const C = R.checks;
@@ -333,7 +341,8 @@ function compute(a) {
   if (vertical && Ihold > Ilim) C.push(['crit', `Le maintien demande ${fmt(Ihold)} A, plus que la limite de ${fmt(Ilim)} A : l’axe ne peut pas tenir la charge.`]);
   if (stopCapped) C.push(['warn', `Courant d’arrêt imposé (${fmt(iStopMa, 0)} mA) au-dessus de la limite liée à la part de T2B autorisée : ramené à ${fmt(driveStopMa, 0)} mA.`]);
   if (vertical && iStopMa && IstopA <= Ihold) C.push(['crit', `La limite d’arrêt (${fmt(iStopMa, 0)} mA) est sous le courant de maintien (${fmt(Ihold)} A) : la charge tombe pendant l’arrêt.`]);
-  if (vPhys && vMax && vMax > vPhys) C.push(['crit', `Vitesse programmée ${fmt(vMax, 0)} au-delà du maximum moteur (${fmt(vPhys, 0)} Units/s).`]);
+  if (vPhys && vMax && vMax > vPhys) C.push(['crit', `Vitesse programmée ${fmt(vMax, 0)} ${R.uV} au-delà du maximum moteur (${fmt(vPhys, 0)} ${R.uV}${R.altTxt(vPhys)}).`]);
+  else if (!R.atv && vNomAx && vMax && vMax > vNomAx) C.push(['info', `À ${fmt(vMax, 0)} ${R.uV} le moteur tourne à ${fmt(nAtVmaxAx, 0)} tr/min, au-dessus de sa vitesse nominale (${fmt(num(m.nNom), 0)} tr/min) : couple disponible réduit, max ${fmt(vPhys, 0)} ${R.uV}.`]);
   if (R.Tucl != null && t2b && R.Tucl > t2b) C.push(['crit', `Le UserCurrentLimit réglé (${fmt(ucl, 1)} %) laisse passer ${fmt(R.Tucl, 0)} Nm en sortie, au-delà du T2B (${fmt(t2b, 0)} Nm) : risque de casse du réducteur. Descendre à ${fmt(pct, 1)} %.`]);
   else if (R.Tucl != null && t2b && R.Tucl > t2b * marge) C.push(['warn', `Le UserCurrentLimit réglé (${fmt(ucl, 1)} %) donne ${fmt(R.Tucl, 0)} Nm en sortie, soit ${fmt(R.Tucl / t2b * 100, 0)} % du T2B : au-dessus de la marge choisie.`]);
   if (t2not && R.Tlim != null && R.Tlim > t2not) C.push(['crit', `La limite de courant laisse passer ${fmt(R.Tlim, 0)} Nm en sortie, au-delà du T2Not (${fmt(t2not, 0)} Nm) : baisser la part de T2B autorisée ou vérifier le T2B.`]);
@@ -364,20 +373,19 @@ function compute(a) {
     if (!a.variateur) C.push(['info', 'Pas de référence de variateur sur cet axe : Imax pris sur le moteur seul. Renseigne l’ATV320 dans « Variateur dans Machine Expert ».']);
     if (drv && R.iDrvNom != null && R.i0 && R.iDrvNom < R.i0) C.push(['crit', `L’ATV320 ${drv.ref} (In ${fmt(R.iDrvNom, 1)} A) est plus petit que le courant nominal du moteur (IN ${fmt(R.i0, 2)} A) : variateur sous-dimensionné.`]);
     if (drv && iDrv && imax && iDrv < imax) C.push(['info', `Imax limité par l’ATV320 ${drv.ref} : ${fmt(iDrv, 1)} A (150 % de In ${fmt(R.iDrvNom, 1)} A), le moteur accepterait ${fmt(imax, 1)} A.`]);
-    if (R.lsp != null && R.hsp != null && R.lsp > R.hsp) C.push(['warn', R.async ? `LSP (${fmt(R.lsp, 1)} Hz) au-dessus de HSP (${fmt(R.hsp, 1)} Hz) : inverser les deux réglages.` : `La vitesse basse (${fmt(num(a.vMin), 0)} Units/s) dépasse la vitesse max du cycle : LSP > HSP.`]);
+    if (R.lsp != null && R.hsp != null && R.lsp > R.hsp) C.push(['warn', R.async ? `LSP (${fmt(R.lsp, 1)} Hz) au-dessus de HSP (${fmt(R.hsp, 1)} Hz) : inverser les deux réglages.` : `La vitesse basse (${fmt(num(a.vMin), 0)} ${R.uV}) dépasse la vitesse max du cycle : LSP > HSP.`]);
     if (ithPct > 100) C.push(['warn', `ITH réglé à ${fmt(ithPct, 0)} % de IN : au-dessus du courant nominal, la protection thermique du moteur n’est plus assurée.`]);
     if (Iacc != null && Iref && Iacc > Iref) C.push(['crit', `Le courant d’accélération (${fmt(Iacc, 2)} A) dépasse le courant max du moteur avec son ATV320 (${fmt(Iref, 1)} A) : réduire l’accélération, la charge ou prendre un rapport plus grand.`]);
     if (Iacc != null && R.i0 && Iacc > R.i0) C.push(['info', `Courant d’accélération ${fmt(Iacc, 2)} A au-dessus du courant nominal IN (${fmt(R.i0, 2)} A) : admissible en pointe, pas en continu (vérifier le cycle).`]);
     if (vertical && Ihold && R.i0 && Ihold > R.i0) C.push(['warn', `Le maintien de la charge (${fmt(Ihold, 2)} A) dépasse le courant nominal IN du moteur (${fmt(R.i0, 2)} A) : échauffement en continu.`]);
-    if (vMax && feed && num(m.nNom) && vMax / feed * i * 60 > num(m.nNom)) C.push(['info', `À ${fmt(vMax, 0)} Units/s le moteur tourne à ${fmt(vMax / feed * i * 60, 0)} tr/min, au-dessus de sa vitesse nominale (${fmt(num(m.nNom), 0)}) : couple disponible réduit.`]);
+    if (vMax && feed && num(m.nNom) && vMax / feed * i * 60 > num(m.nNom)) C.push(['info', `À ${fmt(vMax, 0)} ${R.uV} le moteur tourne à ${fmt(vMax / feed * i * 60, 0)} tr/min, au-dessus de sa vitesse nominale (${fmt(num(m.nNom), 0)}) : couple disponible réduit.`]);
   }
   if (integ && t2b) C.push(['info', `Réducteur intégré au moteur : rendement (${fmt(eta * 100, 0)} %) compté entre le couple moteur et le couple de sortie. T2B (${fmt(t2b, 1)} Nm) correspond à ${fmt(I_T2B, 2)} A moteur.${stopIntegCut ? ` Au freinage, le rendement ne joue plus en faveur du réducteur : DriveStopCurrentLimit est calculé sans rendement (${fmt(driveStopMa, 0)} mA).` : ''}`]);
   if (!t2b && !R.sansRed) C.push(['warn', 'Le réducteur n’a pas de T2B : la limite de courant n’est pas calculée vis-à-vis du réducteur.']);
   if (I_T2N && vertical && Ihold > I_T2N) C.push(['warn', `Le maintien (${fmt(Ihold)} A) dépasse le couple nominal T2N du réducteur (${fmt(I_T2N)} A).`]);
-  if (accMax != null && acc && acc > accMax) C.push(['warn', `L’accélération programmée (${fmt(acc, 0)}) dépasse ce que permet la limite de courant (${fmt(accMax, 0)} Units/s²${vertical ? ' en montée' : ''}).`]);
+  if (accMax != null && acc && acc > accMax) C.push(['warn', `L’accélération programmée (${fmt(acc, 0)}) dépasse ce que permet la limite de courant (${fmt(accMax, 0)} ${R.uV}²${vertical ? ' en montée' : ''}).`]);
   if (R.ratioTot != null && R.ratioTot > 30) C.push(['warn', `Rapport d’inertie de ${fmt(R.ratioTot, 0)} (charge ramenée ÷ moteur + réducteur) : très élevé (au-delà de 30, oscillations probables). Prévoir un rapport de réduction plus grand, un moteur plus gros ou une charge plus légère.`]);
   else if (R.ratioTot != null && R.ratioTot > 10) C.push(['warn', `Rapport d’inertie de ${fmt(R.ratioTot, 1)} (charge ramenée ÷ moteur + réducteur) : au-dessus de 10, ${R.atv ? 'soigner les rampes ACC / DEC et vérifier la loi synchrone de l’ATV320' : 'régler les gains par petites étapes et soigner le profil'}.`]);
-  if (!R.atv && R.gainFactor && R.gainFactor < 0.7 && num(a.velPRetenu) == null) C.push(['warn', `L’inertie déclarée est multipliée par ${fmt(1 / R.gainFactor, 1)} : baisser Vel_P_Gain AVANT d’augmenter J_Load, sinon le moteur grogne.`]);
   if (decLimited) C.push(['info', 'La décélération d’arrêt est limitée par le courant : l’arrêt dure plus longtemps que la durée visée.']);
   if (vertical && !R.atv) C.push(['info', 'Vérifier BrakeCouplingTime et BrakeDisconnectionTime (F1) : le frein doit tenir avant la coupure du couple.']);
   if (!imax) C.push(['warn', R.atv ? 'Imax du moteur non renseigné : la limite de courant ne peut pas être comparée au moteur. Le saisir dans l’onglet Moteurs.' : 'Imax du moteur non renseigné : UserCurrentLimit (%) ne peut pas être calculé. Le saisir dans l’onglet Moteurs (plaque moteur).']);
@@ -391,8 +399,10 @@ function compute(a) {
   const L = R.calc;
   if (R.bielle) { L.push(['Inertie maxi de la charge (bielle-manivelle)', R.bielle.Jmax * 1e4, 'kg·cm²', `angle ${fmt(R.bielle.thMax, 0)}° · course ${fmt(R.bielle.course * 1000, 0)} mm`]); L.push(['Inertie moyenne sur un tour', R.bielle.Jmean * 1e4, 'kg·cm²', 'valeur indicative, le réglage se fait sur le maximum']); }
   L.push(['Kt', kt, 'Nm/A', num(m.kt) ? 'TorqueConstant' : 'M0 ÷ I0']);
+  if (!R.atv && vPhys) L.push(['Vitesse max de l’axe', vPhys, R.uV, `vitesse max moteur ${fmt(num(m.nMax), 0)} tr/min ÷ 60 ÷ i × FeedConstant${R.altTxt(vPhys)}`]);
+  if (!R.atv && vNomAx) L.push(['Vitesse de l’axe à la vitesse nominale', vNomAx, R.uV, `${fmt(num(m.nNom), 0)} tr/min ÷ 60 ÷ i × FeedConstant${R.altTxt(vNomAx)}`]);
   if (feedTheo) L.push(['FeedConstant théorique', feedTheo, 'mm/tr', `π × ${fmt(dRoul, 1)} mm${R.feedSaisi != null ? ' (non utilisé : FeedConstant saisi)' : ''}`]);
-  if (lin) L.push(['Rayon équivalent', rmm, 'Units/rad', 'FeedConstant ÷ 2π']);
+  if (lin) L.push(['Rayon équivalent', rmm, R.uU + '/rad', 'FeedConstant ÷ 2π']);
   L.push(['J charge', JLcharge, 'kg·cm²', lin ? 'masse × rayon² ÷ 100' : R.bielle ? 'maximum de m·r²·f(θ)² sur un tour' : 'saisie']);
   L.push(['J_Load', JL, 'kg·cm²', 'J charge + inertie supplémentaire']);
   L.push(['J charge vue moteur', JLm, 'kg·cm²', 'J_Load ÷ i²']);
@@ -402,7 +412,7 @@ function compute(a) {
   if (pct != null) L.push(['UserCurrentLimit', pct, '%', `Courant limite ÷ Imax moteur (${fmt(imax, 1)} A) × 100, arrondi en dessous`]);
   if (vertical) L.push(['Courant de maintien', Ihold, 'A', 'm × g × rayon ÷ i ÷ η ÷ Kt']);
   if (kAcc) L.push(['Courant par Unit/s²', kAcc * 1000, 'mA', 'TotalInertia × (2π ÷ Feed) × i ÷ Kt']);
-  if (dec) L.push(['ControllerStopDec', dec, 'Units/s²', decLimited ? 'limité par le courant d’arrêt' : 'vMax ÷ durée visée']);
+  if (dec) L.push(['ControllerStopDec', dec, R.uV + '²', decLimited ? 'limité par le courant d’arrêt' : 'vMax ÷ durée visée']);
   L.push(['Vel_P_Gain proposé', R.velPSugg, '', `${GAIN_BASE.p} ÷ (1 + rapport charge/moteur ${fmt(rr, 2)})^${GAIN_BASE.expP}, arrondi à 0,5`]);
   L.push(['Vel_I_Gain proposé', R.velISugg, '', `${GAIN_BASE.i} ÷ (1 + rapport charge/moteur ${fmt(rr, 2)})^${GAIN_BASE.expI}, arrondi à 0,1`]);
   return R;
@@ -493,8 +503,8 @@ function fnChoix(d, R) {
   const E = chExtras(d, R), push = (lv, m) => out.checks.push([lv, m]);
   // 1 Mouvement
   if (!M.ok) { S_('s1', 'none', ''); out.simple = `<div class="tmsg">Saisis la course et la durée du mouvement.</div>`; return out; }
-  const rows1 = [tRow('Vitesse max de l’axe', fmt(M.v, 0), 'Units/s', 1), tRow('Accélération de l’axe', fmt(M.a, 0), 'Units/s²', 1)];
-  if (M.t) rows1.push(tRow('Vitesse atteinte', fmt(M.vpk, 0), 'Units/s'), tRow('Durée du mouvement', fmt(M.t, 2), 's', 1));
+  const rows1 = [tRow('Vitesse max de l’axe', fmt(M.v, 0), R.uV, 1), tRow('Accélération de l’axe', fmt(M.a, 0), R.uV + '²', 1)];
+  if (M.t) rows1.push(tRow('Vitesse atteinte', fmt(M.vpk, 0), R.uV), tRow('Durée du mouvement', fmt(M.t, 2), 's', 1));
   rows1.push(tRow('Vitesse moteur de pointe', fmt(M.rpmOut * R.i, 0), 'tr/min'));
   let h1 = tTab(rows1);
   S_('s1', 'ok', h1);
@@ -566,7 +576,7 @@ function fnChoix(d, R) {
   // Récap des besoins
   const dispo = R.marge * (R.t2b || 0), den = dispo - E.c;
   const aMaxRad = den > 0 ? den / Jout : null, aMaxU = aMaxRad ? aMaxRad * R.feed / (2 * Math.PI) : null;
-  const rows0 = [].concat(M.t ? [tRow('Durée du mouvement avec ces réglages', fmt(M.t, 2), 's', 1), tRow('Vitesse atteinte', fmt(M.vpk, 0), 'Units/s')] : [],
+  const rows0 = [].concat(M.t ? [tRow('Durée du mouvement avec ces réglages', fmt(M.t, 2), 's', 1), tRow('Vitesse atteinte', fmt(M.vpk, 0), R.uV)] : [],
     [tRow('Couple max en accélération', fmt(Tacc, 1), 'Nm'),
     tRow('T2B mini (accélération, marge ' + fmt(R.marge * 100, 0) + ' %)', fmt(T2Bmin, 1), 'Nm', 1),
     tRow('T2B mini (arrêt en ' + fmt(R.tStop, 2) + ' s)', fmt(Tstop / R.marge, 1), 'Nm'),
@@ -594,7 +604,7 @@ function fnChoix(d, R) {
   L.push('Date : ' + new Date().toLocaleDateString('fr-FR'));
   sec('Motorisation'); ln('Moteur', R.m.ref); ln('Courant max (Imax)', R.Iref ? fmt(R.Iref, 1) : null, 'A'); ln('Kt', fmt(R.kt, 3), 'Nm/A'); ln('Vitesse max moteur', R.m.nMax ? fmt(num(R.m.nMax), 0) : null, 'tr/min'); ln('Inertie moteur', fmt(R.Jm, 3), 'kg·cm²');
   sec('Charge'); ln('Inertie de la charge', fmt(R.JL * 1e-4, 3), 'kg·m²'); ln('Masse excentrée', E.m ? fmt(E.m, 1) : null, 'kg'); ln('Centre de gravité à l’axe', E.m ? fmt(E.dd * 1000, 0) : null, 'mm'); ln('Hauteur du centre de gravité', E.h ? fmt(E.h * 1000, 0) : null, 'mm'); ln('Axe de rotation', E.m ? (E.orient === 'horiz' ? 'horizontal' : 'vertical') : null); ln('Frottement', E.tf ? fmt(E.tf, 1) : null, 'Nm');
-  sec('Mouvement'); ln('Course', M.th ? fmt(M.th, 0) : null, 'Units'); ln('Vitesse max', fmt(M.v, 0), 'Units/s'); ln('Accélération', fmt(M.a, 0), 'Units/s²'); ln('Durée du mouvement', M.t ? fmt(M.t, 2) : null, 's'); ln('Vitesse max sortie réducteur', fmt(M.rpmOut, 1), 'tr/min'); ln('Arrêt d’urgence visé', fmt(R.tStop, 2), 's'); ln('Mouvements par cycle', tn(d, 'choix', 'nmv'), ''); ln('Pause par cycle', tn(d, 'choix', 'tpause'), 's');
+  sec('Mouvement'); ln('Course', M.th ? fmt(M.th, 0) : null, R.uU); ln('Vitesse max', fmt(M.v, 0), R.uV); ln('Accélération', fmt(M.a, 0), R.uV + '²'); ln('Durée du mouvement', M.t ? fmt(M.t, 2) : null, 's'); ln('Vitesse max sortie réducteur', fmt(M.rpmOut, 1), 'tr/min'); ln('Arrêt d’urgence visé', fmt(R.tStop, 2), 's'); ln('Mouvements par cycle', tn(d, 'choix', 'nmv'), ''); ln('Pause par cycle', tn(d, 'choix', 'tpause'), 's');
   sec('Caractéristiques à demander au réducteur');
   if (cur.rms != null) L.push('  T2N = ' + fmt(cur.rms, 1) + ' Nm'); L.push('  T2B = ' + fmt(T2Bmin, 1) + ' Nm'); L.push('  T2Not = ' + fmt(Math.max(T2Bmin, Tstop / R.marge) * R.marge, 1) + ' Nm');
   if (E.orient === 'vert' && E.m) { const Fa = E.m * GRAV, Fc = E.m * M.omega * M.omega * E.dd, Ft = E.m * M.alpha * E.dd; ln('Charge axiale sur l’arbre de sortie', fmt(Fa, 0), 'N'); ln('Charge radiale maxi sur l’arbre de sortie', fmt(Math.hypot(Fc, Ft), 0), 'N'); ln('Moment maxi sur le roulement de sortie', fmt(Math.hypot(Fa * E.dd + Fc * E.h, Ft * E.h), 1), 'Nm'); }
@@ -844,7 +854,7 @@ const XL = (() => {
 function gainsOf(a, R) {
   const vpR = num(a.velPRetenu), viR = num(a.velIRetenu);
   return {
-    vp: vpR ?? R.velPTransp ?? R.velPSugg, vpSrc: vpR != null ? 'gardé après essais' : (R.velPTransp != null ? 'transposé du réglage actuel' : 'proposé (point de départ)'),
+    vp: vpR ?? R.velPSugg, vpSrc: vpR != null ? 'gardé après essais' : 'proposé (point de départ)',
     vi: viR ?? R.velISugg, viSrc: viR != null ? 'gardé après essais' : 'proposé (point de départ)'
   };
 }
@@ -858,122 +868,270 @@ function torqueRows(a, R) {
   if (R.IstopA) add(`Arrêt d’urgence (${fmt(R.driveStopMa, 0)} mA)`, R.IstopA * R.kt * R.i);
   return out;
 }
+/* Classeur Excel du projet : Synthèse (tous les axes), Lexium 62 (à saisir dans Machine Expert), ATV320 (réglages Modbus et plaques),
+   Machine Expert (ordre Sercos, ATV320, matériel), E/S, puis une fiche détaillée par axe (réglages, contrôle du réducteur, alertes, calculs). */
 function buildXlsx() {
   const cur = curProj(), now = new Date();
   const when = now.toLocaleDateString('fr-FR') + ' ' + now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
   const C = { dark: 'FF1B2632', acc: 'FF1D5A8E', accSoft: 'FFDFEAF5', key: 'FFEEF4FA', grey: 'FFF2F4F7', white: 'FFFFFFFF', muted: 'FF5A6774',
-    ok: 'FFE1F1E7', okT: 'FF2C7A4C', warn: 'FFFBEFD9', warnT: 'FF9C5D0E', crit: 'FFFBE3E1', critT: 'FFB3261E' };
+    ok: 'FFE1F1E7', okT: 'FF2C7A4C', warn: 'FFFBEFD9', warnT: 'FF9C5D0E', crit: 'FFFBE3E1', critT: 'FFB3261E', todo: 'FFF2F4F7', todoT: 'FF5A6774' };
   const ST = XL.Styles(), s = o => ST.get(o);
   const sTitle = s({ b: 1, sz: 15, color: C.white, fill: C.dark, indent: 1 }), sSub = s({ i: 1, color: C.muted, indent: 1 });
   const sBand = s({ b: 1, color: C.white, fill: C.acc, border: 1, h: 'center' }), sTh = s({ b: 1, fill: C.accSoft, border: 1, h: 'center', wrap: 1 });
   const sSect = s({ b: 1, sz: 11, color: C.white, fill: C.acc, indent: 1 });
   const sLabel = s({ fill: C.grey, border: 1, indent: 1 }), sTxt = s({ border: 1, indent: 1 }), sTxtB = s({ b: 1, border: 1, indent: 1 }), sUnit = s({ color: C.muted, border: 1, h: 'center' });
-  const sNote = s({ i: 1, color: C.muted }), sWrap = s({ border: 1, wrap: 1, indent: 1 });
+  const sNote = s({ i: 1, color: C.muted, wrap: 1 }), sWrap = s({ border: 1, wrap: 1, indent: 1 }), sMuted = s({ border: 1, indent: 1, color: C.muted });
   const feedDec = v => Number.isInteger(v) ? 'int' : Math.min(3, (String(v).split('.')[1] || '').length);
   const nfOf = d => d === 'int' ? '0' : d === 0 ? '#,##0' : d === 1 ? '#,##0.0' : d === 2 ? '#,##0.00' : '0.000';
   const sNum = (d, key) => s({ border: 1, fmt: nfOf(d), h: 'right', ...(key ? { b: 1, fill: C.key, sz: 11 } : {}) });
+  const sPct = st => s({ b: 1, border: 1, h: 'right', fmt: '0%', ...(st ? { fill: C[st], color: C[st + 'T'] } : {}) });
   const sStat = (st, d) => s({ b: 1, border: 1, h: d == null ? 'center' : 'right', fill: C[st], color: C[st + 'T'], ...(d != null ? { fmt: nfOf(d) } : {}) });
-  const ETAT = { ok: 'OK', warn: 'Attention', crit: 'Danger' };
-  const data = pAxes().map(a => { const R = compute(a); const al = R.missing ? [] : R.checks.filter(c => (c[0] === 'crit' || c[0] === 'warn') && c[2] !== 'app');
-    return { a, R, g: R.missing ? null : gainsOf(a, R), tr: R.missing ? [] : torqueRows(a, R), al, st: R.missing ? 'warn' : al.some(c => c[0] === 'crit') ? 'crit' : al.length ? 'warn' : 'ok' }; });
+  const ETAT = { ok: 'OK', warn: 'À vérifier', crit: 'Alerte', todo: 'À compléter' };
+  const TYPE = a => a.gamme === 'BMP' ? 'ATV320' : a.gamme || 'virtuel';
+  const data = brushList().map(a => { const R = compute(a); const al = R.missing ? [] : R.checks.filter(c => (c[0] === 'crit' || c[0] === 'warn') && c[2] !== 'app');
+    const m = R.m || S.motors.find(x => x.id === a.moteurId) || null, r = R.r || S.reducers.find(x => x.id === a.reducteurId) || null;
+    return { a, R, m, r, g: R.missing ? null : gainsOf(a, R), tr: R.missing ? [] : torqueRows(a, R), al, st: R.missing ? 'todo' : al.some(c => c[0] === 'crit') ? 'crit' : al.length ? 'warn' : 'ok',
+      PLQ: !R.missing && R.atv ? atvPlaque({ ref: a.variateur || '' }, R.m, R.drv) : null }; });
+  const lex = data.filter(d => d.a.gamme !== 'BMP'), atv = data.filter(d => d.a.gamme === 'BMP');
   const J = R => Math.round(R.JL / 10) * 10;
+  const pctIn = R => R.Ilim != null && R.i0 ? Math.floor(R.Ilim / R.i0 * 1000) / 10 : null;
+  const head = (ws, titre, sub, lastC) => { ws.set(0, 0, titre, sTitle); for (let c = 1; c <= lastC; c++) ws.set(0, c, '', sTitle); ws.merge(0, 0, 0, lastC); ws.height(0, 26); ws.set(1, 0, sub, sSub); ws.merge(1, 0, 1, lastC); };
+  const bandRow = (ws, r, bands) => bands.forEach(([t, c1, c2]) => { for (let c = c1; c <= c2; c++) ws.set(r, c, c === c1 ? t : '', sBand); if (c2 > c1) ws.merge(r, c1, r, c2); });
+  const thRow = (ws, r, heads) => { heads.forEach((h, c) => ws.set(r, c, h, sTh)); ws.height(r, 32); };
+  const n0 = v => v == null ? null : v;
 
-  // ----- Onglet Synthèse : une ligne par axe
+  // ----- Synthèse : tous les axes
   const sy = XL.Sheet('Synthèse'); sy.landscape = true;
-  sy.cols = [10, 20, 24, 8, 8, 9, 11, 11, 9, 13, 13, 13, 14, 10, 9, 9, 10, 12, 9, 11];
-  const lastC = sy.cols.length - 1;
-  sy.set(0, 0, `Réglages servo · ${cur?.nom || ''}`, sTitle); for (let c = 1; c <= lastC; c++) sy.set(0, c, '', sTitle); sy.merge(0, 0, 0, lastC); sy.height(0, 26);
-  sy.set(1, 0, `Exporté le ${when} · projet ${cur?.statut === 'termine' ? 'terminé' : 'en cours'} · ${data.length} axe${data.length > 1 ? 's' : ''} · une fiche détaillée par axe dans les onglets suivants`, sSub); sy.merge(1, 0, 1, lastC);
-  const bands = [['Axe et matériel', 0, 3], ['Mechanic', 4, 8], ['General', 9, 13], ['Control loop', 14, 15], ['Contrôle réducteur', 16, 19]];
-  bands.forEach(([t, c1, c2]) => { for (let c = c1; c <= c2; c++) sy.set(3, c, c === c1 ? t : '', sBand); sy.merge(3, c1, 3, c2); });
-  const heads = ['Axe', 'Moteur', 'Réducteur', 'i', 'GearIn', 'GearOut', 'Feed\nConstant', 'J_Load\nkg·cm²', 'J_Gear\nkg·cm²', 'UserCurrent\nLimit %', 'DriveStop\nCurrentLimit mA', 'ControllerStop\nDec', 'ControllerStop\nJerk', 'StopTime\nLim ms', 'Vel_P\nGain', 'Vel_I\nGain', 'T2B\nNm', 'Couple autorisé\nNm', '% T2B', 'État'];
-  heads.forEach((h, c) => sy.set(4, c, h, sTh)); sy.height(4, 32);
+  sy.cols = [10, 9, 26, 24, 28, 7, 8, 8, 12, 60];
+  head(sy, `Réglages servo · ${cur?.nom || ''}`, `Exporté le ${when} · projet ${cur?.statut === 'termine' ? 'terminé' : 'en cours'} · ${data.length} axe${data.length > 1 ? 's' : ''} : ${lex.length} Lexium 62 / virtuel${lex.length > 1 ? 's' : ''}, ${atv.length} sur ATV320 · détail par onglet (Lexium 62, ATV320, Machine Expert, E/S) puis une fiche par axe`, sy.cols.length - 1);
+  thRow(sy, 3, ['Axe', 'Type', 'Désignation', 'Moteur', 'Réducteur', 'i', 'T2B\nNm', 'Couple\n% T2B', 'État', 'Alertes et attentions acquittées']);
   data.forEach((d, k) => {
-    const r = 5 + k, { a, R, g } = d;
-    sy.set(r, 0, a.nom || 'Sans nom', sTxtB);
-    sy.set(r, 1, R.m?.ref ?? S.motors.find(m => m.id === a.moteurId)?.ref ?? '', sTxt);
-    sy.set(r, 2, R.r?.ref ?? S.reducers.find(x => x.id === a.reducteurId)?.ref ?? '', sTxt);
-    if (R.missing) { sy.set(r, 3, R.why || 'Ensemble incomplet', sStat('warn')); sy.merge(r, 3, r, lastC); for (let c = 4; c <= lastC; c++) sy.set(r, c, '', sStat('warn')); return; }
-    sy.set(r, 3, R.i, sNum(R.i % 1 ? 2 : 0));
-    sy.set(r, 4, R.gears ? R.gears.gIn : 1, sNum('int', 1)); sy.set(r, 5, R.gears ? R.gears.gOut : R.i, R.gears && !R.gears.exact ? s({ border: 1, h: 'right', fmt: '0', b: 1, fill: C.warn, color: C.warnT }) : sNum(R.gears ? 'int' : 3, 1));
-    sy.set(r, 6, R.feed ?? null, sNum(R.feed ? feedDec(R.feed) : 'int', 1));
-    sy.set(r, 7, J(R), sNum(0, 1)); sy.set(r, 8, R.Jg, sNum(3, 1));
-    sy.set(r, 9, R.pct, sNum(1, 1)); sy.set(r, 10, R.driveStopMa, sNum(0)); sy.set(r, 11, R.dec, sNum(0)); sy.set(r, 12, R.jerkStop, sNum(0)); sy.set(r, 13, R.stl, sNum(0));
-    sy.set(r, 14, g.vp, sNum(1, 1)); sy.set(r, 15, g.vi, sNum(1, 1));
-    const lim = d.tr[0];
-    sy.set(r, 16, R.t2b, sNum(0)); sy.set(r, 17, lim ? lim.t : null, sNum(0)); sy.set(r, 18, lim ? lim.p / 100 : null, lim ? s({ b: 1, border: 1, h: 'right', fmt: '0%', fill: C[lim.st], color: C[lim.st + 'T'] }) : sTxt);
-    sy.set(r, 19, ETAT[d.st], sStat(d.st));
-    sy.height(r, 18);
+    const r = 4 + k, { a, R } = d, lim = d.tr[0];
+    sy.set(r, 0, a.nom || 'Sans nom', sTxtB); sy.set(r, 1, TYPE(a), sTxt); sy.set(r, 2, a.desc || '', sTxt);
+    sy.set(r, 3, d.m ? d.m.ref : '—', sTxt); sy.set(r, 4, d.r ? d.r.ref : (R.sansRed ? 'sans réducteur' : '—'), sTxt);
+    if (R.missing) { sy.set(r, 5, '', sTxt); sy.set(r, 6, '', sTxt); sy.set(r, 7, '', sTxt); }
+    else { sy.set(r, 5, R.i, sNum(R.i % 1 ? 2 : 0)); sy.set(r, 6, n0(R.t2b), sNum(0)); sy.set(r, 7, lim ? lim.p / 100 : null, lim ? sPct(lim.st) : sTxt); }
+    sy.set(r, 8, ETAT[d.st], sStat(d.st));
+    const txt = R.missing ? (R.why || [!d.m ? 'moteur' : null, !d.r && a.gamme !== 'BMP' ? 'réducteur' : null].filter(Boolean).join(' et ') + ' à choisir') : d.al.map(c => (c[0] === 'crit' ? 'DANGER · ' : 'ATTENTION · ') + c[1]).concat((R.acked || []).map(c => 'ACQUITTÉ · ' + c[1])).join('\n');
+    sy.set(r, 9, txt, s({ border: 1, wrap: 1, indent: 1, color: d.st === 'crit' ? C.critT : d.st === 'warn' ? C.warnT : C.muted }));
+    sy.height(r, Math.max(18, 14 * (txt ? txt.split('\n').reduce((n, l) => n + Math.ceil(l.length / 85), 0) : 1)));
   });
-  sy.freeze = { r: 5, c: 1 };
+  sy.freeze = { r: 4, c: 1 };
   const sheets = [sy];
 
+  // ----- Lexium 62 : à saisir dans Machine Expert, une ligne par axe
+  if (lex.length) {
+    const ws = XL.Sheet('Lexium 62'); ws.landscape = true;
+    ws.cols = [10, 9, 20, 24, 8, 8, 9, 11, 11, 9, 13, 13, 13, 14, 10, 9, 9, 9, 11, 11, 12, 9, 11];
+    const lastC = ws.cols.length - 1;
+    head(ws, `Lexium 62 · à saisir dans Machine Expert · ${cur?.nom || ''}`, `Dossier DRV_<axe> de chaque variateur : Mechanic, General, Control loop. Gains : retenus après essais si notés, sinon proposés (point de départ). Exporté le ${when}.`, lastC);
+    bandRow(ws, 3, [['Axe et matériel', 0, 3], ['Mechanic', 4, 8], ['General', 9, 13], ['Control loop', 14, 15], ['Inertie, courant, vitesse', 16, 19], ['Contrôle réducteur', 20, 22]]);
+    thRow(ws, 4, ['Axe', 'Variateur', 'Moteur', 'Réducteur', 'i', 'GearIn', 'GearOut', 'Feed\nConstant', 'J_Load\nkg·cm²', 'J_Gear\nkg·cm²', 'UserCurrent\nLimit %', 'DriveStop\nCurrentLimit mA', 'ControllerStop\nDec', 'ControllerStop\nJerk', 'StopTime\nLim ms', 'Vel_P\nGain', 'Vel_I\nGain', 'Rapport\nd’inertie', 'Courant\nlimite A', 'Vitesse max\naxe (unité/s)', 'T2B\nNm', 'Couple\n% T2B', 'État']);
+    lex.forEach((d, k) => {
+      const r = 5 + k, { a, R, g } = d;
+      ws.set(r, 0, a.nom || 'Sans nom', sTxtB); ws.set(r, 1, TYPE(a) + (a.variateur ? ' ' + a.variateur : ''), sTxt);
+      ws.set(r, 2, d.m ? d.m.ref : '', sTxt); ws.set(r, 3, d.r ? d.r.ref : '', sTxt);
+      if (R.missing) { ws.set(r, 4, R.why || 'Moteur ou réducteur à choisir', sStat('todo')); ws.merge(r, 4, r, lastC); for (let c = 5; c <= lastC; c++) ws.set(r, c, '', sStat('todo')); return; }
+      ws.set(r, 4, R.i, sNum(R.i % 1 ? 2 : 0));
+      ws.set(r, 5, R.gears ? R.gears.gIn : 1, sNum('int', 1)); ws.set(r, 6, R.gears ? R.gears.gOut : R.i, R.gears && !R.gears.exact ? s({ border: 1, h: 'right', fmt: '0', b: 1, fill: C.warn, color: C.warnT }) : sNum(R.gears ? 'int' : 3, 1));
+      ws.set(r, 7, R.feed ?? null, sNum(R.feed ? feedDec(R.feed) : 'int', 1));
+      ws.set(r, 8, J(R), sNum(0, 1)); ws.set(r, 9, R.Jg, sNum(3, 1));
+      ws.set(r, 10, R.pct, sNum(1, 1)); ws.set(r, 11, R.driveStopMa, sNum(0)); ws.set(r, 12, R.dec, sNum(0)); ws.set(r, 13, R.jerkStop, sNum(0)); ws.set(r, 14, R.stl, sNum(0));
+      ws.set(r, 15, g.vp, sNum(1, 1)); ws.set(r, 16, g.vi, sNum(1, 1));
+      ws.set(r, 17, R.ratioTot, R.ratioTot == null ? sTxt : sStat(R.ratioTot > 30 ? 'crit' : R.ratioTot > 10 ? 'warn' : 'ok', 1)); ws.set(r, 18, R.Ilim, sNum(2));
+      ws.set(r, 19, R.vPhys, R.vPhys && R.vMax ? sStat(R.vMax > R.vPhys ? 'crit' : R.vNomAx && R.vMax > R.vNomAx ? 'warn' : 'ok', 0) : sNum(0));
+      const lim = d.tr[0];
+      ws.set(r, 20, n0(R.t2b), sNum(0)); ws.set(r, 21, lim ? lim.p / 100 : null, lim ? sPct(lim.st) : sTxt);
+      ws.set(r, 22, ETAT[d.st], sStat(d.st));
+      ws.height(r, 18);
+    });
+    ws.freeze = { r: 5, c: 1 };
+    sheets.push(ws);
+  }
+
+  // ----- ATV320 : réglages Modbus, plaque moteur, vitesses
+  if (atv.length) {
+    const ws = XL.Sheet('ATV320'); ws.landscape = true;
+    ws.cols = [10, 16, 8, 24, 26, 8, 8, 8, 9, 9, 8, 9, 8, 8, 8, 9, 7, 9, 10, 10, 9, 11];
+    const lastC = ws.cols.length - 1;
+    const A = atvList();
+    const nodeOf = a => { const x = A.find(o => nrmE(o.x.dossier || o.x.nom.replace(/^ATV320_/, '')) === nrmE(a.nom)); return x ? num(x.x.nodeId) : null; };
+    head(ws, `ATV320 · réglages et plaques moteurs · ${cur?.nom || ''}`, `Réglages du variateur (Modbus) : HSP, LSP, ITH, CLI, TLIM. Plaque moteur d’après la fiche du catalogue (asynchrone : NPR, UNS, NCR, FRS, NSP, COS ; synchrone : NCRS, NSPS, PPNS, PHS). Exporté le ${when}.`, lastC);
+    bandRow(ws, 3, [['Axe et matériel', 0, 4], ['Réglages ATV320 (Modbus)', 5, 9], ['Plaque moteur', 10, 15], ['Vitesses', 16, 19], ['Contrôle réducteur', 20, 21]]);
+    thRow(ws, 4, ['Axe', 'ATV320', 'Node-ID', 'Moteur', 'Réducteur', 'HSP\nHz', 'LSP\nHz', 'ITH\nA', 'CLI\nA', 'TLIM\n% MN', 'NPR kW /\nNCRS A', 'UNS V /\nNSPS tr/min', 'NCR A /\nPPNS', 'FRS Hz /\nPHS', 'NSP\ntr/min', 'COS', 'Moteur à HSP\ntr/min', 'Sortie à HSP\ntr/min', 'Axe à HSP', 'Axe à LSP', 'Couple\n% T2B', 'État']);
+    atv.forEach((d, k) => {
+      const r = 5 + k, { a, R, PLQ } = d;
+      ws.set(r, 0, a.nom || 'Sans nom', sTxtB); ws.set(r, 1, a.variateur || '', sTxt); ws.set(r, 2, nodeOf(a), sNum('int'));
+      ws.set(r, 3, d.m ? d.m.ref : '', sTxt); ws.set(r, 4, d.r ? d.r.ref : (R.sansRed ? 'sans réducteur' : ''), sTxt);
+      if (R.missing) { ws.set(r, 5, R.why || 'Moteur à choisir', sStat('todo')); ws.merge(r, 5, r, lastC); for (let c = 6; c <= lastC; c++) ws.set(r, c, '', sStat('todo')); return; }
+      ws.set(r, 5, R.hsp, sNum(1, 1)); ws.set(r, 6, R.lsp != null && (R.pp || R.async) ? R.lsp : null, sNum(1, 1)); ws.set(r, 7, R.ith, sNum(2, 1)); ws.set(r, 8, R.Ilim, sNum(2, 1)); ws.set(r, 9, pctIn(R), sNum(0, 1));
+      if (R.async) { ws.set(r, 10, PLQ.npr, sNum(3)); ws.set(r, 11, PLQ.uns, sNum(0)); ws.set(r, 12, PLQ.ncr, sNum(2)); ws.set(r, 13, PLQ.frs, sNum(0)); ws.set(r, 14, PLQ.nsp, sNum(0)); ws.set(r, 15, PLQ.cos, sNum(2)); }
+      else { ws.set(r, 10, R.i0, sNum(2)); ws.set(r, 11, num(R.m.nNom), sNum(0)); ws.set(r, 12, R.pp, sNum('int')); ws.set(r, 13, num(R.m.ke), sNum(1)); ws.set(r, 14, '', sMuted); ws.set(r, 15, '', sMuted); }
+      ws.set(r, 16, R.async ? R.nHsp : R.nAtVmax, sNum(0)); ws.set(r, 17, R.async ? R.nOutHsp : (R.nAtVmax != null ? R.nAtVmax / R.i : null), sNum(1));
+      const vU = R.asyncConv ? ' m/min' : ' ' + R.uV;
+      ws.set(r, 18, R.vHsp != null ? (R.asyncConv ? fmt(R.vHsp * 0.06, 2) + vU + ' (' + fmt(R.vHsp, 0) + ' mm/s)' : fmt(R.vHsp, 1) + vU) : (R.vMax != null ? fmt(R.vMax, 0) + vU : ''), sTxt);
+      ws.set(r, 19, R.vLsp != null ? (R.asyncConv ? fmt(R.vLsp * 0.06, 2) + vU + ' (' + fmt(R.vLsp, 0) + ' mm/s)' : fmt(R.vLsp, 1) + vU) : (num(a.vMin) != null ? fmt(num(a.vMin), 0) + vU : ''), sTxt);
+      const lim = d.tr[0]; ws.set(r, 20, lim ? lim.p / 100 : null, lim ? sPct(lim.st) : sTxt);
+      ws.set(r, 21, ETAT[d.st], sStat(d.st)); ws.height(r, 18);
+    });
+    ws.freeze = { r: 5, c: 1 };
+    sheets.push(ws);
+  }
+
+  // ----- Machine Expert : ordre Sercos, ATV320 du CANopen, matériel du projet
+  {
+    const ws = XL.Sheet('Machine Expert'); ws.landscape = true;
+    ws.cols = [8, 16, 12, 20, 24, 8, 8, 7, 7, 7, 7, 34];
+    const lastC = ws.cols.length - 1; let r = 0;
+    head(ws, `Machine Expert · ce que le script crée et règle · ${cur?.nom || ''}`, `Exporté le ${when} · heartbeat des ATV320 : ${HB_MS(cur)} ms (tâche de secours ${TACHE_CAN(cur)})`, lastC); r = 3;
+    const sect = t => { for (let c = 0; c <= lastC; c++) ws.set(r, c, c ? '' : t, sSect); ws.merge(r, 0, r, lastC); ws.height(r, 20); r++; };
+    sect('Lexium 62 · ordre Sercos');
+    thRow(ws, r, ['Ordre', 'Axe', 'Variateur', 'Référence', 'Moteur', 'LE_', 'IO_', 'IO0', 'IO1', 'IO4', 'IO5', 'Créé dans Machine Expert']); r++;
+    brushList().filter(a => a.gamme !== 'BMP').forEach(a => {
+      const g = a.gamme || '', card = !!g && ioCardOf(a), m = ioModesOf(a);
+      ws.set(r, 0, num(a.ordre), sNum('int')); ws.set(r, 1, a.nom, sTxtB); ws.set(r, 2, g || 'Aucun (virtuel)', sTxt); ws.set(r, 3, a.variateur || '', sTxt); ws.set(r, 4, motorRefOf(a) || '', sTxt);
+      ws.set(r, 5, g ? (a.leEnc !== false ? 'oui' : 'non') : '', sUnit); ws.set(r, 6, g ? (card ? 'oui' : 'non') : '', sUnit);
+      IO_MODES.forEach((k, j) => ws.set(r, 7 + j, card ? m[k] : null, sNum('int')));
+      ws.set(r, 11, !g ? 'rien (axe virtuel)' : [a.leEnc !== false ? 'LE_' + a.nom : null, 'DRV_' + a.nom, card ? 'IO_' + a.nom : null].filter(Boolean).join(' · '), sTxt); r++;
+    });
+    r++; sect('ATV320 · CANopen');
+    const cols = cur.atvCols || [];
+    thRow(ws, r, ['', 'ATV320', 'Node-ID', 'Référence', 'Moteur (dossier)', 'Optional', 'Axe', '', '', '', '', 'Plaque (fiche catalogue)' + (cols.length ? ' · ' + cols.map(c => c.n).join(', ') : '')]); r++;
+    atvList().forEach(({ x }) => {
+      const ba = atv.find(d => nrmE(d.a.nom) === nrmE(x.dossier || x.nom.replace(/^ATV320_/, '')));
+      const dr = driveOf(x.ref);
+      ws.set(r, 0, '', sTxt); ws.set(r, 1, x.nom, sTxtB); ws.set(r, 2, num(x.nodeId), sNum('int')); ws.set(r, 3, (x.ref || '') + (dr ? ' · In ' + fmt(num(dr.iNom), 1) + ' A · Imax ' + fmt(num(dr.iPeak), 1) + ' A' : ''), sTxt); ws.set(r, 4, x.moteurRef || '', sTxt);
+      ws.set(r, 5, x.optional !== false ? 'oui' : 'non', sUnit); ws.set(r, 6, ba ? ba.a.nom : '', sTxt); for (let c = 7; c <= 10; c++) ws.set(r, c, '', sTxt);
+      const P = ba && ba.PLQ, R = ba && ba.R;
+      let plq = ba ? 'moteur à choisir dans l’axe' : 'pas d’axe pour cet ATV320';
+      if (ba && !R.missing) {
+        plq = R.async ? plaqueTxt({ nom: x.nom, nodeId: x.nodeId }, P).replace(/^[^|]*\| /, '') : ['NCRS ' + (R.i0 != null ? fmt(R.i0, 2) + ' A' : '?'), 'NSPS ' + (num(R.m.nNom) != null ? fmt(num(R.m.nNom), 0) + ' tr/min' : '?'), 'PPNS ' + (R.pp ? fmt(R.pp, 0) : '?'), 'PHS ' + (num(R.m.ke) != null ? fmt(num(R.m.ke), 1) + ' V/krpm' : '?')].join(' | ');
+        plq += (R.hsp != null ? ' | HSP ' + fmt(R.hsp, 1) + ' Hz' : '') + (R.lsp != null ? ' | LSP ' + fmt(R.lsp, 1) + ' Hz' : '') + (R.ith != null ? ' | ITH ' + fmt(R.ith, 2) + ' A' : '') + (R.pct != null ? ' | CLI ' + fmt(R.pct, 0) + ' %' : '');
+      }
+      if (cols.length) plq += ' · ' + cols.map(c => c.n + ' = ' + ((x.params || {})[c.n] ?? '—')).join(', ');
+      ws.set(r, 11, plq, sWrap); r++;
+    });
+    r++; sect('Matériel du projet');
+    thRow(ws, r, ['', 'Appareil', 'Type', 'Famille', 'Sous', 'Node-ID', 'IP', '', '', '', '', 'Origine']); r++;
+    (cur.materiel || []).forEach(x => {
+      ws.set(r, 0, '', sTxt); ws.set(r, 1, x.nom, sTxtB); ws.set(r, 2, x.type, sTxt); ws.set(r, 3, HW_FAM(x.type), sTxt); ws.set(r, 4, x.parent || '', sTxt); ws.set(r, 5, num(x.nodeId), sNum('int')); ws.set(r, 6, x.ip || '', sTxt); for (let c = 7; c <= 10; c++) ws.set(r, c, '', sTxt);
+      ws.set(r, 11, (x.src === 'manuel' ? 'ajouté à la main' : 'dossier élec') + (x.dossier && x.dossier !== x.nom ? ' · dossier : ' + x.dossier : '') + (x.nomFixe ? ' · nom fixé pour ce projet' : ''), sTxt); r++;
+    });
+    sheets.push(ws);
+  }
+
+  // ----- E/S du projet
+  if (typeof ioList === 'function' && ioList().length) {
+    const ws = XL.Sheet('E-S'); ws.cols = [40, 22, 40, 36];
+    head(ws, `E/S · ${cur?.nom || ''}`, `Désignations du dossier et noms des variables automate (dictionnaire E/S). Exporté le ${when}.`, 3);
+    thRow(ws, 3, ['Désignation (dossier)', 'Type', 'Noms automate', 'Remarque']);
+    const idx = ioIndex();
+    ioList().forEach((x, k) => {
+      const t = ioNommer(x.desig, x.kind, idx), noms = x.noms && x.noms.length ? x.noms : t.noms, fixe = !!(x.noms && x.noms.length);
+      const r = 4 + k; ws.set(r, 0, x.desig, sTxtB); ws.set(r, 1, (typeof IO_KIND_L !== 'undefined' && IO_KIND_L[x.kind]) || x.kind, sTxt); ws.set(r, 2, noms.join('\n'), s({ border: 1, wrap: 1, indent: 1 }));
+      ws.set(r, 3, [fixe ? 'noms fixés à la main' : '', ...(t.notes || [])].filter(Boolean).join(' · '), sWrap); ws.height(r, Math.max(18, 15 * Math.max(1, noms.length)));
+    });
+    sheets.push(ws);
+  }
+
   // ----- Une fiche par axe
-  const used = new Set(['Synthèse']);
+  const used = new Set(sheets.map(x => x.name));
   data.forEach(d => {
-    const { a, R, g } = d;
+    const { a, R, g, PLQ } = d;
     let nm = String(a.nom || 'Axe').replace(/[\[\]:*?\/\\]/g, '-').slice(0, 28) || 'Axe'; let base = nm, k = 2; while (used.has(nm)) nm = base + ' ' + k++; used.add(nm);
-    const ws = XL.Sheet(nm); ws.cols = [38, 24, 12, 42];
+    const ws = XL.Sheet(nm); ws.cols = [40, 24, 12, 46];
     let r = 0;
     const full = (t, st, h) => { for (let c = 0; c < 4; c++) ws.set(r, c, c ? '' : t, st); ws.merge(r, 0, r, 3); if (h) ws.height(r, h); r++; };
-    const line = (l, v, u, note, vs) => { ws.set(r, 0, l, sLabel); ws.set(r, 1, v ?? '', vs || (typeof v === 'number' ? sNum(2) : sTxt)); ws.set(r, 2, u || '', sUnit); ws.set(r, 3, note || '', sTxt); r++; };
+    const line = (l, v, u, note, vs) => { ws.set(r, 0, l, sLabel); ws.set(r, 1, v ?? '', vs || (typeof v === 'number' ? sNum(2) : sTxt)); ws.set(r, 2, u || '', sUnit); ws.set(r, 3, note || '', sWrap); r++; };
     const th = cols => { cols.forEach((t, c) => ws.set(r, c, t, sTh)); ws.height(r, 20); r++; };
-    full(`Axe ${a.nom || ''}`, sTitle, 26);
-    full(`Projet ${cur?.nom || ''} · exporté le ${when} · état : ${ETAT[d.st]}`, sSub);
+    const p = (l, v, u, dir, dec, key) => { ws.set(r, 0, l, key ? s({ b: 1, fill: C.key, border: 1, indent: 1 }) : sLabel); ws.set(r, 1, v ?? '', typeof v === 'number' ? sNum(dec, key) : s({ border: 1, h: 'left', indent: 1, ...(key ? { b: 1, fill: C.key } : {}) })); ws.set(r, 2, u || '', sUnit); ws.set(r, 3, dir, sWrap); if (key) ws.height(r, 18); r++; };
+    const calcs = () => { r++; full('DÉTAIL DES CALCULS', sSect, 20); th(['Grandeur', 'Valeur', 'Unité', 'Calcul']); R.calc.forEach(c => line(c[0], typeof c[1] === 'number' && isFinite(c[1]) ? +c[1].toPrecision(6) : c[1], c[2], c[3], sNum(4))); };
+    const alertes = () => { r++; full('ALERTES', sSect, 20);
+      if (!d.al.length) full('Aucun problème détecté.', s({ b: 1, fill: C.ok, color: C.okT, indent: 1 }), 18);
+      (R.acked || []).forEach(c => full('ACQUITTÉ le ' + ackDate(c[2].date) + (c[2].note ? ' (' + c[2].note + ')' : '') + ' · ' + c[1], s({ fill: C.grey, color: C.muted, wrap: 1, indent: 1 }), Math.max(18, 15 * Math.ceil(c[1].length / 110))));
+      d.al.forEach(c => full((c[0] === 'crit' ? 'DANGER · ' : 'ATTENTION · ') + c[1], s({ fill: C[c[0]], color: C[c[0] + 'T'], wrap: 1, indent: 1, b: c[0] === 'crit' ? 1 : 0 }), Math.max(18, 15 * Math.ceil(c[1].length / 95))));
+      R.checks.filter(c => c[0] === 'info').forEach(c => full('À VOIR · ' + c[1], s({ fill: C.grey, wrap: 1, indent: 1 }), Math.max(18, 15 * Math.ceil(c[1].length / 110)))); };
+    const notes = () => { if (a.notes) { r++; full('NOTES', sSect, 20); full(a.notes, sWrap, Math.max(18, 15 * Math.ceil(String(a.notes).length / 95))); } };
+    const reducCtrl = () => { r++; full('CONTRÔLE DU RÉDUCTEUR', sSect, 20);
+      if (d.tr.length) { th(['Effort', 'Couple en sortie', '% du T2B', 'État']); d.tr.forEach(t => { ws.set(r, 0, t.l, sLabel); ws.set(r, 1, t.t, s({ border: 1, h: 'right', fmt: '#,##0" Nm"' })); ws.set(r, 2, t.p / 100, sPct(t.st)); ws.set(r, 3, ETAT[t.st], sStat(t.st)); r++; }); }
+      else full(R.sansRed ? 'Sans réducteur (entraînement direct).' : 'T2B du réducteur non renseigné : couple non contrôlé.', s({ b: 1, fill: C.warn, color: C.warnT, indent: 1 }));
+      if (R.TR && R.TR.some(x => x.ref)) { th(['Limite du réducteur', 'Couple sortie Nm', 'Courant moteur A', '% Imax moteur']); R.TR.filter(x => x.ref || x.hl).forEach(x => { ws.set(r, 0, x.l, x.hl ? sTxtB : sLabel); ws.set(r, 1, x.t, sNum(1)); ws.set(r, 2, x.I, sNum(2)); ws.set(r, 3, x.pc != null ? x.pc / 100 : null, x.I != null && R.Iref && x.I > R.Iref ? sPct('crit') : sPct()); r++; }); } };
+    full(`Axe ${a.nom || ''}${a.desc ? ' · ' + a.desc : ''}`, sTitle, 26);
+    full(`Projet ${cur?.nom || ''} · ${TYPE(a)}${a.variateur ? ' ' + a.variateur : ''} · exporté le ${when} · état : ${ETAT[d.st]}`, sSub);
     r++;
     full('MATÉRIEL', sSect, 20);
-    line('Moteur', R.m?.ref ?? S.motors.find(m => m.id === a.moteurId)?.ref ?? '—');
-    line('Réducteur', R.r?.ref ?? S.reducers.find(x => x.id === a.reducteurId)?.ref ?? '—');
-    if (R.missing) { r++; full(R.why || 'Ensemble incomplet : choisir un moteur et un réducteur.', s({ b: 1, fill: C.warn, color: C.warnT, wrap: 1, indent: 1 }), 22); sheets.push(ws); return; }
-    line('Rapport de réduction i', R.i, '', '', sNum(R.i % 1 ? 3 : 0));
-    line('Kt moteur (TorqueConstant)', R.kt, 'Nm/A', '', sNum(3));
-    line('Imax moteur', R.Iref, 'A', 'Référence du 100 % de UserCurrentLimit', sNum(1));
-    line('T2B réducteur (couple max)', R.t2b, 'Nm', 'Couple max admissible utilisé pour la limite', sNum(0, 1));
+    line('Moteur', d.m ? d.m.ref : '—', '', d.m ? (d.m.typeMot === 'async' ? 'asynchrone' : 'synchrone') + (num(d.m.imax) != null ? ' · Imax ' + fmt(num(d.m.imax), 1) + ' A' : '') + (num(d.m.i0) != null ? ' · IN / I0 ' + fmt(num(d.m.i0), 2) + ' A' : '') : '');
+    line('Réducteur', d.r ? d.r.ref : (R.sansRed ? 'sans réducteur (i = 1)' : '—'), '', d.r ? [d.r.marque, num(d.r.rendement) != null ? 'rendement ' + fmt(num(d.r.rendement), 0) + ' %' : '', num(d.r.jGear) != null ? 'J_Gear ' + fmt(num(d.r.jGear), 3) + ' kg·cm²' : 'J_Gear non renseigné'].filter(Boolean).join(' · ') : '');
+    if (R.missing) { r++; full(R.why || 'Ensemble incomplet : choisir un moteur' + (a.gamme === 'BMP' ? '' : ' et un réducteur') + '.', s({ b: 1, fill: C.warn, color: C.warnT, wrap: 1, indent: 1 }), 22); notes(); sheets.push(ws); return; }
+    line('Rapport de réduction i', R.i, '', R.gears ? 'GearIn ' + R.gears.gIn + ' · GearOut ' + R.gears.gOut + ' · ' + gearsNote(R.gears) : '', sNum(R.i % 1 ? 3 : 0));
+    line(R.async ? 'Kt équivalent (MN ÷ IN)' : 'Kt moteur (TorqueConstant)', R.kt, 'Nm/A', '', sNum(3));
+    line('Imax de référence', R.Iref, 'A', R.atv ? (R.refLim === 'atv' ? 'Limité par l’ATV320 ' + (R.drv ? R.drv.ref : '') : 'Courant max du moteur') : 'Référence du 100 % de UserCurrentLimit', sNum(1));
+    if (R.atv) line('ATV320', R.drv ? R.drv.ref : (a.variateur || '—'), '', R.drv ? 'In ' + fmt(R.iDrvNom, 1) + ' A · Imax ' + fmt(R.iDrv, 1) + ' A' : (a.variateur ? 'absent du catalogue Variateurs' : 'référence à renseigner'));
+    line('T2B réducteur (couple max)', n0(R.t2b), 'Nm', 'Couple max admissible utilisé pour la limite', sNum(0, 1));
     if (R.t2n) line('T2N réducteur (couple nominal)', R.t2n, 'Nm', '', sNum(0));
     if (R.t2not) line('T2Not réducteur (arrêt d’urgence)', R.t2not, 'Nm', 'À ne jamais dépasser', sNum(0));
     r++;
     full('CHARGE ET MOUVEMENT', sSect, 20);
     const tcx = a.typeCharge || 'lineaire', lin = tcx === 'lineaire' || tcx === 'convoyeur';
     line('Type de charge', tcx === 'convoyeur' ? 'Convoyeur' : tcx === 'lineaire' ? 'Linéaire' : tcx === 'bielle' ? 'Bielle-manivelle' : 'Rotative');
-    if (tcx === 'convoyeur') line('Diamètre du rouleau d’entraînement', num(a.dRouleau), 'mm', R.feedTheo ? 'FeedConstant théorique ' + fmt(R.feedTheo, 3) + ' (π × D)' : '', sNum(1));
-    if (lin) line('Masse en mouvement', num(a.masse), 'kg', '', sNum(1)); else if (a.typeCharge === 'bielle') { const BI = bielleCalc(a); line('Inertie maxi de la charge (bielle-manivelle)', BI ? BI.Jmax * 1e4 : null, 'kg·cm²', 'Rayon ' + (num(a.rManiv) ?? '—') + ' mm · plaque ' + (num(a.mPlaque) ?? '—') + ' kg', sNum(1)); } else line('Inertie de la charge', num(a.jLoadDirect), 'kg·cm²', 'Côté sortie du réducteur', sNum(1));
-    if (num(a.jSupp)) line('Inertie en plus', num(a.jSupp), 'kg·cm²', 'Poulies, rouleaux… côté sortie', sNum(1));
-    if (tcx === 'lineaire') line('Axe vertical', a.vertical ? 'Oui' : 'Non');
-    line('Vitesse max du cycle (pas celle du moteur)', num(a.vMax), 'Units/s', 'Vitesse la plus élevée du mouvement programmé', sNum(0));
-    line('Durée d’arrêt visée', num(a.tStop) ?? 0.2, 's', '', sNum(2));
-    line('Part de T2B autorisée', (num(a.marge) ?? 80) / 100, '', 'Marge sur le couple max du réducteur', s({ border: 1, h: 'right', fmt: '0%' }));
-    r++;
-    full('À SAISIR DANS LE VARIATEUR', sSect, 20);
-    th(['Paramètre', 'Valeur', 'Unité', 'Dossier']);
-    const p = (l, v, u, dir, dec, key) => { ws.set(r, 0, l, key ? s({ b: 1, fill: C.key, border: 1, indent: 1 }) : sLabel); ws.set(r, 1, v ?? '', typeof v === 'number' ? sNum(dec, key) : s({ border: 1, h: 'left', indent: 1, ...(key ? { b: 1, fill: C.key } : {}) })); ws.set(r, 2, u || '', sUnit); ws.set(r, 3, dir, sTxt); if (key) ws.height(r, 18); r++; };
-    p('GearIn', R.gears ? R.gears.gIn : 1, '', 'Mechanic', 'int', 1);
-    p('GearOut', R.gears ? R.gears.gOut : R.i, '', 'Mechanic', R.gears ? 'int' : (R.i % 1 ? 3 : 0), 1);
-    if (R.gears) { ws.set(r - 1, 3, 'Mechanic · ' + gearsNote(R.gears), R.gears.exact ? sTxt : s({ color: C.warnT, wrap: 1 })); }
-    if (R.feed) p('FeedConstant', R.feed, 'Units/tr', 'Mechanic', feedDec(R.feed), 1);
-    p('J_Load', J(R), 'kg·cm²', 'Mechanic', 0, 1);
-    p('J_Gear', R.Jg, 'kg·cm²', 'Mechanic', 3, 1);
-    p('UserCurrentLimit', R.pct, '%', 'General', 1, 1);
-    p('DriveStopCurrentLimit', R.driveStopMa, 'mA', 'General', 0);
-    { const NV = R.dec ? null : 'À saisir : vitesse max du cycle (pas celle du moteur)'; p('ControllerStopDec', R.dec || NV, 'Units/s²', 'General', 0); p('ControllerStopJerk', R.dec ? R.jerkStop : NV, 'Units/s³', 'General', 0); p('StopTimeLim', R.dec ? R.stl : NV, 'ms', 'General', 0); }
-    p('UserDefinedStopMode', 'Start with actual values', '', 'General');
-    p('Vel_P_Gain', g.vp, '', 'Control loop', 1, 1);
-    p('Vel_I_Gain', g.vi, '', 'Control loop', 1, 1);
-    r++;
-    full('CONTRÔLE DU RÉDUCTEUR', sSect, 20);
-    if (d.tr.length) {
-      th(['Effort', 'Couple en sortie', '% du T2B', 'État']);
-      d.tr.forEach(t => { ws.set(r, 0, t.l, sLabel); ws.set(r, 1, t.t, s({ border: 1, h: 'right', fmt: '#,##0" Nm"' })); ws.set(r, 2, t.p / 100, s({ b: 1, border: 1, h: 'right', fmt: '0%', fill: C[t.st], color: C[t.st + 'T'] })); ws.set(r, 3, ETAT[t.st], sStat(t.st)); r++; });
-    } else { full('T2B du réducteur non renseigné : couple non contrôlé.', s({ b: 1, fill: C.warn, color: C.warnT, indent: 1 })); }
-    line('Courant limite', R.Ilim, 'A', '', sNum(2));
-    if (R.vertical) line('Courant de maintien', R.Ihold, 'A', 'Gravité, en permanence', sNum(2));
-    line('Inertie vue par le moteur', R.Jtot, 'kg·cm²', '', sNum(2));
-    line('Rapport charge/moteur', R.ratioIn, '', R.ratioIn > 10 ? 'Élevé : monter les gains par petites étapes' : '', sNum(2));
-    r++;
-    full('ALERTES', sSect, 20);
-    if (!d.al.length) full('Aucun problème détecté.', s({ b: 1, fill: C.ok, color: C.okT, indent: 1 }), 18);
-    (d.R.acked || []).forEach(c => full('ACQUITTÉ le ' + ackDate(c[2].date) + (c[2].note ? ' (' + c[2].note + ')' : '') + ' · ' + c[1], s({ fill: C.grey, color: C.muted, wrap: 1, indent: 1 }), Math.max(18, 15 * Math.ceil(c[1].length / 110))));
-    d.al.forEach(c => full((c[0] === 'crit' ? 'DANGER · ' : 'ATTENTION · ') + c[1], s({ fill: C[c[0]], color: C[c[0] + 'T'], wrap: 1, indent: 1, b: c[0] === 'crit' ? 1 : 0 }), Math.max(18, 15 * Math.ceil(c[1].length / 95))));
-    if (a.notes) { r++; full('NOTES', sSect, 20); full(a.notes, sWrap, Math.max(18, 15 * Math.ceil(String(a.notes).length / 95))); }
+    if (tcx === 'convoyeur') line('Diamètre du rouleau d’entraînement', num(a.dRouleau), 'mm', R.feedTheo ? (R.asyncConv ? 'π × D = ' + fmt(R.feedTheo, 1) + ' mm par tour de virole' : 'FeedConstant théorique ' + fmt(R.feedTheo, 3) + ' (π × D)') : '', sNum(1));
+    if (!R.asyncConv && R.feed) line('FeedConstant', R.feed, R.uU + '/tr', 'Déplacement pour un tour de sortie du réducteur', sNum(feedDec(R.feed)));
+    if (!(R.atv && R.async)) {
+      if (lin) line('Masse en mouvement', num(a.masse), 'kg', '', sNum(1)); else if (a.typeCharge === 'bielle') { const BI = bielleCalc(a); line('Inertie maxi de la charge (bielle-manivelle)', BI ? BI.Jmax * 1e4 : null, 'kg·cm²', 'Rayon ' + (num(a.rManiv) ?? '—') + ' mm · plaque ' + (num(a.mPlaque) ?? '—') + ' kg', sNum(1)); } else line('Inertie de la charge', num(a.jLoadDirect), 'kg·cm²', 'Côté sortie du réducteur', sNum(1));
+      if (num(a.jSupp)) line('Inertie ajoutée', num(a.jSupp), 'kg·cm²', 'Poulies, rouleaux… côté sortie', sNum(1));
+      if (tcx === 'lineaire') line('Axe vertical', a.vertical ? 'Oui' : 'Non');
+      line('Vitesse max du cycle (pas celle du moteur)', num(a.vMax), R.uV, 'Vitesse la plus élevée du mouvement programmé', sNum(0));
+      if (R.atv) line('Vitesse basse du cycle', num(a.vMin), R.uV, 'Donne LSP', sNum(0));
+      if (num(a.acc)) line('Accélération programmée', num(a.acc), R.uV + '²', R.Iacc != null ? 'Courant d’accélération ' + fmt(R.Iacc, 2) + ' A' : '', sNum(0));
+      if (!R.atv) line('Durée d’arrêt visée', num(a.tStop) ?? 0.2, 's', '', sNum(2));
+    }
+    line('Part de T2B autorisée', (num(a.marge) ?? 80) / 100, '', 'Marge sur le couple max du réducteur', sPct());
+    if (R.atv) {
+      r++; full('RÉGLAGES ATV320 (MODBUS)', sSect, 20);
+      th(['Paramètre', 'Valeur', 'Unité', 'Remarque']);
+      p('HSP · grande vitesse', R.hsp, 'Hz', R.async ? 'réglage (vide : 50 Hz)' : 'd’après la vitesse max du cycle', 1, 1);
+      p('LSP · petite vitesse', R.lsp != null && (R.pp || R.async) ? R.lsp : null, 'Hz', R.async ? 'réglage (vide : 10 Hz)' : 'd’après la vitesse basse du cycle', 1, 1);
+      p('ITH · courant thermique', R.ith, 'A', fmt(R.ithPct, 0) + ' % de IN', 2, 1);
+      p('CLI · limite de courant', R.Ilim, 'A', R.pct != null ? fmt(R.pct, 1) + ' % de Imax ' + fmt(R.Iref, 1) + ' A' : '', 2, 1);
+      p('TLIM · limite de couple', pctIn(R), '% de MN', 'même limite en % du couple nominal', 0, 1);
+      r++; full('PLAQUE MOTEUR (' + (R.async ? 'loi vectorielle' : 'loi SYN') + ')', sSect, 20);
+      th(['Paramètre', 'Valeur', 'Unité', 'Source']);
+      if (R.async) { p('NPR · puissance', PLQ.npr, 'kW', 'fiche catalogue', 3, 1); p('UNS · tension', PLQ.uns, 'V', PLQ.convI || 'fiche / réseau de l’ATV320', 0, 1); p('NCR · courant nominal', PLQ.ncr, 'A', 'fiche catalogue', 2, 1); p('FRS · fréquence', PLQ.frs, 'Hz', 'fiche catalogue', 0, 1); p('NSP · vitesse nominale', PLQ.nsp, 'tr/min', 'fiche catalogue', 0, 1); p('COS · cos φ', PLQ.cos, '', 'fiche catalogue', 2, 1); }
+      else { p('NCRS · courant nominal', R.i0, 'A', 'fiche catalogue', 2, 1); p('NSPS · vitesse nominale', num(R.m.nNom), 'tr/min', 'fiche catalogue', 0, 1); p('PPNS · paires de pôles', R.pp, '', 'fiche catalogue', 'int', 1); p('PHS · FCEM', num(R.m.ke), 'V / 1000 tr/min', 'fiche catalogue', 1, 1); }
+      r++; full('VITESSES', sSect, 20);
+      th(['', 'À HSP', 'À LSP', 'Unité']);
+      const sp = (l, a1, a2, u, dec) => { ws.set(r, 0, l, sLabel); ws.set(r, 1, a1, sNum(dec)); ws.set(r, 2, a2, sNum(dec)); ws.set(r, 3, u, sUnit); r++; };
+      sp('Moteur', R.async ? R.nHsp : R.nAtVmax, R.async ? R.nLsp : R.nAtVmin, 'tr/min', 0);
+      sp(R.asyncConv ? 'Virole' : 'Sortie du réducteur', R.async ? R.nOutHsp : (R.nAtVmax != null ? R.nAtVmax / R.i : null), R.async ? R.nOutLsp : (R.nAtVmin != null ? R.nAtVmin / R.i : null), 'tr/min', 1);
+      sp(R.asyncConv ? 'Bande' : 'Axe', R.async ? R.vHsp : num(a.vMax), R.async ? R.vLsp : num(a.vMin), R.uV, 1);
+      if (R.asyncConv) sp('Bande', R.vHsp != null ? R.vHsp * 0.06 : null, R.vLsp != null ? R.vLsp * 0.06 : null, 'm/min', 2);
+    } else {
+      r++; full('À SAISIR DANS MACHINE EXPERT', sSect, 20);
+      th(['Paramètre', 'Valeur', 'Unité', 'Dossier']);
+      p('GearIn', R.gears ? R.gears.gIn : 1, '', 'Mechanic', 'int', 1);
+      p('GearOut', R.gears ? R.gears.gOut : R.i, '', 'Mechanic', R.gears ? 'int' : (R.i % 1 ? 3 : 0), 1);
+      if (R.gears) { ws.set(r - 1, 3, 'Mechanic · ' + gearsNote(R.gears), R.gears.exact ? sWrap : s({ color: C.warnT, wrap: 1, border: 1, indent: 1 })); }
+      if (R.feed) p('FeedConstant', R.feed, R.uU + '/tr', 'Mechanic', feedDec(R.feed), 1);
+      p('J_Load', J(R), 'kg·cm²', 'Mechanic', 0, 1);
+      p('J_Gear', R.Jg, 'kg·cm²', 'Mechanic', 3, 1);
+      p('UserCurrentLimit', R.pct, '%', 'General', 1, 1);
+      p('DriveStopCurrentLimit', R.driveStopMa, 'mA', 'General', 0);
+      { const NV = R.dec ? null : 'À saisir : vitesse max du cycle (pas celle du moteur)'; p('ControllerStopDec', R.dec || NV, R.uV + '²', 'General', 0); p('ControllerStopJerk', R.dec ? R.jerkStop : NV, R.uV + '³', 'General', 0); p('StopTimeLim', R.dec ? R.stl : NV, 'ms', 'General', 0); }
+      p('UserDefinedStopMode', 'Start with actual values', '', 'General');
+      p('Vel_P_Gain', g.vp, '', 'Control loop · ' + g.vpSrc, 1, 1);
+      p('Vel_I_Gain', g.vi, '', 'Control loop · ' + g.viSrc, 1, 1);
+      r++; full('VOYANTS', sSect, 20);
+      th(['Voyant', 'Valeur', 'Unité', 'Lecture']);
+      const lim = d.tr[0];
+      if (lim) { ws.set(r, 0, 'Couple réducteur à la limite de courant', sLabel); ws.set(r, 1, lim.p / 100, sPct(lim.st)); ws.set(r, 2, '% du T2B', sUnit); ws.set(r, 3, fmt(lim.t, 0) + ' Nm sur T2B ' + fmt(R.t2b, 0) + ' Nm · marge ' + fmt(R.marge * 100, 0) + ' %', sWrap); r++; }
+      { const st = R.ratioTot == null ? null : R.ratioTot > 30 ? 'crit' : R.ratioTot > 10 ? 'warn' : 'ok'; ws.set(r, 0, 'Rapport d’inertie', sLabel); ws.set(r, 1, R.ratioTot, st ? sStat(st, 1) : sTxt); ws.set(r, 2, '', sUnit); ws.set(r, 3, 'charge ramenée ÷ (moteur + réducteur) · visé ≤ 10 · inertie vue par le moteur ' + fmt(R.Jtot, 2) + ' kg·cm² (moteur ' + fmt(R.Jm, 2) + ' · réducteur ' + fmt(R.Jg, 2) + ' · charge ' + fmt(R.JLm, 2) + ')', sWrap); r++; }
+      line('Courant limite', R.Ilim, 'A', (R.pct != null ? 'UserCurrentLimit ' + fmt(R.pct, 1) + ' % de Imax ' + fmt(R.Iref, 1) + ' A' : '') + (R.I_T2B && R.Ilim < R.I_T2B * R.marge - 1e-6 ? ' · bornée par le moteur' : ''), sNum(2));
+      if (R.vPhys) { const st = !R.vMax ? null : R.vMax > R.vPhys ? 'crit' : R.vNomAx && R.vMax > R.vNomAx ? 'warn' : 'ok'; ws.set(r, 0, 'Vitesse max de l’axe', sLabel); ws.set(r, 1, R.vPhys, st ? sStat(st, 0) : sNum(0)); ws.set(r, 2, R.uV, sUnit); ws.set(r, 3, R.altTxt(R.vPhys).replace(/^ \((.*)\)$/, '$1 · ') + 'moteur ' + fmt(num(R.m.nMax), 0) + ' tr/min max ÷ i × FeedConstant' + (R.vNomAx ? ' · ' + fmt(R.vNomAx, 0) + ' ' + R.uV + R.altTxt(R.vNomAx) + ' à la vitesse nominale (' + fmt(num(R.m.nNom), 0) + ' tr/min)' : '') + (R.vMax ? ' · cycle ' + fmt(R.vMax, 0) + ' ' + R.uV + ' = ' + fmt(R.nAtVmaxAx, 0) + ' tr/min' : ''), sWrap); r++; }
+      if (R.Iacc != null) line('Courant d’accélération', R.Iacc, 'A', 'pour ' + fmt(R.acc, 0) + ' ' + R.uV + '²' + (R.i0 ? ' · IN ' + fmt(R.i0, 2) + ' A' : ''), sNum(2));
+      if (R.vertical) line('Courant de maintien', R.Ihold, 'A', 'Gravité, en permanence', sNum(2));
+      if (R.dec) { line('Arrêt d’urgence : décélération', R.dec, R.uV + '²', R.decLimited ? 'limitée par le courant d’arrêt' : 'vMax ÷ durée visée', sNum(0)); line('Arrêt d’urgence : distance', R.dist, 'Units', 'temps d’arrêt ' + fmt(R.tArret, 2) + ' s', sNum(1)); }
+    }
+    reducCtrl(); alertes(); calcs(); notes();
     sheets.push(ws);
   });
   return XL.book(sheets, ST);
@@ -1031,7 +1189,7 @@ function hwHeader(cur) {
     '# "@optional" = case Optional device de l\'ATV320 (3e drapeau de General Options) ; un autre parametre est cherche par son nom exact dans les parametres CANopen de l\'appareil', 'MATERIEL = [');
   mat.forEach(x => L.push('    (' + pyU(x.nom) + ', ' + pyU(x.type) + ', ' + pyU(x.parent || '') + ', [' + hwParamsOf(x, atvCols).join(', ') + ']),'));
   L.push(']', 'ADRESSES_IP = [' + mat.filter(x => x.ip).map(x => '(' + pyU(x.nom) + ', ' + pyU(x.ip) + ')').join(', ') + ']', '',
-    '# Axes brushless dans l\'ordre Sercos (onglet Brushless) : (axe, type de variateur, carte IO, codeur LE_, modes de la carte IO)',
+    '# Axes brushless dans l\'ordre Sercos (onglet Machine Expert) : (axe, type de variateur, carte IO, codeur LE_, modes de la carte IO)',
     '# Un module double Lexium 62 = deux variateurs declares comme des simples', 'AXES_HW = [');
   ax.forEach(([n, g, c, e, m]) => L.push('    (' + pyU(n) + ', ' + pyU(g) + ', ' + (c ? 'True' : 'False') + ', ' + (e ? 'True' : 'False') + ', [' + IO_MODES.map(k => '("' + k + '", ' + (+m[k] || 0) + ')').join(', ') + ']),'));
   L.push(']');
@@ -1040,11 +1198,11 @@ function hwHeader(cur) {
 function buildMeScript(o) {
   const cur = curProj(), now = new Date();
   const when = now.toLocaleDateString('fr-FR') + ' ' + now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
-  const rows = [], ign = [];
+  const rows = [], ign = []; let nAtvAxes = 0;
   pAxes().forEach(a => {
     const nom = String(a.nom || '').trim();
     if (!nom) { ign.push(['(sans nom)', 'axe sans nom']); return; }
-    if (a.gamme === 'BMP') { ign.push([nom, 'moteur sur ATV320 : pas de DRV_, reglages du variateur en Modbus']); return; }
+    if (a.gamme === 'BMP') { nAtvAxes++; return; }
     const R = compute(a);
     if (R.missing) { ign.push([nom, R.why || 'moteur ou reducteur manquant']); return; }
     const L = [], skip = [];
@@ -1102,7 +1260,14 @@ function buildMeScript(o) {
     'DEMANDER = True          # True : fenetre de confirmation avant chaque axe (Oui / Oui a tous / Non / Arreter)',
     'PREFIXE = "DRV_"         # nom du variateur dans le projet = PREFIXE + nom de l\'axe',
     'FACTEUR_INERTIE = 1.0    # J_Load / J_Gear en kg.cm2 dans l\'outil ; 0.0001 si Machine Expert attend des kg.m2',
-    'FICHIER_RAPPORT = os.path.join(os.path.expanduser("~"), "Documents", "rapport_reglages_' + slug + '.txt")',
+    'def _dossier_rapport():',
+    '    # Documents de l\'utilisateur Windows (USERPROFILE), sinon son profil, sinon le dossier temporaire : le chemin est affiche a la fin',
+    '    for d in [os.path.join(os.environ.get("USERPROFILE", ""), "Documents"), os.path.join(os.path.expanduser("~"), "Documents"), os.environ.get("USERPROFILE", ""), os.environ.get("TEMP", ""), os.getcwd()]:',
+    '        if d and os.path.isdir(d):',
+    '            return d',
+    '    return os.getcwd()',
+    'FICHIER_RAPPORT = os.path.join(_dossier_rapport(), "rapport_reglages_' + slug + '.txt")',
+    'OUVRIR_RAPPORT = True    # True : le rapport s\'ouvre tout seul (Bloc-notes) a la fin du script',
     'LISTE_PARAMETRES = ' + (o.liste ? '"ParameterList_Reglages"' : '""') + '   # liste de parametres creee / completee a la fin ("" = pas de liste)',
     'CREER_TRACES = ' + (o.traces ? 'True ' : 'False') + '   # True : traces TRC_Axes_MT / MC / MP / MR recreees (4 diagrammes par axe : vitesse, position, erreur de poursuite, courant)',
     'TACHE_TRACE = ' + pyU(TACHE_CAN(cur)) + '   # tache d\'echantillonnage des traces',
@@ -1127,13 +1292,14 @@ function buildMeScript(o) {
   });
   H.push(']', '', '# Axes du projet de l\'outil qui ne sont pas dans le script', 'AXES_IGNORES = [');
   ign.forEach(([n, r]) => H.push('    (' + pyU(n) + ', ' + pyA(r) + '),'));
+  if (nAtvAxes) H.push('    ("", ' + pyA(nAtvAxes + ' axe(s) sur ATV320 : pas de DRV_ dans Machine Expert, regles par la partie hardware (Node-ID, Optional device, heartbeat) et dans le variateur') + '),');
   H.push(']', '', ...hwHeader(cur), '', '# ---------------------------------------------------------------------', '# Code commun (ne pas modifier)', '# ---------------------------------------------------------------------');
   return H.join('\n') + '\n' + ME_CORE.replace(/^\n+/, '').replace('# @@HARDWARE@@', HW_CORE).replace('# @@TRACES@@', TRACE_CORE.trim());
 }
 async function exportMeScript(o) {
   const cur = curProj(); if (!cur) return;
   const dups = nodeDups(cur.materiel);
-  if (dups.length) { setStatus('Script non généré : Node-ID en double ' + nodeDupsTxt(dups) + '. Machine Expert refuse deux ATV320 avec le même Node-ID (COB-ID des PDO et EMCY en conflit). Corrige-les dans l’onglet ATV320 (colonne Node-ID), puis relance.', true); return; }
+  if (dups.length) { setStatus('Script non généré : Node-ID en double ' + nodeDupsTxt(dups) + '. Machine Expert refuse deux ATV320 avec le même Node-ID (COB-ID des PDO et EMCY en conflit). Corrige-les dans l’onglet Machine Expert (ATV320, colonne Node-ID), puis relance.', true); return; }
   let py;
   try { py = buildMeScript(o); } catch (e) { setStatus('Script impossible : ' + (e.message || e), true); return; }
   const d = new Date(), day = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
@@ -1430,8 +1596,7 @@ function hwPanel() {
   const cur = curProj(), L = cur.materiel || [], heads = L.filter(x => x.type === 'TM5NS31').map(x => x.nom);
   const f = S.hwForm || (S.hwForm = { nom: '', type: 'TM5SDI12D', val: '', parent: heads[heads.length - 1] || '' });
   const cat = hwCat(), isTm5 = sousTete(cat[f.type]?.parent);
-  const nAx = pAxes().filter(a => a.gamme).length;
-  return `<div class="pform elecform"><div class="memsg"><b>Matériel du projet</b> : ${L.length} appareil${L.length > 1 ? 's' : ''} que le script crée dans l’arbre de Machine Expert (« Sous » = le parent dans l’arbre), repris du dossier élec ou ajoutés ici. ${nAx ? `Les variateurs DRV_, cartes IO_ et codeurs LE_ de ${nAx} axe${nAx > 1 ? 's' : ''} brushless sont réglés dans l’onglet Brushless, les ATV320 dans l’onglet ATV320.` : ''} Un appareil du dossier se change en réimportant le dossier ; ceux ajoutés à la main restent après chaque import. <b>Renommer</b> change le nom de l’appareil dans Machine Expert pour ce projet (gardé à la réimportation) ; pour tous les projets, le modèle de nom se règle dans Catalogue › Matériel (« Nom dans l’automate »).</div>
+  return `<div class="pform elecform" style="padding:12px 16px"><div class="memsg">${L.length} appareil${L.length > 1 ? 's' : ''} que le script crée dans l’arbre de Machine Expert (« Sous » = le parent dans l’arbre), repris du dossier élec ou ajoutés ici ; les DRV_, IO_ et LE_ des axes et les ATV320 sont réglés plus haut. Un appareil du dossier se change en réimportant le dossier ; ceux ajoutés à la main restent après chaque import. <b>Renommer</b> change le nom de l’appareil dans Machine Expert pour ce projet (gardé à la réimportation) ; pour tous les projets, le modèle de nom se règle dans Catalogue › Matériel (« Nom dans l’automate »).</div>
     ${(() => { const m = busManquants(L); return m.length ? `<div class="warnline" style="margin:0;flex-basis:100%">Nœud de bus absent de la liste : ${m.map(esc).join(', ')} (des appareils sont déclarés dessous, le script ne pourra pas les créer). <button class="btn" id="hwFixBus" style="margin-left:8px">Ajouter ${m.map(esc).join(' et ')}</button></div>` : ''; })()}
     ${(() => { const m = tm5SansAlim(L); return m.length ? `<div class="warnline" style="margin:0;flex-basis:100%">Tête${m.length > 1 ? 's' : ''} de bus TM5 sans carte TM5SPS3 (PS3) en premier : ${m.map(esc).join(', ')}. Chaque îlot TM5 commence par sa PS3, qui alimente la tête et le bus TM5 (les PS1 / PS2 créent un segment plus loin dans l’îlot). <button class="btn" id="hwFixAlim" style="margin-left:8px">Ajouter les PS3</button></div>` : ''; })()}
     ${L.length ? hwTable(L, false, true) : '<div class="memsg">Aucun matériel : importe le dossier élec ou ajoute un appareil.</div>'}
@@ -1439,7 +1604,7 @@ function hwPanel() {
     <select id="hwType" aria-label="Type">${Object.keys(cat).filter(t => !['Variateur Sercos', 'Carte IO', 'Codeur'].includes(HW_FAM(t))).sort().map(t => `<option ${t === f.type ? 'selected' : ''}>${esc(t)}</option>`).join('')}</select>
     ${isTm5 ? `<select id="hwParent" aria-label="Tête de bus">${heads.length ? heads.map(h => `<option ${h === f.parent ? 'selected' : ''}>${esc(h)}</option>`).join('') : '<option value="">aucune tête TM5NS31</option>'}</select>` : ''}
     ${f.type === 'ATV320' || HW_FAM(f.type) === 'Ethernet/IP' ? `<div class="inp text" style="min-width:140px"><input id="hwVal" placeholder="${f.type === 'ATV320' ? 'Node-ID' : 'Adresse IP'}" value="${esc(f.val)}" autocomplete="off"></div>` : ''}
-    <button class="btn primary" id="hwAdd">Ajouter</button><button class="btn" id="hwClose">Fermer</button></div>`;
+    <button class="btn primary" id="hwAdd">Ajouter</button></div>`;
 }
 /* Les appareils ajoutés à la main reprennent leur place (après l'appareil qui les précédait, sinon en fin de leur bus) */
 function mergeHw(elec, man) {
@@ -1483,6 +1648,7 @@ function parseElec(sheets) {
     if (!nom) { const t = col(r, 'type'), n = col(r, 'n°'); if (t && n != null) nom = String(t).trim() + String(n).trim(); }
     if (!nom || !gamme) continue;
     const drv = String(col(r, 'reference') || '').trim(), motRef = String(col(r, 'references') || '').trim(), desc = String(col(r, 'nom') || col(r, 'designation') || '').trim();
+    const redRef = String(col(r, 'ref2', 'ref 2', 'reducteur', 'reference reducteur') || '').trim();
     /* moteur sur ATV320 (asynchrone, BMP, tambour…) : géré comme un axe (moteur, réducteur, charge → HSP / LSP / ITH / limite de courant),
        et l'ATV320 va dans le matériel (CANopen). Gamme ATV320 mais variateur qui n'est pas un ATV (actionneur Linak…) : ignoré, signalé. */
     const estAtvG = /^ATV/i.test(gamme), estAtvD = /^ATV/i.test(drv);
@@ -1490,11 +1656,11 @@ function parseElec(sheets) {
     if (estAtvG || estAtvD) {
       const pl = plaque(r);
       asyn.push({ nom, brut, gamme: /^ATV320/i.test(drv) || !estAtvG ? 'ATV320' : gamme, desc, ref: drv, moteurRef: motRef, bmp: true, ...pl });
-      servo.push({ ligne: i + 1, ordre: servo.length + 1, nom, brut, desc, moteurRef: motRef, frein: /^o(ui)?$/i.test(String(col(r, 'frein') || '').trim()), gamme: 'BMP', variateur: drv, i: pos(col(r, 'i')), feed: pos(col(r, 'feed constant')), p: pl.p ?? null, fab: pl.fab || '' });
+      servo.push({ ligne: i + 1, ordre: servo.length + 1, nom, brut, desc, moteurRef: motRef, redRef, frein: /^o(ui)?$/i.test(String(col(r, 'frein') || '').trim()), gamme: 'BMP', variateur: drv, i: pos(col(r, 'i')), feed: pos(col(r, 'feed constant')), p: pl.p ?? null, fab: pl.fab || '' });
       continue;
     }
     if (!/^(LXM62|ILM62)/.test(gamme)) { autres[gammeTxt] = (autres[gammeTxt] || 0) + 1; asyn.push({ nom, brut, gamme, desc, ref: drv, moteurRef: motRef, ...plaque(r) }); continue; }
-    servo.push({ ligne: i + 1, ordre: servo.length + 1, nom, brut, desc, moteurRef: motRef,
+    servo.push({ ligne: i + 1, ordre: servo.length + 1, nom, brut, desc, moteurRef: motRef, redRef,
       frein: /^o(ui)?$/i.test(String(col(r, 'frein') || '').trim()), gamme: gamme.slice(0, 5), variateur: /^(LXM|ILM)/i.test(drv) ? drv : '', i: pos(col(r, 'i')), feed: pos(col(r, 'feed constant')) });
   }
   /* deux repères qui ne diffèrent que par le folio : on garde le repère complet pour les deux */
@@ -1646,7 +1812,8 @@ function elecDiff(P, file) {
     if (a && nrmE(a.nom) !== nrmE(s.nom)) want.nom = s.nom;
     if (mt.m) want.moteurId = mt.m.id;
     if (s.feed) want.feed = s.feed;
-    const rd = matchReducer(s.moteurRef, s.i);
+    /* réducteur : désignation SEW dans Réf2 (réducteur séparé d'un brushless) ou en tête de la référence du motoréducteur (WA10/T DRN71M4) */
+    const rd = matchReducer(s.redRef && sewDesig(s.redRef) ? s.redRef : s.moteurRef, s.i);
     if (rd && rd.r && !(a && a.reducteurId)) want.reducteurId = rd.r.id;   // un réducteur déjà choisi dans l'axe n'est jamais remplacé
     const ch = [];
     if (a) for (const [k, v] of Object.entries(want)) { if (k === 'feed' && num(a.feed) != null) continue; if (String(a[k] ?? '') !== String(v ?? '')) ch.push(k); }
@@ -1701,7 +1868,7 @@ function elecPanel() {
   const fichesHtml = fiches.length ? `<h3 class="elech">Moteurs sur ATV320 <span class="el-sub">chaque moteur sur ATV320 est un axe (tableau Axes) ; le dossier donne la référence, la fiche du catalogue Moteurs donne les données constructeur (plaque de l’ATV320 : NPR, UNS, NCR, FRS, NSP, COS, ITH ; HSP / LSP / limite de courant d’après l’axe)</span></h3>
     <div class="tblwrap elecwrap"><table><thead><tr><th>Moteur (dossier)</th><th>Fiche catalogue (fait foi)</th><th>Indiqué dans le dossier <span class="el-sub" style="text-transform:none">contrôle seulement${D.plaques.length ? ' · colonnes ' + D.plaques.map(esc).join(', ') : ''}</span></th><th>ATV320</th></tr></thead><tbody>${ficheRows}</tbody></table></div>
 
-    ${nFiches ? `<label class="chk"><input type="checkbox" id="elecFiches" ${E.ficheOn ? 'checked' : ''}> ${nFiches > 1 ? 'Créer les ' + nFiches + ' fiches absentes' : 'Créer la fiche absente'} dans Catalogue › Moteurs (référence et fabricant seulement : les données constructeur se saisissent depuis le catalogue ou la plaque, jamais depuis le dossier)</label>` : '<div class="memsg">Toutes les références ont leur fiche : la plaque de chaque ATV320 est dans l’onglet ATV320.</div>'}` : '';
+    ${nFiches ? `<label class="chk"><input type="checkbox" id="elecFiches" ${E.ficheOn ? 'checked' : ''}> ${nFiches > 1 ? 'Créer les ' + nFiches + ' fiches absentes' : 'Créer la fiche absente'} dans Catalogue › Moteurs (référence et fabricant seulement : les données constructeur se saisissent depuis le catalogue ou la plaque, jamais depuis le dossier)</label>` : '<div class="memsg">Toutes les références ont leur fiche : la plaque de chaque ATV320 est dans l’onglet Machine Expert.</div>'}` : '';
   const diagHtml = D.onglets.length || D.inutilisees.length ? `<details class="tabmore" style="flex-basis:100%"><summary>Ce que le dossier contient d’autre (non lu par l’outil)</summary><ul>
     ${D.onglets.length ? `<li>Onglets non lus : ${D.onglets.map(esc).join(', ')}.</li>` : ''}
     ${D.inutilisees.length ? `<li>Colonnes de « Liste actionneurs » non exploitées : ${D.inutilisees.map(esc).join(', ')}.</li>` : ''}
@@ -1711,7 +1878,7 @@ function elecPanel() {
     ${E.folio ? `<div class="memsg">Repères : ${esc(E.folio)}.</div>` : ''}
     <h3 class="elech">Axes</h3>
     <div class="tblwrap elecwrap"><table><thead><tr><th><input type="checkbox" id="elecAll" title="Tout cocher / décocher" aria-label="Tout cocher ou décocher" ${E.rows.some(r => r.etat !== 'ok' && !r.on) ? '' : 'checked'} ${E.rows.some(r => r.etat !== 'ok') ? '' : 'disabled'}></th><th>Axe</th><th>Désignation</th><th>Moteur</th><th>Variateur</th><th>Charge proposée</th><th>Action</th></tr></thead><tbody>${tr}</tbody></table></div>
-    ${E.absents.length ? `<div class="memsg">Dans le projet mais pas dans le dossier : ${E.absents.map(esc).join(', ')} (rien n’est supprimé, un axe se retire dans son onglet Brushless / Asynchrones).</div>` : ''}
+    ${E.absents.length ? `<div class="memsg">Dans le projet mais pas dans le dossier : ${E.absents.map(esc).join(', ')} (rien n’est supprimé, un axe se retire dans l’onglet Axes).</div>` : ''}
     <div class="memsg">Après l’import : le réducteur, la charge et la vitesse du cycle restent à saisir dans chaque axe. Ce qui est déjà saisi n’est jamais écrasé.</div>
     ${E.hw ? `<h3 class="elech">Matériel <span class="el-sub">CAN et ATV320, alimentations, îlots TM5, Ethernet/IP · les DRV_, IO_ et LE_ viennent des axes</span></h3>
       ${E.hw.renommes && E.hw.renommes.length || (E.hw.decales && E.hw.decales.length) || E.hw.retires.length || E.hw.remplaces.length || E.hw.man.length || E.hwWarn.length ? `<ul class="eleclist">
@@ -1737,7 +1904,7 @@ async function readElecFile(f) {
   try {
     setStatus('Lecture du dossier élec…');
     const sheets = await xlsxSheets(await f.arrayBuffer(), ['Liste actionneurs', 'Matériels']);
-    S.projForm = null; S.meForm = null; S.hwView = false; S.elec = null;
+    S.projForm = null; S.elec = null;
     elecBuild(sheets, f.name);
     setStatus(''); renderProj();
   } catch (e) { S.elec = null; setStatus('Dossier élec illisible : ' + (e.message || e), true); renderProj(); }
@@ -1794,20 +1961,21 @@ async function fusionDoubles() {
 function bilanPanel() {
   const L = brushList(), BADGE2 = { ok: ['ok', 'OK'], warn: ['warn', 'À vérifier'], crit: ['crit', 'Alerte'], todo: ['todo', 'À compléter'] };
   const stOf = a => { const R = compute(a); const al = R.missing ? [] : R.checks.filter(c => c[0] === 'crit' || c[0] === 'warn'); return { R, al, st: R.missing ? 'todo' : al.some(c => c[0] === 'crit') ? 'crit' : al.length ? 'warn' : 'ok' }; };
+  const kvs = (R, a) => R.missing ? '' : R.atv
+    ? [['HSP', R.hsp != null ? fmt(R.hsp, 1) + ' Hz' : '?'], ['LSP', R.lsp != null && (R.pp || R.async) ? fmt(R.lsp, 1) + ' Hz' : '?'], ['ITH', R.ith != null ? fmt(R.ith, 2) + ' A' : '?'], ['CLI', R.Ilim != null ? fmt(R.Ilim, 2) + ' A' + (R.pct != null ? ' (' + fmt(R.pct, 0) + ' %)' : '') : '?'], R.asyncConv && R.vHsp != null ? ['bande', fmt(R.vHsp * 0.06, 2) + ' m/min'] : null]
+    : (g => [['UCL', R.pct != null ? fmt(R.pct, 1) + ' %' : '?'], ['J_Load', fmt(Math.round(R.JL / 10) * 10, 0)], ['arrêt', R.dec ? fmt(R.stl, 0) + ' ms' : 'vitesse ?'], ['Vel_P / I', fmt(g.vp, 1) + ' / ' + fmt(g.vi, 1) + (num(a.velPRetenu) != null ? '' : ' prop.')], ['inertie', '×' + fmt(R.ratioTot, 1)]])(gainsOf(a, R));
   const rows = L.map(a => {
     const { R, al, st } = stOf(a), m = S.motors.find(x => x.id === a.moteurId), r = S.reducers.find(x => x.id === a.reducteurId);
-    const g = R.missing ? null : gainsOf(a, R), [cls, lab] = BADGE2[st];
-    const manq = R.missing ? ([!m ? 'moteur' : null, !r ? 'réducteur' : null].filter(Boolean).join(' et ') || R.why || 'fiche incomplète') : '';
-    return `<tr class="bl-${st}"><td><button class="linkbtn" data-bilan="${esc(a.id)}">${esc(a.nom || 'Sans nom')}</button>${a.desc ? `<div class="el-sub">${esc(a.desc)}</div>` : ''}</td>
-      <td class="mono">${esc(m ? m.ref : '—')}</td><td class="mono">${esc(r ? r.ref : '—')}${r && !R.missing ? `<div class="el-sub">i=${fmt(R.i, 2)} · T2B ${R.t2b ? fmt(R.t2b, 0) + ' Nm' : '?'}</div>` : ''}</td>
-      <td class="n">${R.missing ? '' : fmt(R.ratioTot, 1)}</td><td class="n">${R.missing || R.pct == null ? '' : fmt(R.pct, 1) + ' %'}</td>
-      <td class="n">${R.missing ? '' : (R.dec ? fmt(R.stl, 0) + ' ms' : '<span class="el-sub">vitesse ?</span>')}</td>
-      <td class="n">${g ? fmt(g.vp, 1) + ' / ' + fmt(g.vi, 1) + (num(a.velPRetenu) != null ? '' : ' <span class="el-sub">prop.</span>') : ''}</td>
+    const [cls, lab] = BADGE2[st];
+    const manq = R.missing ? ([!m ? 'moteur' : null, !r && a.gamme !== 'BMP' ? 'réducteur' : null].filter(Boolean).join(' et ') || R.why || 'fiche incomplète') : '';
+    return `<tr class="bl-${st}"><td><button class="linkbtn" data-bilan="${esc(a.id)}">${esc(a.nom || 'Sans nom')}</button><div class="el-sub">${a.gamme === 'BMP' ? 'ATV320' : a.gamme || 'virtuel'}${a.desc ? ' · ' + esc(a.desc) : ''}</div></td>
+      <td class="mono">${esc(m ? m.ref : '—')}</td><td class="mono">${esc(r ? r.ref : R.sansRed ? 'sans réducteur' : '—')}${r && !R.missing ? `<div class="el-sub">i=${fmt(R.i, 2)} · T2B ${R.t2b ? fmt(R.t2b, 0) + ' Nm' : '?'}</div>` : ''}</td>
+      <td class="kvcell">${(kvs(R, a) || []).filter(Boolean).map(x => `<span><small>${esc(x[0])}</small>${esc(x[1])}</span>`).join('')}</td>
       <td><span class="tag ${cls}">${lab}</span>${R.missing ? `<div class="el-sub">${esc(manq)}</div>` : al.length ? `<div class="el-sub">${al.slice(0, 2).map(c => esc(c[1])).join('<br>')}${al.length > 2 ? '<br>…' : ''}</div>` : ''}${!R.missing && (R.acked || []).length ? `<div class="el-sub">${R.acked.length} attention${R.acked.length > 1 ? 's' : ''} acquittée${R.acked.length > 1 ? 's' : ''}</div>` : ''}</td></tr>`;
   }).join('');
   const n = { todo: 0, ok: 0, warn: 0, crit: 0 }; L.forEach(a => { n[stOf(a).st]++; });
-  return `<div class="pform elecform"><div class="elechead"><div><b>Bilan des axes</b><div class="el-sub">${L.length} axe${L.length > 1 ? 's' : ''} : ${n.ok} OK · ${n.warn} à vérifier · ${n.crit} en alerte · ${n.todo} à compléter. Clique sur un axe pour l’ouvrir. Le script n’écrit que les axes réglés (OK, à vérifier ou en alerte).</div></div><div class="actions"><button class="btn" id="bilanClose">Fermer</button></div></div>
-    <div class="tblwrap elecwrap" style="max-height:none"><table class="gtbl bilan"><thead><tr><th>Axe</th><th>Moteur</th><th>Réducteur</th><th class="n" title="Inertie de la charge ramenée au moteur ÷ (moteur + réducteur)">Rapport d’inertie</th><th class="n">UserCurrentLimit</th><th class="n" title="StopTimeLim, d’après la vitesse max du cycle et la durée d’arrêt">Arrêt</th><th class="n" title="Vel_P_Gain / Vel_I_Gain : retenus après essais, sinon proposés">Vel_P / Vel_I</th><th>État</th></tr></thead><tbody>${rows}</tbody></table></div></div>`;
+  return `<div class="panel-h"><h2>Bilan des axes</h2><div class="el-sub">${L.length} axe${L.length > 1 ? 's' : ''} : ${n.ok} OK · ${n.warn} à vérifier · ${n.crit} en alerte · ${n.todo} à compléter. Clique sur un axe pour l’ouvrir. Le script n’écrit que les axes réglés (OK, à vérifier ou en alerte).</div></div>
+    <div class="tblwrap"><table class="gtbl bilan"><thead><tr><th>Axe</th><th>Moteur</th><th>Réducteur</th><th title="Lexium 62 : UserCurrentLimit, J_Load, StopTimeLim, gains, rapport d’inertie · ATV320 : HSP, LSP, ITH, CLI">Réglages</th><th>État</th></tr></thead><tbody>${rows}</tbody></table></div>`;
 }
 /* Ligne d'avancement du projet : ce qui est réglable, ce qui reste à compléter */
 function projLine(cur) {
@@ -1829,96 +1997,16 @@ function renderProj() {
     ${done ? '<span class="pill done">Terminé</span>' : ''}
     <button class="btn" id="projNew" title="Nouveau projet (une machine)">+ Projet</button>
     ${cur ? `<button class="btn ghost" id="projRen">Renommer</button><button class="btn ghost" id="projDone" title="${done ? 'Remettre le projet dans la liste « En cours »' : 'Classer le projet dans « Terminés » (rien n’est supprimé)'}">${done ? 'Rouvrir' : 'Terminer'}</button>` : ''}
-    ${cur ? `<div class="pacts">
-      ${!done ? '<button class="btn" id="projElec" title="Lit le dossier électrique (.xlsm) et crée ou met à jour les axes et le matériel. Le fichier n’est ni enregistré ni envoyé.">Importer le dossier élec</button><input type="file" id="elecFile" accept=".xlsm,.xlsx" hidden>' : ''}
-      <button class="btn" id="projHw" title="Tout le matériel du projet : CAN et ATV320, alimentations, îlots TM5, Ethernet/IP">Matériel du projet${(cur.materiel || []).length ? ' (' + cur.materiel.length + ')' : ''}</button>
-      ${pAxes().length ? `<button class="btn ${S.bilanView ? 'primary' : ''}" id="projBilan" title="Tous les axes du projet sur une page : moteur, réducteur, inertie, limite de courant, gains, alertes. À relire avant de générer le script">Bilan des axes</button>` : ''}
-      <span class="sep"></span>
-      ${pAxes().length && (S.dl || !S.db) ? '<button class="btn" id="projMe" title="Génère le script Python qui crée le hardware et écrit les réglages dans Machine Expert">Script Machine Expert</button><button class="btn" id="projExp" title="Classeur Excel : un onglet par axe avec les valeurs à saisir et les alertes">Exporter (Excel)</button>' : ''}
-    </div>${projLine(cur)}` : ''}
+    ${cur && !done ? '<span class="grow"></span><button class="btn" id="projElec" title="Lit le dossier électrique (.xlsm) et crée ou met à jour les axes et le matériel. Le fichier n’est ni enregistré ni envoyé.">Importer le dossier élec</button><input type="file" id="elecFile" accept=".xlsm,.xlsx" hidden>' : ''}
+    ${cur ? projLine(cur) : ''}
     ${S.projForm ? `<div class="pform"><div class="inp text" style="flex:1;min-width:200px"><input id="pfNom" placeholder="Nom du projet (machine, client…)" value="${esc(S.projForm.nom)}" autocomplete="off"></div>
       ${S.projForm.mode === 'new' && cur && n ? `<label class="chk"><input type="checkbox" id="pfCopy" ${S.projForm.copy ? 'checked' : ''}> Copier les ${n} axes de « ${esc(cur.nom)} »</label>` : ''}
       <button class="btn primary" id="pfOk">${S.projForm.mode === 'new' ? 'Créer' : 'Renommer'}</button><button class="btn" id="pfCancel">Annuler</button></div>` : ''}
-    ${S.meForm && cur ? (() => { const F = S.meForm, A = pAxes(), ok = A.filter(a => !compute(a).missing && a.gamme !== 'BMP').length, hw = A.filter(a => a.gamme === 'LXM62' || a.gamme === 'ILM62').length;
-      return `<div class="pform meform"><div class="memsg"><b>Script Machine Expert</b> : un fichier Python à lancer dans le projet (Outils › Scripting › Exécuter). Il ne supprime jamais rien et demande confirmation avant chaque écriture. Le rapport est écrit dans Documents.</div>
-      <div class="mesec"><div class="mesec-h"><label class="chk"><input type="checkbox" id="meHw" ${F.hw ? 'checked' : ''}> <b>1 · Hardware</b></label><span class="el-sub">${hw} axe${hw > 1 ? 's' : ''} brushless · ${(cur.materiel || []).length} appareil${(cur.materiel || []).length > 1 ? 's' : ''} du projet</span></div>
-        <div class="mesec-b">Crée ce qui manque dans l’arbre : le matériel du projet, puis pour chaque axe le codeur LE_, le variateur DRV_ et la carte IO_. Écrit ensuite les réglages des onglets Brushless (modes IO) et ATV320 (Node-ID, Optional device, paramètres). Une fenêtre liste les appareils avant de commencer.</div></div>
-      <div class="mesec"><div class="mesec-h"><b>2 · Réglages des axes</b><span class="el-sub">${ok} axe${ok > 1 ? 's' : ''} réglé${ok > 1 ? 's' : ''} sur ${A.length}${A.length - ok ? ' (les autres sont ignorés)' : ''}</span></div>
-        <div class="mesec-b">Écrits dans le variateur DRV_ de chaque axe réglé. Avant chaque axe, une fenêtre montre les valeurs qui changent (ancien → nouveau) : Oui, Oui à tous, Non, Arrêter.</div>
-        <div class="mechk"><label class="chk"><input type="checkbox" id="meMeca" ${F.meca ? 'checked' : ''}> Mécanique : FeedConstant, GearIn, GearOut, J_Load, J_Gear</label>
-        <label class="chk"><input type="checkbox" id="meLim" ${F.lim ? 'checked' : ''}> Limite de courant : UserCurrentLimit</label>
-        <label class="chk"><input type="checkbox" id="meStop" ${F.stop ? 'checked' : ''}> Arrêt d’urgence : DriveStopCurrentLimit, ControllerStopDec, ControllerStopJerk, StopTimeLim, UserDefinedStopMode</label>
-        <label class="chk"><input type="checkbox" id="meGains" ${F.gains ? 'checked' : ''}> Gains Vel_P / Vel_I (valeurs retenues si notées, sinon proposées)</label></div></div>
-      <div class="mesec"><div class="mesec-h"><label class="chk"><input type="checkbox" id="meListe" ${F.liste ? 'checked' : ''}> <b>3 · Liste de paramètres</b></label></div>
-        <div class="mesec-b">Crée ou complète <b>ParameterList_Reglages</b> sous Application : tous les axes, une colonne par paramètre réglé, pour tout voir d’un coup. Rien n’y est retiré, l’ancienne version est sauvegardée.</div></div>
-      <div class="mesec"><div class="mesec-h"><label class="chk"><input type="checkbox" id="meTraces" ${F.traces ? 'checked' : ''}> <b>4 · Traces des axes</b></label><span class="el-sub">tâche ${esc(TACHE_CAN(cur))}</span></div>
-        <div class="mesec-b">Recrée les traces <b>TRC_Axes_MT / MC / MP / MR</b> sous Application (script traces validé) : pour chaque axe physique DRV_, 4 diagrammes — Vitesse (consigne + réel), Position (réel + consigne), Erreur de poursuite, Courant. Les traces existantes de ces noms sont remplacées ; une famille sans axe n’a pas de trace.</div></div>
-      <div class="actions"><button class="btn primary" id="meOk">Générer le script</button><button class="btn" id="meCancel">Annuler</button></div></div>`; })() : ''}
-    ${S.elec && cur ? elecPanel() : ''}
-    ${S.hwView && cur && !S.elec && !S.meForm && !S.projForm ? hwPanel() : ''}
-    ${S.bilanView && cur && !S.elec && !S.meForm && !S.projForm && !S.hwView ? bilanPanel() : ''}`;
-  const sel = $('#projSel'); if (sel) sel.onchange = () => { if (S.dirty && !confirm_()) { sel.value = S.projId; return; } S.projId = sel.value; S.axisId = null; S.dirty = false; S.draft = null; S.bilanView = false; S.hwView = false; S.elec = null; S.meForm = null; try { localStorage.setItem('servo-proj', S.projId); } catch (e) {} onData(); };
+    ${S.elec && cur ? elecPanel() : ''}`;
+  const sel = $('#projSel'); if (sel) sel.onchange = () => { if (S.dirty && !confirm_()) { sel.value = S.projId; return; } S.projId = sel.value; S.axisId = null; S.dirty = false; S.draft = null; S.elec = null; try { localStorage.setItem('servo-proj', S.projId); } catch (e) {} onData(); };
   $('#projNew').onclick = () => { S.projForm = { mode: 'new', nom: '', copy: false }; renderProj(); $('#pfNom').focus(); };
   const rn = $('#projRen'); if (rn) rn.onclick = () => { S.projForm = { mode: 'ren', nom: cur.nom }; renderProj(); $('#pfNom').focus(); };
-  const ex = $('#projExp'); if (ex) ex.onclick = () => exportProject();
-  const ph = $('#projHw'); if (ph) ph.onclick = () => { S.hwView = !S.hwView; S.bilanView = false; S.elec = null; S.meForm = null; S.projForm = null; renderProj(); };
   const pf = $('#projFusion'); if (pf) pf.onclick = () => { pf.disabled = true; pf.textContent = 'Fusion…'; fusionDoubles(); };
-  const pb = $('#projBilan'); if (pb) pb.onclick = () => { S.bilanView = !S.bilanView; S.hwView = false; S.elec = null; S.meForm = null; S.projForm = null; renderProj(); };
-  const bc = $('#bilanClose'); if (bc) bc.onclick = () => { S.bilanView = false; renderProj(); };
-  document.querySelectorAll('[data-bilan]').forEach(b => { b.onclick = () => {
-    const a = S.axes.find(x => x.id === b.dataset.bilan); if (!a) return;
-    if (S.dirty && !(S.draft && S.draft.id === a.id)) { setStatus('Un axe a des modifications non enregistrées : enregistre-les ou annule-les d’abord.', true); return; }
-    S.tab = axesTabDe(a); S.axisId = a.id; if (!S.dirty) S.draft = { ...a }; S.bilanView = false; try { localStorage.setItem('servo-tab', S.tab); } catch (e) {} render(); window.scrollTo({ top: 0 });
-  }; });
-  if (S.hwView && cur && $('#hwAdd')) {
-    const f = S.hwForm, L = cur.materiel || [];
-    $('#hwNom').oninput = e => { f.nom = e.target.value; };
-    $('#hwType').onchange = e => { f.type = e.target.value; renderProj(); };
-    const hp = $('#hwParent'); if (hp) hp.onchange = e => { f.parent = e.target.value; };
-    const hv = $('#hwVal'); if (hv) hv.oninput = e => { f.val = e.target.value; };
-    $('#hwClose').onclick = () => { S.hwView = false; renderProj(); };
-    const fb = $('#hwFixBus'); if (fb) fb.onclick = () => { const r = busCompleter(L); hwSave(r.out, r.ajoutes.join(', ') + ' ajouté' + (r.ajoutes.length > 1 ? 's' : '') + ' : le script créera le bus avant ses appareils.'); };
-    const fx = $('#hwFixAlim'); if (fx) fx.onclick = () => { const w = []; const nl = tm5Alims(L.map(x => ({ ...x })), w).map(x => x.auto && !x.src ? { ...x, src: 'manuel', apres: x.parent } : x); hwSave(nl, w.join(' · ') || 'Alimentations en place.'); };
-    document.querySelectorAll('[data-hwdel]').forEach(b => { b.onclick = () => { const x = L[+b.dataset.hwdel]; hwSave(L.filter((_, k) => k !== +b.dataset.hwdel), '« ' + x.nom + ' » retiré du matériel.'); }; });
-    document.querySelectorAll('[data-hwren]').forEach(b => { b.onclick = () => { S.hwRen = +b.dataset.hwren; renderProj(); const i = $('#hwRenIn'); if (i) { i.focus(); i.select(); } }; });
-    const rn = $('#hwRenNo'); if (rn) rn.onclick = () => { S.hwRen = null; renderProj(); };
-    const ro = $('#hwRenOk'), ri = $('#hwRenIn');
-    if (ro && ri) {
-      const ok = () => {
-        const x = L[S.hwRen], nom = hwName(ri.value); if (!x) return;
-        if (!nom) { setStatus('Donne un nom à l’appareil.', true); return; }
-        if (nom === x.nom) { S.hwRen = null; renderProj(); return; }
-        if (L.some(y => y.nom === nom) || pAxes().some(a => ['DRV_', 'IO_', 'LE_'].some(p => p + a.nom === nom))) { setStatus('« ' + nom + ' » existe déjà.', true); return; }
-        const old = x.nom, nl = L.map(y => { const z = { ...y }; if (z.parent === old) z.parent = nom; if (z.apres === old) z.apres = nom; return z; });
-        nl[S.hwRen] = { ...nl[S.hwRen], nom, ...(x.src === 'manuel' ? {} : { nomFixe: true }) };
-        S.hwRen = null;
-        hwSave(nl, '« ' + old + ' » renommé « ' + nom + ' » pour ce projet' + (nl.some(y => y.parent === nom) ? ' (et ses modules rattachés)' : '') + '. Dans Machine Expert, un appareil déjà présent sous l’ancien nom (même référence) est reconnu par le script.');
-      };
-      ro.onclick = ok; ri.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); ok(); } if (e.key === 'Escape') { S.hwRen = null; renderProj(); } };
-    }
-    $('#hwAdd').onclick = () => {
-      const nom = hwName(f.nom); if (!nom) { setStatus('Donne un nom à l’appareil.', true); return; }
-      if (L.some(x => x.nom === nom) || pAxes().some(a => 'DRV_' + a.nom === nom)) { setStatus('« ' + nom + ' » existe déjà.', true); return; }
-      const c = hwCat()[f.type], isTm5 = sousTete(c?.parent);
-      const x = { nom, type: f.type, parent: isTm5 ? (f.parent || 'TM5NS31 ?') : (c?.parent || '?'), src: 'manuel' };
-      if (f.type === 'ATV320') { const id = parseInt(f.val, 10); if (!(id > 0)) { setStatus('Donne le Node-ID de l’ATV320.', true); return; } x.nodeId = id; }
-      else if (HW_FAM(f.type) === 'Ethernet/IP' && f.val) x.ip = f.val.trim();
-      const anc = isTm5 ? f.parent : x.parent; let at = -1;
-      L.forEach((y, k) => { if (y.nom === anc || y.parent === anc) at = k; });
-      /* ne pas couper l'îlot du voisin : sauter ses enfants (ex. une nouvelle tête après la tête précédente ET ses modules) */
-      if (at >= 0) { const bloc = new Set([L[at].nom]); while (at + 1 < L.length && bloc.has(L[at + 1].parent)) { at++; bloc.add(L[at].nom); } }
-      if (at >= 0) x.apres = L[at].nom;
-      let nl = L.slice(); if (at >= 0) nl.splice(at + 1, 0, x); else nl.push(x);
-      const rb = busCompleter(nl); nl = rb.out;
-      S.hwForm = { ...f, nom: '', val: '' };
-      if (f.type === 'TM5NS31') {
-        const t = ALIM_TM5_TYPE(), kh = nl.filter(y => y.type === 'TM5NS31').length, pn = hwUnique(hwNommer(t, { n: nl.filter(estAlimTm5).length + 1, ilot: kh }), new Set(nl.map(y => y.nom)));
-        nl.splice(nl.indexOf(x) + 1, 0, { nom: pn, type: t, parent: nom, src: 'manuel', apres: nom, auto: true });
-        hwSave(nl, '« ' + nom + ' » ajouté sous ' + x.parent + ', avec sa carte d’alimentation « ' + pn + ' » (' + t + ').'); return;
-      }
-      hwSave(nl, '« ' + nom + ' » ajouté sous ' + x.parent + (rb.ajoutes.length ? ', avec ' + rb.ajoutes.join(' et ') : '') + '.');
-    };
-  }
   document.querySelectorAll('[data-hwcat]').forEach(b => { b.onclick = () => { const t = b.dataset.hwcat, tm5 = /^TM5/i.test(t); S.lib.hwtypes = { ref: t, serie: tm5 ? 'Module TM5' : 'Autre', devType: tm5 ? 72 : null, devVer: tm5 ? '1.56.15.2' : '', parent: tm5 ? 'TM5NS31' : '' }; S.tab = 'hwtypes'; render(); setStatus('Complète la fiche (identifiant et version du DeviceID), enregistre, puis réimporte le dossier élec.'); }; });
   const pe = $('#projElec'), fe = $('#elecFile');
   if (pe && fe) { pe.onclick = () => fe.click(); fe.onchange = () => { const f = fe.files[0]; fe.value = ''; if (f) readElecFile(f); }; }
@@ -1929,12 +2017,6 @@ function renderProj() {
     const eh = $('#elecHw'); if (eh) eh.onchange = () => { S.elec.hwOn = eh.checked; renderProj(); };
     const ef = $('#elecFiches'); if (ef) ef.onchange = () => { S.elec.ficheOn = ef.checked; renderProj(); };
     document.querySelectorAll('[data-elecok]').forEach(b => { b.onclick = () => applyElec(); });
-  }
-  const me = $('#projMe'); if (me) me.onclick = () => { S.projForm = null; S.elec = null; S.meForm = S.meForm ? null : { hw: true, meca: true, lim: true, stop: true, gains: true, liste: true, traces: false }; renderProj(); };
-  if (S.meForm && $('#meOk')) {
-    ['meHw', 'meMeca', 'meLim', 'meStop', 'meGains', 'meListe', 'meTraces'].forEach(id => { $('#' + id).onchange = e => { S.meForm[{ meHw: 'hw', meMeca: 'meca', meLim: 'lim', meStop: 'stop', meGains: 'gains', meListe: 'liste', meTraces: 'traces' }[id]] = e.target.checked; }; });
-    $('#meCancel').onclick = () => { S.meForm = null; renderProj(); };
-    $('#meOk').onclick = async () => { const o = { ...S.meForm }; if (!o.hw && !o.meca && !o.lim && !o.stop && !o.gains && !o.traces) { setStatus('Coche au moins une partie du script.', true); return; } await exportMeScript(o); S.meForm = null; renderProj(); };
   }
   const dn = $('#projDone'); if (dn) dn.onclick = async () => { try { await writeDoc('projects', cur.id, { ...strip(cur), statut: done ? 'en cours' : 'termine', termine: done ? null : Date.now() }); setStatus(done ? '' : 'Projet terminé et sauvegardé. Crée le suivant avec « + Projet ».'); } catch (e) { setStatus('Impossible : ' + (e.message || e.code), true); } };
   if (S.projForm) {
@@ -1957,6 +2039,56 @@ function renderProj() {
     };
   }
 }
+/* Matériel du projet (onglet Machine Expert) : liaisons du tableau et du formulaire d'ajout */
+function bindHw() {
+  const cur = curProj(); if (!cur || !$('#hwAdd')) return;
+  const f = S.hwForm, L = cur.materiel || [];
+  $('#hwNom').oninput = e => { f.nom = e.target.value; };
+  $('#hwType').onchange = e => { f.type = e.target.value; render(); };
+  const hp = $('#hwParent'); if (hp) hp.onchange = e => { f.parent = e.target.value; };
+  const hv = $('#hwVal'); if (hv) hv.oninput = e => { f.val = e.target.value; };
+  const fb = $('#hwFixBus'); if (fb) fb.onclick = () => { const r = busCompleter(L); hwSave(r.out, r.ajoutes.join(', ') + ' ajouté' + (r.ajoutes.length > 1 ? 's' : '') + ' : le script créera le bus avant ses appareils.'); };
+  const fx = $('#hwFixAlim'); if (fx) fx.onclick = () => { const w = []; const nl = tm5Alims(L.map(x => ({ ...x })), w).map(x => x.auto && !x.src ? { ...x, src: 'manuel', apres: x.parent } : x); hwSave(nl, w.join(' · ') || 'Alimentations en place.'); };
+  document.querySelectorAll('[data-hwdel]').forEach(b => { b.onclick = () => { const x = L[+b.dataset.hwdel]; hwSave(L.filter((_, k) => k !== +b.dataset.hwdel), '« ' + x.nom + ' » retiré du matériel.'); }; });
+  document.querySelectorAll('[data-hwren]').forEach(b => { b.onclick = () => { S.hwRen = +b.dataset.hwren; render(); const i = $('#hwRenIn'); if (i) { i.focus(); i.select(); } }; });
+  const rn = $('#hwRenNo'); if (rn) rn.onclick = () => { S.hwRen = null; render(); };
+  const ro = $('#hwRenOk'), ri = $('#hwRenIn');
+  if (ro && ri) {
+    const ok = () => {
+      const x = L[S.hwRen], nom = hwName(ri.value); if (!x) return;
+      if (!nom) { setStatus('Donne un nom à l’appareil.', true); return; }
+      if (nom === x.nom) { S.hwRen = null; render(); return; }
+      if (L.some(y => y.nom === nom) || pAxes().some(a => ['DRV_', 'IO_', 'LE_'].some(p => p + a.nom === nom))) { setStatus('« ' + nom + ' » existe déjà.', true); return; }
+      const old = x.nom, nl = L.map(y => { const z = { ...y }; if (z.parent === old) z.parent = nom; if (z.apres === old) z.apres = nom; return z; });
+      nl[S.hwRen] = { ...nl[S.hwRen], nom, ...(x.src === 'manuel' ? {} : { nomFixe: true }) };
+      S.hwRen = null;
+      hwSave(nl, '« ' + old + ' » renommé « ' + nom + ' » pour ce projet' + (nl.some(y => y.parent === nom) ? ' (et ses modules rattachés)' : '') + '. Dans Machine Expert, un appareil déjà présent sous l’ancien nom (même référence) est reconnu par le script.');
+    };
+    ro.onclick = ok; ri.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); ok(); } if (e.key === 'Escape') { S.hwRen = null; render(); } };
+  }
+  $('#hwAdd').onclick = () => {
+    const nom = hwName(f.nom); if (!nom) { setStatus('Donne un nom à l’appareil.', true); return; }
+    if (L.some(x => x.nom === nom) || pAxes().some(a => 'DRV_' + a.nom === nom)) { setStatus('« ' + nom + ' » existe déjà.', true); return; }
+    const c = hwCat()[f.type], isTm5 = sousTete(c?.parent);
+    const x = { nom, type: f.type, parent: isTm5 ? (f.parent || 'TM5NS31 ?') : (c?.parent || '?'), src: 'manuel' };
+    if (f.type === 'ATV320') { const id = parseInt(f.val, 10); if (!(id > 0)) { setStatus('Donne le Node-ID de l’ATV320.', true); return; } x.nodeId = id; }
+    else if (HW_FAM(f.type) === 'Ethernet/IP' && f.val) x.ip = f.val.trim();
+    const anc = isTm5 ? f.parent : x.parent; let at = -1;
+    L.forEach((y, k) => { if (y.nom === anc || y.parent === anc) at = k; });
+    /* ne pas couper l'îlot du voisin : sauter ses enfants (ex. une nouvelle tête après la tête précédente ET ses modules) */
+    if (at >= 0) { const bloc = new Set([L[at].nom]); while (at + 1 < L.length && bloc.has(L[at + 1].parent)) { at++; bloc.add(L[at].nom); } }
+    if (at >= 0) x.apres = L[at].nom;
+    let nl = L.slice(); if (at >= 0) nl.splice(at + 1, 0, x); else nl.push(x);
+    const rb = busCompleter(nl); nl = rb.out;
+    S.hwForm = { ...f, nom: '', val: '' };
+    if (f.type === 'TM5NS31') {
+      const t = ALIM_TM5_TYPE(), kh = nl.filter(y => y.type === 'TM5NS31').length, pn = hwUnique(hwNommer(t, { n: nl.filter(estAlimTm5).length + 1, ilot: kh }), new Set(nl.map(y => y.nom)));
+      nl.splice(nl.indexOf(x) + 1, 0, { nom: pn, type: t, parent: nom, src: 'manuel', apres: nom, auto: true });
+      hwSave(nl, '« ' + nom + ' » ajouté sous ' + x.parent + ', avec sa carte d’alimentation « ' + pn + ' » (' + t + ').'); return;
+    }
+    hwSave(nl, '« ' + nom + ' » ajouté sous ' + x.parent + (rb.ajoutes.length ? ', avec ' + rb.ajoutes.join(' et ') : '') + '.');
+  };
+}
 /* ---------- Onglets Brushless et ATV320 : le matériel du projet, réglé ici et écrit par le script ---------- */
 const IO_MODES = ['IO0_Mode', 'IO1_Mode', 'IO4_Mode', 'IO5_Mode'];
 const IO_MODE_DEF = { IO0_Mode: 1, IO1_Mode: 1, IO4_Mode: 0, IO5_Mode: 0 };
@@ -1966,24 +2098,21 @@ const projTop = () => '<div class="panel" style="padding:10px 12px"><div class="
 const noProj = () => projTop() + '<div class="panel" style="margin-top:14px"><div class="empty"><b>Aucun projet</b><span>Crée ton premier projet avec « + Projet ».</span></div></div>';
 const motorRefOf = a => S.motors.find(m => m.id === a.moteurId)?.ref || a.moteurRef || '';
 const optH = (val, cur, lab) => `<option value="${esc(val)}" ${String(cur ?? '') === String(val) ? 'selected' : ''}>${esc(lab ?? val)}</option>`;
-/* Onglet Brushless = axes Lexium 62 / ILM62 / virtuels ; onglet Asynchrones = axes sur ATV320 (gamme BMP : asynchrones, BMP, tambours) */
-const axesVue = () => S.tab === 'axesatv' ? 'atv' : 'lex';
-const axesTabDe = a => a && a.gamme === 'BMP' ? 'axesatv' : 'axes';
-const axesDeVue = (vue = axesVue()) => brushList().filter(a => (a.gamme === 'BMP') === (vue === 'atv'));
+/* Familles d'axes dans la liste de l'onglet Axes : Lexium 62 (LXM62 / ILM62), ATV320 (gamme BMP : asynchrones, BMP, tambours), virtuels */
+const axeFam = a => a.gamme === 'BMP' ? 'atv' : (a.gamme === 'LXM62' || a.gamme === 'ILM62') ? 'lex' : 'virt';
 function brushList() { return pAxes().slice().sort((a, b) => (num(a.ordre) ?? 1e9) - (num(b.ordre) ?? 1e9) || String(a.nom).localeCompare(String(b.nom), 'fr', { numeric: true })); }
 async function axisPatch(a, patch) {
-  if (S.dirty && S.draft && !S.draft._new && S.draft.id === a.id) { setStatus('« ' + a.nom + ' » a des modifications non enregistrées (onglet Brushless / Asynchrones) : enregistre-les ou annule-les d’abord.', true); render(); return; }
+  if (S.dirty && S.draft && !S.draft._new && S.draft.id === a.id) { setStatus('« ' + a.nom + ' » a des modifications non enregistrées (onglet Axes) : enregistre-les ou annule-les d’abord.', true); render(); return; }
   try { await writeDoc('axes', a.id, { ...strip(a), ...patch }); setStatus('« ' + a.nom + ' » enregistré.'); }
   catch (e) { setStatus('Impossible : ' + (e.message || e.code), true); }
 }
-function renderBrushless() {
-  const v = $('#view'); if (!allLoaded()) { v.innerHTML = ''; return; }
-  if (!curProj()) { v.innerHTML = noProj(); renderProj(); return; }
-  const L = brushList(), nHw = L.filter(a => a.gamme === 'LXM62' || a.gamme === 'ILM62').length, nBmp = L.filter(a => a.gamme === 'BMP').length, F = S.blForm || (S.blForm = { nom: '', gamme: 'LXM62' });
+/* Onglet Machine Expert, section Lexium 62 : ordre Sercos et ce que le script crée pour chaque axe brushless */
+function sercosHtml() {
+  const L = brushList().filter(a => a.gamme !== 'BMP'), nHw = L.filter(a => a.gamme === 'LXM62' || a.gamme === 'ILM62').length, nBmp = pAxes().filter(a => a.gamme === 'BMP').length;
   const ords = L.filter(a => (a.gamme === 'LXM62' || a.gamme === 'ILM62') && num(a.ordre) != null).map(a => num(a.ordre)), dup = [...new Set(ords.filter((o, i) => ords.indexOf(o) !== i))];
   const rows = L.map((a, i) => {
     const g = a.gamme || '', bmp = g === 'BMP', card = !!g && !bmp && ioCardOf(a), m = ioModesOf(a);
-    const crees = !g ? 'rien (axe virtuel)' : bmp ? 'rien ici : moteur sur ATV320 (onglet ATV320, réglages en Modbus)' : [a.leEnc !== false ? 'LE_' + a.nom : null, 'DRV_' + a.nom, card ? 'IO_' + a.nom : null].filter(Boolean).join(' · ');
+    const crees = !g ? 'rien (axe virtuel)' : bmp ? 'rien ici : moteur sur ATV320 (section ATV320, réglages en Modbus)' : [a.leEnc !== false ? 'LE_' + a.nom : null, 'DRV_' + a.nom, card ? 'IO_' + a.nom : null].filter(Boolean).join(' · ');
     return `<tr data-bl="${esc(a.id)}" class="${g ? '' : 'bl-virt'}">
     <td class="ordcell"><input type="number" min="1" step="1" class="w-s" data-f="ordre" value="${esc(a.ordre ?? '')}" aria-label="Ordre Sercos de ${esc(a.nom)}"><span class="ordbtns"><button type="button" class="ordbtn" data-move="-1" title="Monter" aria-label="Monter ${esc(a.nom)}" ${i === 0 ? 'disabled' : ''}>▲</button><button type="button" class="ordbtn" data-move="1" title="Descendre" aria-label="Descendre ${esc(a.nom)}" ${i === L.length - 1 ? 'disabled' : ''}>▼</button></span></td>
     <td><button class="linkbtn" data-open="${esc(a.id)}" title="Ouvrir le réglage de l’axe">${esc(a.nom || 'Sans nom')}</button>${a.desc ? `<div class="el-sub">${esc(a.desc)}</div>` : ''}<div class="el-sub mono" style="font-size:11px" title="Ce que le script crée dans Machine Expert">${esc(crees)}</div></td>
@@ -1995,20 +2124,19 @@ function renderBrushless() {
     ${IO_MODES.map(k => `<td class="c"><select data-io="${k}" ${card ? '' : 'disabled'} aria-label="${k} de ${esc(a.nom)}">${optH(0, m[k])}${optH(1, m[k])}</select></td>`).join('')}
     </tr>`;
   }).join('');
-  v.innerHTML = projTop() + `<div class="panel" style="margin-top:14px"><div class="panel-h"><h2>Variateurs brushless · ${nHw} axe${nHw > 1 ? 's' : ''} Sercos sur ${L.length}${nBmp ? ` · ${nBmp} sur ATV320` : ''}</h2></div>
-    <div class="tabnote">Ce que le script crée dans Machine Expert pour chaque axe, dans l’ordre Sercos : codeur LE_, variateur DRV_, carte IO_. Chaque modification est enregistrée aussitôt. Le réglage du moteur (réducteur, charge, gains) se fait dans l’onglet Brushless.
+  return `<div class="panel" style="margin-top:14px"><div class="panel-h"><h2>Lexium 62 · Sercos${L.length ? ` · ${nHw} variateur${nHw > 1 ? 's' : ''}` : ''}</h2>${nBmp ? `<span class="el-sub">${nBmp} axe${nBmp > 1 ? 's' : ''} sur ATV320 : plus bas</span>` : ''}</div>
+    <div class="tabnote">Ce que le script crée dans Machine Expert pour chaque axe brushless, dans l’ordre Sercos : codeur LE_, variateur DRV_, carte IO_. Chaque modification est enregistrée aussitôt. Le moteur, le réducteur et la charge se règlent dans l’onglet Axes.
       <details class="tabmore"><summary>Détail des colonnes</summary><ul>
         <li><b>Ordre</b> : position sur l’anneau Sercos, celle du dossier élec au départ. Les flèches ▲▼ déplacent un axe (les numéros sont refaits 1, 2, 3…), ou tape un numéro.</li>
-        <li><b>Variateur</b> : LXM62 (module en armoire) ou ILM62 (intégré au moteur). « Aucun » = axe virtuel (Master, MC_Cut…), rien n’est créé. <b>Sur ATV320</b> : moteur asynchrone (SEW, Leroy-Somer…) ou synchrone (BMP, tambour NGI MTS62, Interroll DM) piloté par un ATV320 (CANopen) ; l’axe sert au calcul avec son réducteur (HSP, LSP, ITH, limite de courant), le variateur est dans l’onglet ATV320 et se règle en Modbus.</li>
+        <li><b>Variateur</b> : LXM62 (module en armoire) ou ILM62 (intégré au moteur). « Aucun » = axe virtuel (Master, MC_Cut…), rien n’est créé. <b>Sur ATV320</b> : l’axe passe dans la section ATV320 (CANopen, réglages en Modbus).</li>
         <li><b>Référence</b> : celle du dossier élec (pour information). Un module double Lexium 62 se déclare dans Machine Expert comme deux variateurs : rien de particulier à faire.</li>
         <li><b>LE_</b> : codeur logique, créé sous l’automate. <b>IO_</b> : carte IO sous le variateur, ses voies renommées TP_, DQ_, DI_ + nom de l’axe.</li>
         <li><b>IO0, IO1, IO4, IO5</b> : modes des voies de la carte IO, écrits à chaque lancement (valeurs de l’Auto_Pannel : 1, 1, 0, 0). Absents sur une carte : laissés.</li></ul></details></div>
     ${dup.length ? `<div class="warnline">Même ordre Sercos sur plusieurs axes : ${dup.join(', ')}. Les axes sont créés dans l’ordre du tableau.</div>` : ''}
     ${L.length ? `<div class="tblwrap" style="margin-top:10px"><table class="gtbl"><thead><tr><th>Ordre</th><th>Axe · dans Machine Expert</th><th>Variateur</th><th>Référence</th><th>Moteur</th><th class="c" title="Codeur LE_">LE_</th><th class="c" title="Carte IO_">IO_</th>${IO_MODES.map(k => `<th class="c">${k.replace('_Mode', '')}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table></div>`
-      : '<div class="empty"><b>Aucun axe dans ce projet</b><span>Importe le dossier élec (bandeau du projet) ou ajoute un axe ci-dessous.</span></div>'}
-    <div class="pform addline"><span class="addlab">Ajouter un axe à la main</span><input type="text" id="blNom" placeholder="Nom (ex. MT9)" value="${esc(F.nom)}" autocomplete="off" aria-label="Nom du nouvel axe">
-      <select id="blGamme" aria-label="Variateur du nouvel axe">${optH('LXM62', F.gamme)}${optH('ILM62', F.gamme)}${optH('BMP', F.gamme, 'Sur ATV320')}</select><button class="btn" id="blAdd">+ Axe</button></div></div>`;
-  renderProj();
+      : '<div class="empty"><b>Aucun axe brushless dans ce projet</b><span>Importe le dossier élec (bandeau du projet) ou ajoute un axe dans l’onglet Axes.</span></div>'}</div>`;
+}
+function bindSercos(v) {
   v.querySelectorAll('tr[data-bl]').forEach(tr => {
     const A = () => S.axes.find(x => x.id === tr.dataset.bl);
     tr.querySelectorAll('[data-f]').forEach(el => { el.onchange = () => {
@@ -2019,8 +2147,8 @@ function renderBrushless() {
     }; });
     tr.querySelectorAll('[data-io]').forEach(el => { el.onchange = () => { const a = A(); if (a) axisPatch(a, { ioModes: { ...ioModesOf(a), [el.dataset.io]: +el.value } }); }; });
     tr.querySelectorAll('[data-move]').forEach(b => { b.onclick = async () => {
-      if (S.dirty) { setStatus('Un axe a des modifications non enregistrées (onglet Brushless / Asynchrones) : enregistre-les ou annule-les d’abord.', true); return; }
-      const list = brushList(), i = list.findIndex(x => x.id === tr.dataset.bl), j = i + (+b.dataset.move);
+      if (S.dirty) { setStatus('Un axe a des modifications non enregistrées (onglet Axes) : enregistre-les ou annule-les d’abord.', true); return; }
+      const list = brushList().filter(x => x.gamme !== 'BMP'), i = list.findIndex(x => x.id === tr.dataset.bl), j = i + (+b.dataset.move);
       if (i < 0 || j < 0 || j >= list.length) return;
       [list[i], list[j]] = [list[j], list[i]];
       try {
@@ -2031,21 +2159,9 @@ function renderBrushless() {
   });
   v.querySelectorAll('[data-open]').forEach(b => { b.onclick = () => {
     const a = S.axes.find(x => x.id === b.dataset.open); if (!a) return;
-    if (S.dirty && !(S.draft && S.draft.id === a.id)) { setStatus('Un axe a des modifications non enregistrées (onglet Brushless / Asynchrones) : enregistre-les ou annule-les d’abord.', true); return; }
-    S.tab = axesTabDe(a); S.axisId = a.id; if (!S.dirty) S.draft = { ...a }; try { localStorage.setItem('servo-tab', S.tab); } catch (e) {} render();
+    if (S.dirty && !(S.draft && S.draft.id === a.id)) { setStatus('Un axe a des modifications non enregistrées (onglet Axes) : enregistre-les ou annule-les d’abord.', true); return; }
+    S.axisId = a.id; if (!S.dirty) S.draft = { ...a }; goTab('axes');
   }; });
-  $('#blNom').oninput = e => { F.nom = e.target.value; };
-  $('#blNom').onkeydown = e => { if (e.key === 'Enter') $('#blAdd').click(); };
-  $('#blGamme').onchange = e => { F.gamme = e.target.value; };
-  $('#blAdd').onclick = async () => {
-    const nom = String(F.nom || '').trim();
-    if (!nom) { setStatus('Donne un nom à l’axe.', true); return; }
-    if (pAxes().some(a => nrmE(a.nom) === nrmE(nom))) { setStatus('« ' + nom + ' » existe déjà dans ce projet.', true); return; }
-    const ordre = Math.max(0, ...pAxes().map(a => num(a.ordre) || 0)) + 1;
-    S.blForm = { nom: '', gamme: F.gamme };
-    try { await writeDoc('axes', newId('axes'), { nom, gamme: F.gamme, ordre, typeCharge: 'lineaire', marge: 80, tStop: 0.2, projetId: S.projId, source: 'onglet Brushless' }); setStatus('Axe « ' + nom + ' » ajouté (ordre ' + ordre + '). Choisis son moteur et son réducteur dans l’onglet Brushless ou Asynchrones.'); }
-    catch (e) { S.blForm = { ...F }; setStatus('Impossible : ' + (e.message || e.code), true); }
-  };
 }
 /* ATV320 : Node-ID, Optional device et paramètres choisis (colonnes), écrits dans chaque ATV320 par le script */
 function atvList() { return (curProj()?.materiel || []).map((x, k) => ({ x, k })).filter(o => o.x.type === 'ATV320'); }
@@ -2065,9 +2181,9 @@ async function projPatch(patch, msg) {
   try { await writeDoc('projects', cur.id, { ...strip(cur), ...patch }); if (msg) setStatus(msg); }
   catch (e) { setStatus('Impossible : ' + (e.message || e.code), true); }
 }
-function renderAtv() {
-  const v = $('#view'); if (!allLoaded()) { v.innerHTML = ''; return; }
-  const cur = curProj(); if (!cur) { v.innerHTML = noProj(); renderProj(); return; }
+/* Onglet Machine Expert, section ATV320 : Node-ID, Optional device, heartbeat, plaques moteurs */
+function atvHtml() {
+  const cur = curProj();
   const A = atvList(), cols = cur.atvCols || [], P = atvParamsCat(), F = S.atvForm || (S.atvForm = { col: '', nom: '', node: '' });
   const nodes = A.map(o => num(o.x.nodeId)).filter(n => n != null), dupN = [...new Set(nodes.filter((n, i) => nodes.indexOf(n) !== i))];
   const cell = (c, val, attr) => {
@@ -2099,9 +2215,8 @@ function renderAtv() {
   const ctrlCell = (P, R, m) => { const L = [...((P && P.checks) || []), ...(R ? (R.checks || []).filter(c => c[0] !== 'info') : [])].slice(0, 4);
     return L.map(c => `<div><span class="tag ${TAG[c[0]]}">${c[0] === 'crit' ? 'Alerte' : c[0] === 'warn' ? 'À vérifier' : 'Info'}</span> <span class="el-sub">${esc(c[1]).slice(0, 120)}</span></div>`).join('') || (m ? '<span class="tag ok">OK</span>' : ''); };
   const atvCell = (d, x) => d ? 'In ' + fmt(num(d.iNom), 1) + ' A · Imax ' + fmt(num(d.iPeak), 1) + ' A' + (num(d.puissance) != null ? ' · ' + fmt(num(d.puissance), 2) + ' kW' : '') : x.ref ? '<span class="el-warn">réf. absente du catalogue Variateurs</span>' : '<span class="el-sub">réf. inconnue</span>';
-  const axeLink = (ba, m, d) => `<div class="el-sub">${m.typeMot === 'async' ? 'asynchrone (loi vectorielle)' : 'synchrone (loi SYN)'} · axe <b>${esc(ba.nom)}</b>, onglet Asynchrones${d && num(m.i0) != null && num(d.iNom) != null && num(m.i0) > num(d.iNom) ? ' · <span class="el-warn">IN moteur > In ATV320</span>' : ''}</div>`;
-  const plRows = PL.map(({ x, k, ba, m, d, P, R, sync, axeA }) => `<tr data-atvm="${k}"><td><b>${esc(x.nom)}</b></td>
-    <td>${x.moteurRef ? `<span class="mono">${esc(x.moteurRef)}</span>` : '<span class="el-sub">pas de référence moteur dans le dossier</span>'}${x.moteurFab || x.moteurP != null || x.moteurI != null || x.moteurN != null ? `<div class="el-sub">${[x.moteurFab, x.moteurP != null ? fmt(x.moteurP, 3) + ' kW' : '', x.moteurI != null ? 'IN ' + fmt(x.moteurI, 2) + ' A' : '', x.moteurN != null ? fmt(x.moteurN, 0) + ' tr/min' : '', x.moteurU].filter(Boolean).map(esc).join(' · ')}</div>` : ''}</td>
+  const axeLink = (ba, m, d) => `<div class="el-sub">${m.typeMot === 'async' ? 'asynchrone (loi vectorielle)' : 'synchrone (loi SYN)'} · axe <b>${esc(ba.nom)}</b>, onglet Axes${d && num(m.i0) != null && num(d.iNom) != null && num(m.i0) > num(d.iNom) ? ' · <span class="el-warn">IN moteur > In ATV320</span>' : ''}</div>`;
+  const plRows = PL.map(({ x, k, ba, m, d, P, R, sync, axeA }) => `<tr data-atvm="${k}"><td><b>${esc(x.nom)}</b><div class="el-sub" title="Référence du moteur dans le dossier élec (contrôle seulement)">${x.moteurRef ? `<span class="mono">${esc(x.moteurRef)}</span>` : 'pas de référence moteur dans le dossier'}${x.moteurFab || x.moteurP != null || x.moteurI != null || x.moteurN != null ? `<br>${[x.moteurFab, x.moteurP != null ? fmt(x.moteurP, 3) + ' kW' : '', x.moteurI != null ? 'IN ' + fmt(x.moteurI, 2) + ' A' : '', x.moteurN != null ? fmt(x.moteurN, 0) + ' tr/min' : '', x.moteurU].filter(Boolean).map(esc).join(' · ')}` : ''}</div></td>
     ${axeA ? `<td>${esc(m.ref)}${axeLink(ba, m, d)}</td>
       <td class="n">${nv(P.npr, 3, 'kW')}</td><td class="n">${nv(P.uns, 0, 'V')}</td><td class="n">${nv(P.ncr, 2, 'A')}<div class="el-sub">NCR</div></td><td class="n">${nv(P.frs, 0, 'Hz')}<div class="el-sub">FRS${R && R.hsp != null ? ' · HSP ' + fmt(R.hsp, 1) : ''}${R && R.lsp != null ? ' · LSP ' + fmt(R.lsp, 1) : ''}</div></td>
       <td class="n">${nv(P.nsp, 0, 'tr/min')}<div class="el-sub">NSP${R && R.nHsp != null ? ' · ' + fmt(R.nHsp, 0) + ' à HSP' + (R.vHsp != null ? ' (' + fmt(R.vHsp, 1) + ' ' + R.uV + (R.asyncConv ? ' = ' + fmt(R.vHsp * 0.06, 2) + ' m/min' : '') + ')' : '') : ''}</div></td><td class="n">${nv(P.cos, 2, '')}</td>
@@ -2113,8 +2228,8 @@ function renderAtv() {
       <td class="n">${nv(num(m.nNom), 0, 'tr/min')}<div class="el-sub">NSPS${R && R.nAtVmax ? ' · ' + fmt(R.nAtVmax, 0) + ' à Vmax' : ''}</div></td><td class="n">${(pp => pp ? fmt(pp, 0) + ' <span class="el-sub">p.</span>' : '<span class="el-sub">?</span>')(ppOf(m, R))}<div class="el-sub">PPNS${num(m.ke) != null ? ' · PHS ' + fmt(num(m.ke), 1) : ''}</div></td>
       <td class="n">${R && R.ith != null ? nv(R.ith, 2, 'A') : nv(num(m.i0), 2, 'A')}<div class="el-sub">${R && R.ithPct != null ? fmt(R.ithPct, 0) + ' % de IN' : 'IN'}${R && R.pct != null ? ' · CLI ' + fmt(R.pct, 0) + ' %' : ''}</div></td>
       <td>${atvCell(d, x)}</td><td>${ctrlCell(null, R, m)}</td>`
-      : `<td colspan="10"><span class="el-sub">${ba.id ? 'Choisis le moteur dans l’axe <b>' + esc(ba.nom) + '</b> (onglet Asynchrones) : la plaque s’affiche ici.' : 'L’axe <b>' + esc(ba.nom) + '</b> n’existe pas dans l’onglet Asynchrones (réimporte le dossier ou crée-le).'}</span></td>`)
-    : ba ? `<td colspan="10"><span class="el-sub">Réglages de l’ATV320 dans l’axe <b>${esc(ba.nom)}</b>, onglet Asynchrones.</span></td>`
+      : `<td colspan="10"><span class="el-sub">${ba.id ? 'Choisis le moteur dans l’axe <b>' + esc(ba.nom) + '</b> (onglet Axes) : la plaque s’affiche ici.' : 'L’axe <b>' + esc(ba.nom) + '</b> n’existe pas dans l’onglet Axes (réimporte le dossier ou crée-le).'}</span></td>`)
+    : ba ? `<td colspan="10"><span class="el-sub">Réglages de l’ATV320 dans l’axe <b>${esc(ba.nom)}</b>, onglet Axes.</span></td>`
       : `<td><select data-mot aria-label="Fiche moteur de ${esc(x.nom)}"><option value="">${esc(x.moteurId ? '— d’après la référence du dossier —' : m ? 'auto : ' + m.ref : '— à choisir —')}</option>${grpM.map(([s, L]) => `<optgroup label="${esc(s)}">${L.map(mm => `<option value="${esc(mm.id)}" ${x.moteurId === mm.id ? 'selected' : ''}>${esc(mm.ref)}${num(mm.pNom) != null ? ' · ' + fmt(num(mm.pNom), 2) + ' kW' : ''}</option>`).join('')}</optgroup>`).join('')}</select>${!m && x.moteurRef ? `<div class="el-sub"><span class="el-warn">absente du catalogue</span> <button class="btn ghost" data-motnew="${k}" title="Référence et fabricant seulement : les données constructeur se saisissent depuis le catalogue ou la plaque">Créer la fiche</button></div>` : m && x.moteurId ? `<div class="el-sub">choisie ici</div>` : m && refKey(m.ref) !== refKey(x.moteurRef) ? `<div class="el-sub">${esc(m.ref)} (début de référence commun)</div>` : ''}</td>
     <td class="n">${m ? nv(P.npr, 3, 'kW') : ''}</td><td class="n">${m ? nv(P.uns, 0, 'V') : ''}</td><td class="n">${m ? nv(P.ncr, 2, 'A') : ''}</td><td class="n">${m ? nv(P.frs, 0, 'Hz') : ''}</td><td class="n">${m ? nv(P.nsp, 0, 'tr/min') : ''}</td><td class="n">${m ? nv(P.cos, 2, '') : ''}</td><td class="n">${m ? nv(P.ith, 2, 'A') : ''}</td>
     <td>${atvCell(d, x)}</td>
@@ -2122,14 +2237,14 @@ function renderAtv() {
   const plaqueSyncTxt = r => { const m = r.m, R = r.R, v = volts(m); return r.x.nom + (r.x.nodeId != null ? ' (Node-ID ' + r.x.nodeId + ')' : '') + ' · ' + m.ref + ' · synchrone (loi SYN) | NCRS ' + (num(m.i0) != null ? fmt(num(m.i0), 2) + ' A' : '?') + ' | NSPS ' + (num(m.nNom) != null ? fmt(num(m.nNom), 0) + ' tr/min' : '?') + ' | PPNS ' + ((pp => pp ? fmt(pp, 0) : '?')(ppOf(m, R))) + ' | PHS ' + (num(m.ke) != null ? fmt(num(m.ke), 1) + ' V/krpm' : '?') + (v.length ? ' | UNS ' + v.join('/') + ' V' : '') + ' | ITH ' + (R && R.ith != null ? fmt(R.ith, 2) + ' A' : '?') + ' | HSP ' + (R && R.hsp != null ? fmt(R.hsp, 1) + ' Hz' : '?') + ' | LSP ' + (R && R.lsp != null && R.pp ? fmt(R.lsp, 1) + ' Hz' : '?') + (R && R.pct != null ? ' | CLI ' + fmt(R.pct, 0) + ' %' : ''); };
   const plaqueAxeATxt = r => { const R = r.R; return plaqueTxt(r.x, r.P) + (R ? ' | HSP ' + (R.hsp != null ? fmt(R.hsp, 1) + ' Hz' + (R.nHsp != null ? ' (' + fmt(R.nHsp, 0) + ' tr/min' + (R.vHsp != null ? ', ' + fmt(R.vHsp, 1) + ' ' + R.uV : '') + ')' : '') : '?') + ' | LSP ' + (R.lsp != null ? fmt(R.lsp, 1) + ' Hz' + (R.nLsp != null ? ' (' + fmt(R.nLsp, 0) + ' tr/min' + (R.vLsp != null ? ', ' + fmt(R.vLsp, 2) + ' ' + R.uV : '') + ')' : '') : '?') + (R.ith != null ? ' | ITH axe ' + fmt(R.ith, 2) + ' A' : '') + (R.pct != null ? ' | CLI ' + fmt(R.pct, 0) + ' %' : '') : ''); };
   const plaquesTxt = PL.filter(r => (r.P && r.P.m) || (r.sync && r.m)).map(r => r.sync ? plaqueSyncTxt(r) : r.axeA ? plaqueAxeATxt(r) : plaqueTxt(r.x, r.P)).join('\n');
-  const plaquesHtml = A.length ? `<h3 class="elech" style="margin-top:14px">Moteurs des ATV320 · plaque signalétique <span class="el-sub">ce que le programme écrit en Modbus dans chaque ATV320 (menu Contrôle moteur). Les valeurs viennent de la fiche constructeur (Catalogue › Moteurs), retrouvée d’après la référence du dossier ; ce que le dossier indique sert seulement de contrôle (écart signalé). Chaque moteur sur ATV320 est un axe (onglet Asynchrones) : asynchrone → NPR, UNS, NCR, FRS, NSP, COS (loi vectorielle) ; synchrone (BMP, tambour NGI MTS62 ou Interroll DM) → NCRS, NSPS, PPNS, PHS (loi SYN) ; dans les deux cas ITH, HSP, LSP et limite de courant d’après l’axe</span></h3>
-    <div class="tblwrap"><table class="gtbl"><thead><tr><th>ATV320</th><th>Moteur (dossier)</th><th>Fiche moteur</th><th class="n" title="Rated motor power">NPR</th><th class="n" title="Rated motor voltage">UNS</th><th class="n" title="Rated motor current (synchrone : NCRS)">NCR</th><th class="n" title="Rated motor frequency (synchrone : HSP / LSP)">FRS</th><th class="n" title="Rated motor speed (synchrone : NSPS)">NSP</th><th class="n" title="Motor cos φ (synchrone : paires de pôles PPNS et FCEM PHS)">COS</th><th class="n" title="Motor thermal current">ITH</th><th>ATV320</th><th>Contrôles</th></tr></thead><tbody>${plRows}</tbody></table></div>
-    <div class="pform addline">${plaquesTxt ? `<button class="btn" id="atvPlCopy">Copier les plaques</button><span class="el-sub">une ligne par ATV320 : asynchrone NPR | UNS | NCR | FRS | NSP | COS | ITH, synchrone NCRS | NSPS | PPNS | PHS | ITH | HSP | LSP | CLI, à coller dans la liste des paramètres Modbus</span>` : '<span class="el-sub">Aucune fiche moteur rattachée : choisis-la dans la colonne « Fiche moteur » ou crée-la (les fiches se créent aussi à l’import du dossier).</span>'}</div>` : '';
+  const plaquesHtml = A.length ? `<h3 class="elech" style="margin-top:14px;padding:0 16px">Plaques moteurs <span class="el-sub">ce que le programme écrit en Modbus dans chaque ATV320 (menu Contrôle moteur), d’après la fiche du catalogue Moteurs (jamais d’après le dossier, qui sert de contrôle). Asynchrone → NPR, UNS, NCR, FRS, NSP, COS ; synchrone (BMP, tambour) → NCRS, NSPS, PPNS, PHS ; ITH, HSP, LSP et limite de courant d’après l’axe</span></h3>
+    <div class="tblwrap"><table class="gtbl"><thead><tr><th>ATV320 · moteur du dossier</th><th>Fiche moteur</th><th class="n" title="Rated motor power">NPR</th><th class="n" title="Rated motor voltage">UNS</th><th class="n" title="Rated motor current (synchrone : NCRS)">NCR</th><th class="n" title="Rated motor frequency (synchrone : HSP / LSP)">FRS</th><th class="n" title="Rated motor speed (synchrone : NSPS)">NSP</th><th class="n" title="Motor cos φ (synchrone : paires de pôles PPNS et FCEM PHS)">COS</th><th class="n" title="Motor thermal current">ITH</th><th>ATV320</th><th>Contrôles</th></tr></thead><tbody>${plRows}</tbody></table></div>
+    <div class="pform addline">${plaquesTxt ? `<button class="btn" id="atvPlCopy" data-txt="${esc(plaquesTxt)}">Copier les plaques</button><span class="el-sub">une ligne par ATV320 : asynchrone NPR | UNS | NCR | FRS | NSP | COS | ITH, synchrone NCRS | NSPS | PPNS | PHS | ITH | HSP | LSP | CLI, à coller dans la liste des paramètres Modbus</span>` : '<span class="el-sub">Aucune fiche moteur rattachée : choisis-la dans la colonne « Fiche moteur » ou crée-la (les fiches se créent aussi à l’import du dossier).</span>'}</div>` : '';
   const allRow = A.length > 1 ? `<tr class="all"><td><b>Tous</b></td><td class="el-sub">valeur mise sur tous les ATV320</td><td></td>
     <td class="c"><input type="checkbox" id="atvOptAll" ${allOpt ? 'checked' : ''} aria-label="Optional device pour tous"></td>${cols.map((c, j) => `<td>${cell(c, '', `data-all="${j}" aria-label="${esc(c.n)} pour tous"`)}</td>`).join('')}<td></td></tr>` : '';
-  v.innerHTML = projTop() + meImpPanel() + `<div class="panel" style="margin-top:14px"><div class="panel-h"><h2>ATV320 · ${A.length} variateur${A.length > 1 ? 's' : ''} sur le CANopen</h2>
-      <div class="pform" style="width:auto"><label class="btn" for="meJson" style="cursor:pointer">Importer depuis Machine Expert</label><input type="file" id="meJson" accept=".json,application/json" hidden></div></div>
-    <div class="tabnote">Ce que le script écrit dans chaque ATV320 de Machine Expert : le Node-ID (et les COB-ID qui en dépendent), la case Optional device, le heartbeat, et au besoin un paramètre CANopen par colonne. Les réglages du variateur lui-même (ACC, DEC, vitesses…) sont gérés en Modbus par le programme : ils ne passent pas par ici, mais la <b>plaque du moteur</b> de chaque ATV320 (NPR, UNS, NCR, FRS, NSP, COS, ITH) est calculée plus bas d’après la fiche du catalogue Moteurs, avec un contrôle du calibre du variateur. Chaque modification est enregistrée aussitôt ; une case vide n’est pas écrite, Machine Expert garde sa valeur.
+  return `<div class="panel" style="margin-top:14px"><div class="panel-h"><h2>ATV320 · CANopen${A.length ? ` · ${A.length} variateur${A.length > 1 ? 's' : ''}` : ''}</h2>
+      <div class="pform" style="width:auto"><label class="btn" for="meJson" style="cursor:pointer" title="Fichier explo_materiel.json du script explorer_materiel.py : DeviceID des appareils et liste des paramètres de l’ATV320">Importer depuis Machine Expert</label><input type="file" id="meJson" accept=".json,application/json" hidden></div></div>
+    <div class="tabnote">Ce que le script écrit dans chaque ATV320 : Node-ID (et COB-ID), Optional device, heartbeat, et au besoin un paramètre CANopen par colonne. Les réglages du variateur (ACC, DEC, vitesses…) sont gérés en Modbus par le programme ; la plaque du moteur de chaque ATV320 est plus bas. Chaque modification est enregistrée aussitôt ; une case vide n’est pas écrite.
       <details class="tabmore"><summary>Détail</summary><ul>
         <li><b>Optional device</b> coché : le CANopen démarre même si cet ATV320 ne répond pas (variateur hors tension, option de machine absente).</li>
         <li><b>Heartbeat</b> : le Producer time (onglet General de l’ATV320, en principe 200 ms) doit être un multiple du cycle de la tâche qui cadence le bus CAN. Le script lit la tâche de cycle de bus de l’ATV320 et son cycle dans le projet, puis arrondit au multiple le plus proche (200 ms avec un cycle de 15 ms → 13 cycles = 195 ms) ; même consigne pour tous les ATV320 du projet.</li>
@@ -2143,7 +2258,10 @@ function renderAtv() {
     ${plaquesHtml}
     ${A.length ? `<div class="pform addline"><span class="addlab">Ajouter une colonne (paramètre CANopen)</span><input type="text" id="atvCol" list="atvPList" placeholder="Paramètre CANopen (ex. SDO Timeout)" value="${esc(F.col)}" autocomplete="off" aria-label="Paramètre à ajouter" style="min-width:220px"><datalist id="atvPList">${P.map(p => `<option value="${esc(p.n)}">`).join('')}</datalist><button class="btn" id="atvColAdd">+ Paramètre</button></div>` : ''}
     <div class="pform addline"><span class="addlab">Ajouter un ATV320 à la main</span><input type="text" id="atvNom" placeholder="Repère (ex. M9)" value="${esc(F.nom)}" autocomplete="off" aria-label="Nom du nouvel ATV320"><input type="number" id="atvNode" class="w-s" min="1" max="127" placeholder="Node-ID" value="${esc(F.node)}" aria-label="Node-ID du nouvel ATV320" style="width:90px"><button class="btn" id="atvAdd">+ ATV320</button></div></div>`;
-  renderProj(); bindMeImp();
+}
+function bindAtv(v) {
+  const cur = curProj(), A = atvList(), cols = cur.atvCols || [], P = atvParamsCat(), F = S.atvForm;
+  const plaquesTxt = v.querySelector('#atvPlCopy') ? v.querySelector('#atvPlCopy').dataset.txt : '';
   const L = () => (curProj().materiel || []).slice();
   const setItem = (k, f, msg) => { const l = L(); l[k] = f({ ...l[k] }); projPatch({ materiel: l }, msg); };
   const rn = $('#atvRenum'); if (rn) rn.onclick = () => { const l = L(); let n = 0; l.forEach((x, i) => { if (x.type === 'ATV320') { n++; l[i] = { ...x, nodeId: n, nodeIdManuel: true }; } }); projPatch({ materiel: l }, 'Node-ID renumérotés de 1 à ' + n + ' dans l’ordre du tableau : à reporter dans chaque ATV320 (ADCO), puis relancer le script.'); };
@@ -2195,6 +2313,50 @@ function renderAtv() {
     S.atvForm = { ...F, nom: '', node: '' };
     projPatch({ materiel: l }, '« ' + nom + ' » ajouté (Node-ID ' + n + ').');
   };
+}
+/* ---------- Onglet Machine Expert : Lexium 62 (Sercos), ATV320 (CANopen), matériel du projet ---------- */
+function renderMe() {
+  const v = $('#view'); if (!allLoaded()) { v.innerHTML = ''; return; }
+  const cur = curProj(); if (!cur) { v.innerHTML = noProj(); renderProj(); return; }
+  const L = cur.materiel || [];
+  v.innerHTML = projTop() + meImpPanel() + sercosHtml() + atvHtml()
+    + `<div class="panel" style="margin-top:14px"><div class="panel-h"><h2>Matériel du projet${L.length ? ` · ${L.length} appareil${L.length > 1 ? 's' : ''}` : ''}</h2><span class="el-sub">alimentations, îlots TM5, CAN, Ethernet/IP</span></div>${hwPanel()}</div>`;
+  renderProj(); bindMeImp(); bindSercos(v); bindAtv(v); bindHw();
+}
+/* ---------- Onglet Bilan & script : tous les axes, script Machine Expert, export Excel ---------- */
+const ME_OPTS = () => S.meOpts || (S.meOpts = { hw: true, meca: true, lim: true, stop: true, gains: true, liste: true, traces: false });
+function renderBilan() {
+  const v = $('#view'); if (!allLoaded()) { v.innerHTML = ''; return; }
+  const cur = curProj(); if (!cur) { v.innerHTML = noProj(); renderProj(); return; }
+  const A = pAxes(), F = ME_OPTS(), lex = A.filter(a => a.gamme !== 'BMP'), ok = lex.filter(a => !compute(a).missing).length, hw = A.filter(a => a.gamme === 'LXM62' || a.gamme === 'ILM62').length;
+  const incomplets = lex.filter(a => compute(a).missing).map(a => a.nom), nAtv = A.length - lex.length, canDl = !!(S.dl || !S.db);
+  const script = `<div class="panel" style="margin-top:14px"><div class="panel-h"><h2>Script Machine Expert</h2><div class="actions">${A.length && canDl ? '<button class="btn" id="projExp" title="Classeur Excel : synthèse de tous les axes, Lexium 62 (paramètres Machine Expert), ATV320 (réglages et plaques), Machine Expert (Sercos, CANopen, matériel), E/S, puis une fiche détaillée par axe">Exporter le bilan (Excel)</button>' : ''}</div></div>
+    <div class="panel-b meform" style="gap:10px"><div class="memsg">Un fichier Python à lancer dans le projet (Outils › Scripting › Exécuter). Il ne supprime jamais rien et demande confirmation avant chaque écriture. Le rapport est écrit dans Documents et s’ouvre à la fin.</div>
+    ${!A.length ? '<div class="memsg">Aucun axe dans ce projet : importe le dossier élec ou ajoute des axes (onglet Axes).</div>' : ''}
+    ${incomplets.length ? `<div class="memsg el-warn"><b>${incomplets.length} axe${incomplets.length > 1 ? 's' : ''} brushless sans moteur ou sans réducteur, non écrit${incomplets.length > 1 ? 's' : ''} par le script</b> : ${esc(incomplets.join(', '))}. Le script ne touche pas à leur DRV_ ; complète-les dans l’onglet Axes pour qu’ils soient réglés.</div>` : ''}${nAtv ? `<div class="memsg">${nAtv} axe${nAtv > 1 ? 's' : ''} sur ATV320 : pas de DRV_ dans Machine Expert, leurs réglages (Node-ID, Optional device, heartbeat) passent par la partie Hardware ; le reste se règle dans le variateur.</div>` : ''}
+    <div class="mesec"><div class="mesec-h"><label class="chk"><input type="checkbox" id="meHw" ${F.hw ? 'checked' : ''}> <b>1 · Hardware</b></label><span class="el-sub">${hw} axe${hw > 1 ? 's' : ''} brushless · ${(cur.materiel || []).length} appareil${(cur.materiel || []).length > 1 ? 's' : ''} du projet</span></div>
+      <div class="mesec-b">Crée ce qui manque dans l’arbre : le matériel du projet, puis pour chaque axe le codeur LE_, le variateur DRV_ et la carte IO_. Écrit ensuite les réglages de l’onglet Machine Expert (modes IO, Node-ID, Optional device, paramètres). Une fenêtre liste les appareils avant de commencer.</div></div>
+    <div class="mesec"><div class="mesec-h"><b>2 · Réglages des axes</b><span class="el-sub">${ok} axe${ok > 1 ? 's' : ''} réglé${ok > 1 ? 's' : ''} sur ${A.length}${A.length - ok ? ' (les autres sont ignorés)' : ''}</span></div>
+      <div class="mesec-b">Écrits dans le variateur DRV_ de chaque axe réglé. Avant chaque axe, une fenêtre montre les valeurs qui changent (ancien → nouveau) : Oui, Oui à tous, Non, Arrêter.</div>
+      <div class="mechk"><label class="chk"><input type="checkbox" id="meMeca" ${F.meca ? 'checked' : ''}> Mécanique : FeedConstant, GearIn, GearOut, J_Load, J_Gear</label>
+      <label class="chk"><input type="checkbox" id="meLim" ${F.lim ? 'checked' : ''}> Limite de courant : UserCurrentLimit</label>
+      <label class="chk"><input type="checkbox" id="meStop" ${F.stop ? 'checked' : ''}> Arrêt d’urgence : DriveStopCurrentLimit, ControllerStopDec, ControllerStopJerk, StopTimeLim, UserDefinedStopMode</label>
+      <label class="chk"><input type="checkbox" id="meGains" ${F.gains ? 'checked' : ''}> Gains Vel_P / Vel_I (valeurs retenues si notées, sinon proposées)</label></div></div>
+    <div class="mesec"><div class="mesec-h"><label class="chk"><input type="checkbox" id="meListe" ${F.liste ? 'checked' : ''}> <b>3 · Liste de paramètres</b></label></div>
+      <div class="mesec-b">Crée ou complète <b>ParameterList_Reglages</b> sous Application : tous les axes, une colonne par paramètre réglé, pour tout voir d’un coup. Rien n’y est retiré, l’ancienne version est sauvegardée.</div></div>
+    <div class="mesec"><div class="mesec-h"><label class="chk"><input type="checkbox" id="meTraces" ${F.traces ? 'checked' : ''}> <b>4 · Traces des axes</b></label><span class="el-sub">tâche ${esc(TACHE_CAN(cur))}</span></div>
+      <div class="mesec-b">Recrée les traces <b>TRC_Axes_MT / MC / MP / MR</b> sous Application (script traces validé) : pour chaque axe physique DRV_, 4 diagrammes — Vitesse (consigne + réel), Position (réel + consigne), Erreur de poursuite, Courant. Les traces existantes de ces noms sont remplacées ; une famille sans axe n’a pas de trace.</div></div>
+    <div class="actions">${A.length && canDl ? '<button class="btn primary" id="meOk">Générer le script</button>' : A.length ? '<span class="el-sub">Téléchargement indisponible dans cette vue : ouvre la page complète pour générer le script.</span>' : ''}</div></div></div>`;
+  v.innerHTML = projTop() + script + (A.length ? `<div class="panel" style="margin-top:14px">${bilanPanel()}</div>` : '');
+  renderProj();
+  document.querySelectorAll('[data-bilan]').forEach(b => { b.onclick = () => {
+    const a = S.axes.find(x => x.id === b.dataset.bilan); if (!a) return;
+    if (S.dirty && !(S.draft && S.draft.id === a.id)) { setStatus('Un axe a des modifications non enregistrées : enregistre-les ou annule-les d’abord.', true); return; }
+    S.axisId = a.id; if (!S.dirty) S.draft = { ...a }; goTab('axes'); window.scrollTo({ top: 0 });
+  }; });
+  const ex = $('#projExp'); if (ex) ex.onclick = () => exportProject();
+  ['meHw', 'meMeca', 'meLim', 'meStop', 'meGains', 'meListe', 'meTraces'].forEach(id => { const el = $('#' + id); if (el) el.onchange = e => { F[{ meHw: 'hw', meMeca: 'meca', meLim: 'lim', meStop: 'stop', meGains: 'gains', meListe: 'liste', meTraces: 'traces' }[id]] = e.target.checked; }; });
+  const ok_ = $('#meOk'); if (ok_) ok_.onclick = async () => { const o = { ...F }; if (!o.hw && !o.meca && !o.lim && !o.stop && !o.gains && !o.traces) { setStatus('Coche au moins une partie du script.', true); return; } await exportMeScript(o); };
 }
 /* ---------- Import de explo_materiel.json (script explorer_materiel.py lancé dans Machine Expert) ---------- */
 async function readMeJson(f) {
@@ -2284,7 +2446,7 @@ const confirm_ = () => { setStatus('Modifications non enregistrées : enregistre
 function render() {
   S.lastTab = { ...(S.lastTab || {}), [grpOf(S.tab).k]: S.tab };
   renderNav();
-  if (S.tab === 'axes' || S.tab === 'axesatv') renderAxes(); else if (S.tab === 'brushless') renderBrushless(); else if (S.tab === 'atv') renderAtv(); else if (S.tab === 'es') renderIo(); else if (S.tab === 'iodict') renderIoDict(); else if (S.tab === 'asyncs') renderLib('motors', 'async'); else renderLib(S.tab);
+  if (S.tab === 'axes') renderAxes(); else if (S.tab === 'me') renderMe(); else if (S.tab === 'bilan') renderBilan(); else if (S.tab === 'es') renderIo(); else if (S.tab === 'iodict') renderIoDict(); else if (S.tab === 'asyncs') renderLib('motors', 'async'); else renderLib(S.tab);
 }
 
 
@@ -2328,8 +2490,8 @@ const WHERE = {
   'drives.iPeak': 'Catalogue Lexium 62, « Peak current » du module (A). Dans Machine Expert : MaxDrivePeakCurrent.',
   'drives.iNom': 'Catalogue Lexium 62, courant de sortie permanent à 8 kHz (A).',
   'drives.format': 'Catalogue : simple axe ou double axe (un variateur pour 2 moteurs).',
-  moteurId: 'Choisis la référence de la plaque du moteur. Absent de la liste : ajoute-le dans l’onglet Moteurs.',
-  reducteurId: 'Choisis la référence + rapport de la plaque du réducteur. Absent : ajoute-le dans l’onglet Réducteurs.',
+  moteurId: 'Choisis la référence de la plaque du moteur. Absent de la liste : ajoute-le dans Catalogue › Brushless ou Asynchrones.',
+  reducteurId: 'Choisis la référence + rapport de la plaque du réducteur. Absent : ajoute-le dans Catalogue › Réducteurs, ou tape la désignation SEW complète avec son rapport.',
   nom: 'Le nom de l’axe dans ton projet Machine Expert (ex. MC1, DRV_MT2).',
   typeCharge: 'Linéaire : courroie, vis, crémaillère. Convoyeur : bande entraînée par un rouleau, il suffit du diamètre du rouleau. Rotative : plateau, pivot. Bielle-manivelle : rotation continue qui fait coulisser une plaque.',
   dRouleau: 'Plan ou mesure au pied à coulisse : diamètre extérieur du rouleau d’entraînement (tambour), en mm. FeedConstant théorique = π × D. Bande épaisse : ajoute son épaisseur au diamètre. Glissement ou dérive sur la machine : mesure l’avance réelle sur 10 tours et saisis le FeedConstant recalé.',
@@ -2350,16 +2512,12 @@ const WHERE = {
   tStop: 'Temps souhaité pour s’immobiliser en arrêt d’urgence. 0,15 à 0,2 s en général. Plus court = plus de couple sur le réducteur.',
   marge: 'Choix de ta marge de sécurité : 80 % de T2B autorisé = 20 % de marge.',
   acc: 'Programme de l’automate (accélération du mouvement) ou cahier des charges.',
-  periode: 'Durée d’un aller-retour de l’oscillation, déduite du cycle de la machine.',
   velPRetenu: 'Machine Expert, dossier de l’axe / Controller : Vel_P_Gain. Reporte la valeur gardée après tes essais.',
   velIRetenu: 'Machine Expert : Vel_I_Gain, après essais.',
-  velPActuel: 'Machine Expert : Vel_P_Gain actuellement réglé sur la machine (avant changement de charge ou de réducteur).',
-  jLoadActuel: 'Machine Expert : J_Load actuellement réglé sur la machine.',
-  jGearActuel: 'Machine Expert : J_Gear actuellement réglé sur la machine.',
   notes: 'Texte libre : source de la donnée, remarque, point à vérifier.',
   desc: 'Dossier élec, colonne « Nom » de la liste des actionneurs (ex. Convoyeur de sortie).',
-  variateur: 'Dossier élec, colonne « Référence » de la liste des actionneurs, ou plaque du module Lexium 62.',
-  gamme: 'Dossier élec, colonne « Gamme » : LXM62 ou ILM62. Les ATV320 et TeSys ne sont pas des axes : ils vont dans le matériel du projet.',
+  variateur: 'Dossier élec, colonne « Référence » de la liste des actionneurs, ou plaque du module Lexium 62 / de l’ATV320.',
+  gamme: 'Dossier élec, colonne « Gamme » : LXM62, ILM62 ou ATV320 (moteur asynchrone, BMP ou tambour piloté par un ATV320). Les TeSys ne sont pas des axes : ils vont dans le matériel du projet.',
   ioCard: 'Dossier élec : coché quand le variateur est un LXM62 (carte IO montée dans le module). Un ILM62 n’a pas de carte IO.'
 };
 function whereOf(f, prefix) { const tab = S.tab === 'asyncs' ? 'motors' : S.tab; const w = (prefix === 'lib-' ? (WHERE[tab + '.' + f.k] || WHERE[f.k]) : WHERE[f.k]) || ''; return w && f.h && !w.includes(f.h) ? f.h + '. ' + w : (w || f.h || ''); }
@@ -2401,35 +2559,43 @@ function readInput(el) { if (el.type === 'checkbox') return el.checked; const k 
 function renderAxes() {
   const v = $('#view');
   if (!allLoaded()) { v.innerHTML = ''; return; }
-  const chipSt = a => { const R = compute(a); return R.missing ? 'c-todo' : R.checks.some(c => c[0] === 'crit') ? 'c-crit' : R.checks.some(c => c[0] === 'warn') ? 'c-warn' : 'c-ok'; };
-  const chipTitle = (a, st) => { const n = (compute(a).acked || []).length; return (a.desc ? a.desc + ' · ' : '') + ({ 'c-todo': 'à compléter : moteur ou réducteur manquant', 'c-crit': 'réglé, avec une alerte à traiter', 'c-warn': 'réglé, avec un point à vérifier', 'c-ok': 'réglé, aucun problème' })[st] + (n ? ' · ' + n + ' attention' + (n > 1 ? 's' : '') + ' acquittée' + (n > 1 ? 's' : '') : ''); };
-  const vue = axesVue(), LV = axesDeVue(vue);
-  /* l'axe affiché doit être de cette vue (sauf un nouvel axe en cours de saisie) */
+  const stOf = a => { const R = compute(a); return R.missing ? 'c-todo' : R.checks.some(c => c[0] === 'crit') ? 'c-crit' : R.checks.some(c => c[0] === 'warn') ? 'c-warn' : 'c-ok'; };
+  const stTitle = (a, st) => { const n = (compute(a).acked || []).length; return (a.desc ? a.desc + ' · ' : '') + ({ 'c-todo': 'à compléter : moteur ou réducteur manquant', 'c-crit': 'réglé, avec une alerte à traiter', 'c-warn': 'réglé, avec un point à vérifier', 'c-ok': 'réglé, aucun problème' })[st] + (n ? ' · ' + n + ' attention' + (n > 1 ? 's' : '') + ' acquittée' + (n > 1 ? 's' : '') : ''); };
+  const LV = brushList();
+  /* l'axe affiché doit exister dans le projet (sauf un nouvel axe en cours de saisie) */
   if (!(S.draft && S.draft._new) && !LV.find(a => a.id === S.axisId)) { S.axisId = LV[0]?.id || null; S.dirty = false; S.draft = S.axisId ? { ...LV[0] } : null; }
-  const chips = LV.map(a => { const st = chipSt(a); return `<button class="axischip ${st}" data-axis="${esc(a.id)}" title="${esc(chipTitle(a, st))}" aria-pressed="${a.id === S.axisId && !(S.draft && S.draft._new)}">${esc(a.nom || 'Sans nom')}</button>`; }).join('');
-  const top = `<div class="panel" style="padding:10px 12px;display:flex;flex-direction:column;gap:10px"><div class="topbar" id="projbar"></div>
-    ${S.projects.length ? `<div class="axisbar">${chips}<button class="btn ghost" id="newAxis">+ Axe</button></div>` : ''}</div>`;
+  const sub = a => { const m = S.motors.find(x => x.id === a.moteurId), r = S.reducers.find(x => x.id === a.reducteurId); return m || r ? [m ? m.ref : 'moteur ?', r ? (r.ref.length > 22 ? r.ref.slice(0, 21) + '…' : r.ref) : (a.gamme === 'BMP' ? '' : 'réducteur ?')].filter(Boolean).join(' · ') : 'moteur et réducteur à choisir'; };
+  const row = a => { const st = stOf(a); return `<button class="axrow ${st}" data-axis="${esc(a.id)}" title="${esc(stTitle(a, st))}" aria-pressed="${a.id === S.axisId && !(S.draft && S.draft._new)}"><span class="axn">${esc(a.nom || 'Sans nom')}</span><span class="axs">${esc(sub(a))}</span></button>`; };
+  const FAMS = [['lex', 'Lexium 62 · Sercos'], ['atv', 'ATV320 · CANopen'], ['virt', 'Axes virtuels']];
+  const groups = FAMS.map(([k, l]) => { const L = LV.filter(a => axeFam(a) === k); return L.length ? `<div class="axgrp"><div class="axgrp-h">${l}<span>${L.length}</span></div>${L.map(row).join('')}</div>` : ''; }).join('');
+  const curP = curProj();
+  const top = projTop();
   if (!S.draft) {
-    const curP = curProj();
-    v.innerHTML = top + (S.projects.length ? `<div class="panel" style="margin-top:14px"><div class="empty"><b>${vue === 'atv' ? 'Aucun axe sur ATV320 dans ce projet' : 'Aucun axe brushless dans ce projet'}</b><span>${vue === 'atv' ? 'Les moteurs sur ATV320 du dossier élec (asynchrones, BMP, tambours) arrivent ici à l’import ; sinon, ajoute un axe à la main.' : 'Le plus rapide : importer le dossier électrique de la machine, qui crée les axes et le matériel. Sinon, ajoute un axe à la main.'}</span>
-        <div class="actions">${curP && curP.statut !== 'termine' ? '<button class="btn primary" id="emptyElec">Importer le dossier élec</button>' : ''}<button class="btn" id="emptyAxis">+ Axe à la main</button><button class="btn ghost" id="emptyHelp">Comment ça marche ?</button></div></div></div>`
+    v.innerHTML = top + (S.projects.length ? `<div class="panel" style="margin-top:14px"><div class="empty"><b>Aucun axe dans ce projet</b><span>Le plus rapide : importer le dossier électrique de la machine, qui crée les axes (Lexium 62 et ATV320) et le matériel. Sinon, ajoute un axe à la main.</span>
+        <div class="actions">${curP && curP.statut !== 'termine' ? '<button class="btn primary" id="emptyElec">Importer le dossier élec</button>' : ''}<button class="btn" id="emptyAxis">+ Axe brushless</button><button class="btn" id="emptyAtv">+ Axe sur ATV320</button><button class="btn ghost" id="emptyHelp">Comment ça marche ?</button></div></div></div>`
       : `<div class="panel" style="margin-top:14px"><div class="empty"><b>Aucun projet</b><span>Un projet = une machine. Crée-le, puis importe son dossier électrique ou ajoute ses axes.</span><div class="actions"><button class="btn primary" id="emptyProj">+ Projet</button><button class="btn ghost" id="emptyHelp">Comment ça marche ?</button></div></div></div>`);
     renderProj(); bindAxes(); return;
   }
-  const d = S.draft, lin = (d.typeCharge || 'lineaire') === 'lineaire', motTyp = (S.motors.find(x => x.id === d.moteurId) || {}).typeMot === 'async' ? 'async' : 'sync';
-  /* asynchrone sur ATV320 + convoyeur : pas de FeedConstant (pas d'axe Machine Expert), le diamètre du rouleau suffit, vitesses en mm/s */
-  const asyncConv = motTyp === 'async' && d.gamme === 'BMP' && (d.typeCharge || 'lineaire') === 'convoyeur';
-  const adapt = f => !asyncConv ? f : f.k === 'dRouleau' ? { ...f, n: 'Vitesse de la bande = π × diamètre × tr/min de la virole' } : f.u === 'Units/s' ? { ...f, u: 'mm/s' } : f;
-  const fs = g => { const note = typeof g.note === 'function' ? g.note(d) : g.note; return `<fieldset><legend>${esc(g.t)}</legend>${note ? `<div class="gnote">${esc(note)}</div>` : ''}${g.f.filter(f => (!f.show || [].concat(f.show).includes(d.typeCharge || 'lineaire')) && (!f.mot || f.mot === motTyp) && !(asyncConv && f.k === 'feed')).map(f => inputHtml(adapt(f), f.k === 'ioCard' ? (d.ioCard ?? d.gamme === 'LXM62') : d[f.k], 'ax-')).join('')}</fieldset>`; };
-  const bmp = d.gamme === 'BMP', grp = AXIS_GROUPS.filter(g => !(bmp && g.lx) && !(!bmp && g.bmp));
+  const d = S.draft, bmp = d.gamme === 'BMP', motTyp = (S.motors.find(x => x.id === d.moteurId) || {}).typeMot === 'async' ? 'async' : 'sync';
+  /* asynchrone sur ATV320 : pas d'axe Machine Expert, ni inertie ni vitesse de cycle ; convoyeur → le diamètre du rouleau donne les vitesses (mm/s) */
+  const asyncAtv = bmp && motTyp === 'async', asyncConv = asyncAtv && (d.typeCharge || 'lineaire') === 'convoyeur';
+  const uU = String(d.unite || '').trim() || 'Units';
+  const adapt = f => !asyncAtv ? (uU === 'Units' || !f.u || !/^Units/.test(f.u) ? f : { ...f, u: f.u.replace(/^Units/, uU) }) : f.k === 'dRouleau' ? { ...f, n: 'Vitesse de la bande = π × diamètre × tr/min de la virole' } : f.k === 'feed' ? { ...f, l: 'Déplacement par tour de sortie', u: 'mm/tr', h: 'Avance de l’axe pour un tour en sortie du réducteur : donne la vitesse de l’axe à HSP / LSP' } : f.u === 'Units/s' ? { ...f, u: 'mm/s' } : f;
+  const okGrp = g => !(bmp && g.lx) && !(!bmp && g.bmp) && !(asyncAtv && g.noasync) && !(!asyncAtv && g.onlyasync);
+  const okField = f => (!f.show || [].concat(f.show).includes(d.typeCharge || 'lineaire')) && (!f.mot || f.mot === motTyp) && !(asyncAtv && f.noasync) && !(bmp && f.lx) && !(asyncConv && f.k === 'feed');
+  const fs = g => { const note = typeof g.note === 'function' ? g.note(d) : g.note; return `<fieldset><legend>${esc(g.t)}</legend>${note ? `<div class="gnote">${esc(note)}</div>` : ''}${g.f.filter(okField).map(f => inputHtml(adapt(f), f.k === 'ioCard' ? (d.ioCard ?? d.gamme === 'LXM62') : d[f.k], 'ax-')).join('')}</fieldset>`; };
+  const grp = AXIS_GROUPS.filter(okGrp);
   const main = grp.filter(g => !g.adv).map(fs).join('');
   const adv = grp.filter(g => g.adv).map(fs).join('');
   const isNew = !!d._new;
-  v.innerHTML = top + `<div class="cols" style="margin-top:14px">
-    <section class="panel"><div class="panel-h"><h2>${isNew ? 'Nouvel axe' : 'Axe ' + esc(d.nom || '')}</h2><span class="hsave"><span id="dirtyTag"></span><button class="btn primary" id="saveAxisTop" title="Enregistrer (Ctrl+S)" ${S.dirty ? '' : 'hidden'}>Enregistrer</button></span></div>
+  const list = `<aside class="panel axlist sticky"><div class="axl-h"><h2>Axes</h2><span class="el-sub">${LV.length}</span></div>
+      <div class="axl-b">${groups || '<div class="el-sub" style="padding:8px 12px">Aucun axe enregistré.</div>'}</div>
+      <div class="axl-f"><button class="btn ghost" id="newAxis" title="Axe brushless sur Lexium 62">+ Brushless</button><button class="btn ghost" id="newAtv" title="Moteur asynchrone, BMP ou tambour piloté par un ATV320">+ ATV320</button></div></aside>`;
+  v.innerHTML = top + `<div class="axes3" style="margin-top:14px">${list}
+    <section class="panel"><div class="panel-h"><h2>${isNew ? 'Nouvel axe' + (bmp ? ' sur ATV320' : '') : 'Axe ' + esc(d.nom || '')}</h2><span class="hsave"><span id="dirtyTag"></span><button class="btn primary" id="saveAxisTop" title="Enregistrer (Ctrl+S)" ${S.dirty ? '' : 'hidden'}>Enregistrer</button></span></div>
       <div class="panel-b" id="axisForm">${main}
-        ${toolsBox(d)}
-        <details class="more" id="advBox" ${S.advOpen ? 'open' : ''}><summary>Plus d’options <span class="el-sub">variateur Machine Expert · mouvement · gains existants · notes</span></summary><div class="inner">${adv}</div></details>
+        ${asyncAtv ? '' : toolsBox(d)}
+        <details class="more" id="advBox" ${S.advOpen ? 'open' : ''}><summary>Plus d’options <span class="el-sub">${asyncAtv ? 'désignation · variateur · réducteur · notes' : 'désignation · variateur · mouvement et inertie · notes'}</span></summary><div class="inner">${adv}</div></details>
         <div class="actions"><button class="btn primary" id="saveAxis">Enregistrer</button>
         ${isNew ? '<button class="btn" id="cancelAxis">Annuler</button>' : '<button class="btn ghost" id="dupAxis">Dupliquer</button><button class="btn ghost" id="delAxis">Supprimer</button>'}</div>
       </div></section>
@@ -2449,59 +2615,80 @@ function renderResults() {
     S.gstate = {}; colorFields();
     const d = S.draft, manq = [!S.motors.find(x => x.id === d.moteurId) ? 'le moteur' : null, !S.reducers.find(x => x.id === d.reducteurId) ? 'le réducteur' : null].filter(Boolean);
     const titre = manq.length ? 'Il manque ' + manq.join(' et ') : 'Fiche incomplète';
-    box.innerHTML = `<div class="panel-h"><h2>À saisir dans le variateur</h2></div><div class="empty"><b>${esc(titre)}</b><span>${esc(R.why || (manq.length ? 'Choisis-' + (manq.length > 1 ? 'les' : 'le') + ' dans « Moteur et réducteur » : les valeurs à saisir dans le variateur s’affichent ici dès que l’ensemble est complet. Absent de la liste : ajoute-le dans le catalogue (onglets Moteurs / Réducteurs).' : 'Les réglages s’affichent dès que l’ensemble est complet.'))}</span></div>`;
+    box.innerHTML = `<div class="panel-h"><h2>${d.gamme === 'BMP' ? 'Réglages ATV320' : 'À saisir dans Machine Expert'}</h2></div><div class="empty"><b>${esc(titre)}</b><span>${esc(R.why || (manq.length ? 'Choisis-' + (manq.length > 1 ? 'les' : 'le') + ' dans « Moteur et réducteur » : les réglages s’affichent ici dès que l’ensemble est complet. Absent de la liste : ajoute-le dans le catalogue (Brushless / Asynchrones / Réducteurs)' + (d.gamme === 'BMP' ? ', ou tape la désignation SEW complète avec son rapport' : '') + '.' : 'Les réglages s’affichent dès que l’ensemble est complet.'))}</span></div>`;
     renderToolResults(TT); return; }
   const row = (n, v, u, key) => v == null || v === '—' ? '' : `<div class="prow ${key ? 'key' : ''}"><span class="pn">${esc(n)}</span><span class="pv">${esc(v)}${u ? `<small>${esc(u)}</small>` : ''}</span></div>`;
-  const rowA = (n, v, u) => `<div class="prow"><span class="pn">${esc(n)}</span><span class="pv">${v == null ? '<small class="todo">vitesse du cycle à saisir</small>' : esc(v)}${v != null && u ? `<small>${esc(u)}</small>` : ''}</span></div>`;
+  const rowA = (n, v, u, key) => `<div class="prow ${key && v != null ? 'key' : ''}"><span class="pn">${esc(n)}</span><span class="pv">${v == null ? '<small class="todo">vitesse du cycle à saisir</small>' : esc(v)}${v != null && u ? `<small>${esc(u)}</small>` : ''}</span></div>`;
   const vpR = num(S.draft.velPRetenu), viR = num(S.draft.velIRetenu);
   const mech = [row('J_Load', fmt(Math.round(R.JL / 10) * 10, 0), 'kg·cm²', 1), row('J_Gear', fmt(R.Jg, 3), 'kg·cm²', 1)].join('');
   const gen = [row('UserCurrentLimit', R.pct != null ? fmt(R.pct, 1) : null, '%', 1), row('DriveStopCurrentLimit', R.driveStopMa != null ? fmt(R.driveStopMa, 0) : null, 'mA'),
-    rowA('ControllerStopDec', R.dec ? fmt(R.dec, 0) : null, 'Units/s²'), rowA('ControllerStopJerk', R.dec ? fmt(R.jerkStop, 0) : null, 'Units/s³'), rowA('StopTimeLim', R.dec ? fmt(R.stl, 0) : null, 'ms')].join('');
-  const vpShow = vpR != null ? fmt(vpR, 2) : (R.velPTransp != null ? fmt(R.velPTransp, 1) : fmt(R.velPSugg, 1));
+    rowA('ControllerStopDec', R.dec ? fmt(R.dec, 0) : null, R.uV + '²'), rowA('ControllerStopJerk', R.dec ? fmt(R.jerkStop, 0) : null, R.uV + '³'), rowA('StopTimeLim', R.dec ? fmt(R.stl, 0) : null, 'ms')].join('');
+  const vpShow = vpR != null ? fmt(vpR, 2) : fmt(R.velPSugg, 1);
   const viShow = viR != null ? fmt(viR, 2) : fmt(R.velISugg, 1);
-  const base = `base Schneider ${GAIN_BASE.p} / ${GAIN_BASE.i}, rapport charge / moteur seul ${fmt(R.ratioIn ?? 0, (R.ratioIn ?? 0) < 1 ? 2 : 1)}`;
-  const vpSub = vpR != null ? 'retenu après essais' : (R.velPTransp != null ? 'transposé du réglage actuel' : 'proposé · ' + base);
-  const viSub = viR != null ? 'retenu après essais' : 'proposé · ' + base;
-  const grow = (n, v, sub) => `<div class="prow ${v != null ? 'key' : ''}"><span class="pn">${n}</span><span class="pv">${v != null ? esc(v) : '<span class="muted" style="font-size:12px;font-weight:400">à régler</span>'}</span></div>`;
-  const gains = grow('Vel_P_Gain', vpShow) + grow('Vel_I_Gain', viShow) + (vpR == null || viR == null ? `<div class="pnote">${vpR == null && viR == null ? 'Valeurs proposées' : 'Valeur proposée'} : partir de là, monter par paliers de 10 % ; si le moteur grogne, redescendre de 30 %. Noter ensuite les valeurs retenues dans « Gains retenus après essais ».</div>` : '');
+  const grow = (n, v, sub) => `<div class="prow ${v != null ? 'key' : ''}"><span class="pn">${n}${sub ? `<small class="pvs">${sub}</small>` : ''}</span><span class="pv">${v != null ? esc(v) : '<span class="muted" style="font-size:12px;font-weight:400">à régler</span>'}</span></div>`;
+  const gains = grow('Vel_P_Gain', vpShow, vpR != null ? 'retenu après essais' : 'proposé') + grow('Vel_I_Gain', viShow, viR != null ? 'retenu après essais' : 'proposé') + (vpR == null || viR == null ? `<div class="pnote">${vpR == null && viR == null ? 'Valeurs proposées' : 'Valeur proposée'} (base Schneider ${GAIN_BASE.p} / ${GAIN_BASE.i}, rapport charge / moteur ${fmt(R.ratioIn ?? 0, (R.ratioIn ?? 0) < 1 ? 2 : 1)}) : partir de là, monter par paliers de 10 % ; si le moteur grogne, redescendre de 30 %. Noter ensuite les valeurs retenues dans « Gains retenus après essais ».</div>` : '');
   const nMot = R.vMax && R.feed ? R.vMax / R.feed * R.i * 60 : null;
   const pctIn = R.Ilim != null && R.i0 ? Math.floor(R.Ilim / R.i0 * 1000) / 10 : null;
   const vTxt = (v, dec) => v == null ? null : R.asyncConv ? fmt(v, dec) + ' mm/s · ' + fmt(v * 0.06, 2) : fmt(v, dec);
-  const uVs = R.asyncConv ? 'm/min' : 'Units/s';
+  const uVs = R.asyncConv ? 'm/min' : R.uV;
   const spdRows = R.async ? [rowA('Moteur à HSP', R.nHsp != null ? fmt(R.nHsp, 0) : null, 'tr/min'), rowA(R.asyncConv ? 'Virole à HSP' : 'Sortie réducteur à HSP', R.nOutHsp != null ? fmt(R.nOutHsp, 1) : null, 'tr/min'), rowA(R.asyncConv ? 'Bande à HSP' : 'Vitesse de l’axe à HSP', vTxt(R.vHsp, 1), uVs),
     rowA('Moteur à LSP', R.nLsp != null ? fmt(R.nLsp, 0) : null, 'tr/min'), rowA(R.asyncConv ? 'Virole à LSP' : 'Sortie réducteur à LSP', R.nOutLsp != null ? fmt(R.nOutLsp, 2) : null, 'tr/min'), rowA(R.asyncConv ? 'Bande à LSP' : 'Vitesse de l’axe à LSP', vTxt(R.vLsp, 2), uVs)].join('') : '';
-  const atvGen = [rowA('HSP · grande vitesse', R.hsp != null ? fmt(R.hsp, 1) : null, 'Hz'), row('LSP · petite vitesse', R.lsp != null && (R.pp || R.async) ? fmt(R.lsp, 1) : null, 'Hz', 1), spdRows, row('ITH · courant thermique', R.ith != null ? fmt(R.ith, 2) : null, 'A', 1),
-    row('Limite de courant (CLI)', R.Ilim != null ? fmt(R.Ilim, 2) : null, 'A', 1), row('Limite en % de Imax', R.pct != null ? fmt(R.pct, 1) : null, '%', 1), row('Limite de couple (TLIM)', pctIn != null ? fmt(pctIn, 0) : null, '% de MN'), row('Courant nominal IN', R.i0 != null ? fmt(R.i0, 2) : null, 'A'), row(R.async ? 'Imax moteur (150 % de IN)' : 'Imax moteur', R.async ? (R.i0 != null ? fmt(R.i0 * 1.5, 2) : null) : (num(R.m.imax) != null ? fmt(num(R.m.imax), 1) : null), 'A'), row('Imax ATV320' + (R.drv ? ' ' + R.drv.ref : ''), R.iDrv != null ? fmt(R.iDrv, 1) : null, 'A'), row('In ATV320', R.iDrvNom != null ? fmt(R.iDrvNom, 1) : null, 'A'),
-    row('Couple nominal MN', R.m0 != null ? fmt(R.m0, 2) : null, 'Nm'), row('Fréquence nominale moteur', R.fNom != null ? fmt(R.fNom, 1) : null, 'Hz'), rowA('Vitesse moteur à Vmax', nMot ? fmt(nMot, 0) : null, 'tr/min'), rowA('Courant d’accélération', R.Iacc != null ? fmt(R.Iacc, 2) : null, 'A')].join('');
+  /* ATV320 : réglages Modbus et plaque moteur (d'après la fiche catalogue, l'ATV320 du dossier pour la tension) */
+  const PLQ = R.atv ? atvPlaque({ ref: S.draft.variateur || '' }, R.m, R.drv) : null;
+  const volts = (String(R.m.tension || '').match(/\d{3}/g) || []).map(Number);
+  const atvGen = R.atv ? [rowA('HSP · grande vitesse', R.hsp != null ? fmt(R.hsp, 1) : null, 'Hz', 1), row('LSP · petite vitesse', R.lsp != null && (R.pp || R.async) ? fmt(R.lsp, 1) : null, 'Hz', 1), row('ITH · courant thermique', R.ith != null ? fmt(R.ith, 2) : null, 'A', 1),
+    row('CLI · limite de courant', R.Ilim != null ? fmt(R.Ilim, 2) : null, 'A', 1), row('TLIM · limite de couple', pctIn != null ? fmt(pctIn, 0) : null, '% de MN', 1)].join('') : '';
+  const plaque = !R.atv ? '' : R.async
+    ? [row('NPR · puissance', PLQ.npr != null ? fmt(PLQ.npr, 3) : null, 'kW'), row('UNS · tension', PLQ.uns != null ? fmt(PLQ.uns, 0) : null, 'V'), row('NCR · courant nominal', PLQ.ncr != null ? fmt(PLQ.ncr, 2) : null, 'A'), row('FRS · fréquence', PLQ.frs != null ? fmt(PLQ.frs, 0) : null, 'Hz'), row('NSP · vitesse nominale', PLQ.nsp != null ? fmt(PLQ.nsp, 0) : null, 'tr/min'), row('COS · cos φ', PLQ.cos != null ? fmt(PLQ.cos, 2) : null, '')].join('')
+    : [row('NCRS · courant nominal', R.i0 != null ? fmt(R.i0, 2) : null, 'A'), row('NSPS · vitesse nominale', num(R.m.nNom) != null ? fmt(num(R.m.nNom), 0) : null, 'tr/min'), row('PPNS · paires de pôles', R.pp ? fmt(R.pp, 0) : null, ''), row('PHS · FCEM', num(R.m.ke) != null ? fmt(num(R.m.ke), 1) : null, 'V / 1000 tr/min'), row('UNS · tension', volts.length ? volts.join('/') : null, 'V')].join('');
+  const plaqueManque = R.atv ? (R.async ? [PLQ.npr == null ? 'NPR' : null, PLQ.ncr == null ? 'NCR' : null, PLQ.nsp == null ? 'NSP' : null, PLQ.cos == null ? 'COS' : null] : [R.i0 == null ? 'NCRS' : null, num(R.m.nNom) == null ? 'NSPS' : null, !R.pp ? 'PPNS' : null, num(R.m.ke) == null ? 'PHS' : null]).filter(Boolean) : [];
+  const drvNote = R.drv ? `ATV320 ${esc(R.drv.ref)} · In ${fmt(R.iDrvNom, 1)} A · Imax ${fmt(R.iDrv, 1)} A` : S.draft.variateur ? `ATV320 « ${esc(S.draft.variateur)} » absent du catalogue Variateurs` : 'référence de l’ATV320 à renseigner (Plus d’options › Variateur)';
   const groups = R.atv ? `<div class="pgroups">
-    <div class="pcol"><div class="pgroup"><div class="pg-h">Mécanique</div>${mech}<div class="pnote">Rapport ${fmt(R.i, 3)}${R.feed ? (R.asyncConv ? ' · rouleau Ø ' + fmt(R.dRoul, 1) + ' mm (π × D = ' + fmt(R.feed, 1) + ' mm/tr)' : ' · FeedConstant ' + fmt(R.feed, 3) + ' Units/tr') : ''} · inertie vue par le moteur ${fmt(R.Jtot, 2)} kg·cm²</div></div></div>
-    <div class="pgroup"><div class="pg-h">ATV320 (réglé en Modbus)</div>${atvGen}<div class="pnote">Limite = part de T2B autorisée ramenée au moteur, plafonnée au courant max du couple moteur + ATV320 (Imax). Le % est pris sur Imax, comme UserCurrentLimit. TLIM est le même réglage exprimé en % du couple nominal : il dépasse 100 % dès que la limite est au-dessus de IN (un BMP admet environ 2,5 × IN en pointe). Pas de paramètre Machine Expert pour cet axe.</div></div></div>` : `<div class="pgroups">
+    <div class="pgroup"><div class="pg-h">ATV320 · réglages (Modbus)</div>${atvGen}<div class="pnote">${drvNote}. CLI = part de T2B autorisée ramenée au moteur, plafonnée au courant max moteur + ATV320 ; TLIM = la même limite en % du couple nominal.</div></div>
+    <div class="pgroup"><div class="pg-h">Plaque moteur (${R.async ? 'loi vectorielle' : 'loi SYN'})</div>${plaque}<div class="pnote">Fiche catalogue « ${esc(R.m.ref)} »${plaqueManque.length ? ' · <span class="el-warn">à compléter : ' + plaqueManque.join(', ') + '</span>' : ''}${PLQ.convI ? ' · ' + esc(PLQ.convI) : ''}</div></div></div>` : `<div class="pgroups">
     <div class="pcol"><div class="pgroup"><div class="pg-h">Mechanic</div>${mech}<div class="pnote">${R.gears ? `GearIn ${R.gears.gIn} · GearOut ${R.gears.gOut}${R.gears.exact ? '' : ' ⚠'}` : 'GearIn 1 · GearOut ' + fmt(R.i, 3)}${R.feed ? ' · FeedConstant ' + fmt(R.feed, 3) : ''}${R.gears ? `<br>${esc(gearsNote(R.gears))}` : ''}</div></div>
     <div class="pgroup"><div class="pg-h">Control loop</div>${gains}</div></div>
     <div class="pgroup"><div class="pg-h">General</div>${gen}<div class="pnote">UserDefinedStopMode : Start with actual values</div></div></div>`;
-  const P = R.atv ? [['Moteur', R.m.ref], ['Réducteur', R.r.ref + ' (i = ' + fmt(R.i, 3) + ')'], R.feed ? ['FeedConstant', fmt(R.feed, 3)] : null,
-    ['HSP', R.hsp != null ? fmt(R.hsp, 1) + ' Hz' + (R.async && R.nHsp != null ? ' (' + fmt(R.nHsp, 0) + ' tr/min moteur' + (R.vHsp != null ? ', ' + fmt(R.vHsp, 1) + ' ' + R.uV + (R.asyncConv ? ' = ' + fmt(R.vHsp * 0.06, 2) + ' m/min' : '') : '') + ')' : '') : '— (vitesse du cycle à saisir)'], ['LSP', R.lsp != null && (R.pp || R.async) ? fmt(R.lsp, 1) + ' Hz' + (R.async && R.nLsp != null ? ' (' + fmt(R.nLsp, 0) + ' tr/min moteur' + (R.vLsp != null ? ', ' + fmt(R.vLsp, 2) + ' ' + R.uV : '') + ')' : '') : '—'], R.ith != null ? ['ITH', fmt(R.ith, 2) + ' A (' + fmt(R.ithPct, 0) + ' % de IN)'] : null, R.fNom != null ? ['Fréquence nominale moteur (FRS)', fmt(R.fNom, 1) + ' Hz'] : null, ['J_Load', fmt(Math.round(R.JL / 10) * 10, 0) + ' kg·cm²'], ['J_Gear', fmt(R.Jg, 3) + ' kg·cm²'], ['Inertie vue par le moteur', fmt(R.Jtot, 2) + ' kg·cm²'], ['Rapport d’inertie', fmt(R.ratioTot, 1)],
-    R.Ilim != null ? ['Limite de courant (CLI)', fmt(R.Ilim, 2) + ' A' + (R.pct != null ? ' (' + fmt(R.pct, 1) + ' % de Imax)' : '')] : null, pctIn != null ? ['Limite de couple (TLIM)', fmt(pctIn, 0) + ' % de MN'] : null, R.i0 != null ? ['Courant nominal IN', fmt(R.i0, 2) + ' A'] : null, R.drv ? ['ATV320 ' + R.drv.ref, 'In ' + fmt(R.iDrvNom, 1) + ' A · Imax ' + fmt(R.iDrv, 1) + ' A'] : null, R.Iref ? ['Courant max moteur + ATV', fmt(R.Iref, 1) + ' A'] : null, nMot ? ['Vitesse moteur à Vmax', fmt(nMot, 0) + ' tr/min'] : null, R.Iacc != null ? ['Courant d’accélération', fmt(R.Iacc, 2) + ' A'] : null].filter(Boolean)
+  const P = R.atv ? [['Moteur', R.m.ref], ['Réducteur', R.r.ref + ' (i = ' + fmt(R.i, 3) + ')'], R.feed ? [R.asyncConv ? 'Rouleau' : 'FeedConstant', R.asyncConv ? fmt(R.dRoul, 1) + ' mm (π × D = ' + fmt(R.feed, 1) + ' mm/tr)' : fmt(R.feed, 3)] : null,
+    ['HSP', R.hsp != null ? fmt(R.hsp, 1) + ' Hz' + (R.async && R.nHsp != null ? ' (' + fmt(R.nHsp, 0) + ' tr/min moteur' + (R.vHsp != null ? ', ' + fmt(R.vHsp, 1) + ' ' + R.uV + (R.asyncConv ? ' = ' + fmt(R.vHsp * 0.06, 2) + ' m/min' : '') : '') + ')' : '') : '— (vitesse du cycle à saisir)'], ['LSP', R.lsp != null && (R.pp || R.async) ? fmt(R.lsp, 1) + ' Hz' + (R.async && R.nLsp != null ? ' (' + fmt(R.nLsp, 0) + ' tr/min moteur' + (R.vLsp != null ? ', ' + fmt(R.vLsp, 2) + ' ' + R.uV : '') + ')' : '') : '—'], R.ith != null ? ['ITH', fmt(R.ith, 2) + ' A (' + fmt(R.ithPct, 0) + ' % de IN)'] : null,
+    R.Ilim != null ? ['CLI', fmt(R.Ilim, 2) + ' A' + (R.pct != null ? ' (' + fmt(R.pct, 1) + ' % de Imax)' : '')] : null, pctIn != null ? ['TLIM', fmt(pctIn, 0) + ' % de MN'] : null,
+    ...(R.async ? [['NPR', PLQ.npr != null ? fmt(PLQ.npr, 3) + ' kW' : '?'], ['UNS', PLQ.uns + ' V'], ['NCR', PLQ.ncr != null ? fmt(PLQ.ncr, 2) + ' A' : '?'], ['FRS', fmt(PLQ.frs, 0) + ' Hz'], ['NSP', PLQ.nsp != null ? fmt(PLQ.nsp, 0) + ' tr/min' : '?'], ['COS', PLQ.cos != null ? fmt(PLQ.cos, 2) : '?']]
+      : [['NCRS', R.i0 != null ? fmt(R.i0, 2) + ' A' : '?'], ['NSPS', num(R.m.nNom) != null ? fmt(num(R.m.nNom), 0) + ' tr/min' : '?'], ['PPNS', R.pp ? fmt(R.pp, 0) : '?'], ['PHS', num(R.m.ke) != null ? fmt(num(R.m.ke), 1) + ' V/krpm' : '?']]),
+    R.drv ? ['ATV320 ' + R.drv.ref, 'In ' + fmt(R.iDrvNom, 1) + ' A · Imax ' + fmt(R.iDrv, 1) + ' A'] : null, R.t2b ? ['Couple réducteur à CLI', fmt(R.Tlim, 0) + ' Nm (' + fmt(R.Tlim / R.t2b * 100, 0) + ' % du T2B ' + fmt(R.t2b, 0) + ' Nm)'] : null].filter(Boolean)
     : [['GearIn', R.gears ? String(R.gears.gIn) : '1'], ['GearOut', R.gears ? String(R.gears.gOut) : fmt(R.i, 3)], R.feed ? ['FeedConstant', fmt(R.feed, 3)] : null, ['J_Load', fmt(Math.round(R.JL / 10) * 10, 0)], ['J_Gear', fmt(R.Jg, 3)],
     R.pct != null ? ['UserCurrentLimit', fmt(R.pct, 1) + ' %'] : null, R.driveStopMa != null ? ['DriveStopCurrentLimit', fmt(R.driveStopMa, 0) + ' mA'] : null,
     ['ControllerStopDec', R.dec ? fmt(R.dec, 0) : '— (vitesse du cycle à saisir)'], ['ControllerStopJerk', R.dec ? fmt(R.jerkStop, 0) : '—'], ['StopTimeLim', R.dec ? fmt(R.stl, 0) + ' ms' : '—'],
-    ['UserDefinedStopMode', 'Start with actual values'], ['Vel_P_Gain', vpShow + (vpR == null ? ' (proposé)' : '')], ['Vel_I_Gain', viShow + (viR == null ? ' (proposé)' : '')]].filter(Boolean);
+    ['UserDefinedStopMode', 'Start with actual values'], ['Vel_P_Gain', vpShow + (vpR == null ? ' (proposé)' : '')], ['Vel_I_Gain', viShow + (viR == null ? ' (proposé)' : '')],
+    R.vPhys ? ['Vitesse max de l’axe', fmt(R.vPhys, 0) + ' ' + R.uV + R.altTxt(R.vPhys) + ' (moteur ' + fmt(num(R.m.nMax), 0) + ' tr/min)' + (R.vNomAx ? ' · ' + fmt(R.vNomAx, 0) + ' ' + R.uV + R.altTxt(R.vNomAx) + ' à la vitesse nominale' : '')] : null].filter(Boolean);
 
-  // Jauge réducteur : % du T2B
-  let gear = ''; S.gstate = {};
-  if (R.t2b) {
-    const MAXP = 125, m = R.marge * 100;
-    const items = [{ g: 'lim', l: R.atv ? 'Limite ' + (R.pct != null ? fmt(R.pct, 1) + ' % (' + fmt(R.Ilim, 2) + ' A)' : fmt(R.Ilim, 2) + ' A') : 'UserCurrentLimit ' + fmt(R.pct, 1) + ' %', t: R.Tlim }];
-    if (R.Tucl != null) items.push({ g: 'ucl', l: 'Réglé : ' + fmt(R.ucl, 1) + ' %', t: R.Tucl });
-    if (R.vertical && R.Ihold) items.push({ g: 'hold', l: 'Maintien charge', t: R.Ihold * R.kt * R.i * R.eta });
-    if (R.IstopA && !R.atv) items.push({ g: 'stop', l: 'Arrêt d’urgence', t: R.IstopA * R.kt * R.i });
-    const bar = x => { const p = x.t / R.t2b * 100, c = p > 100.05 || (R.t2not && x.t > R.t2not) ? 'crit' : p > m + 0.05 ? 'warn' : 'ok'; S.gstate[x.g] = c;
-      return `<div class="gi" data-gk="${x.g}" tabindex="0"><span class="gl">${esc(x.l)}<span class="dep">${esc(GAUGES[x.g].dep)}</span></span><div class="track" role="img" aria-label="${fmt(p, 0)} % du T2B"><div class="fill ${c}" style="width:${Math.min(p, MAXP) / MAXP * 100}%"></div><div class="tick m" style="left:${m / MAXP * 100}%"></div><div class="tick" style="left:${100 / MAXP * 100}%"></div></div><span class="gv"><b>${fmt(x.t, 0)} Nm</b> · ${fmt(p, 0)} %</span></div>`; };
-    gear = `<div class="sect"><div class="sect-h"><h3>Couple en sortie du réducteur</h3><span>T2B ${fmt(R.t2b, 0)} Nm${R.t2n ? ' · T2N ' + fmt(R.t2n, 0) : ''}${R.t2not ? ' · T2Not ' + fmt(R.t2not, 0) : ''}</span></div>
-      <div class="gauge">${items.map(bar).join('')}<div class="gi"><span></span><div class="gscale"><span style="left:0;transform:none">0</span>${m < 92 ? `<span style="left:${m / MAXP * 100}%">${fmt(m, 0)} %</span>` : ''}<span style="left:${100 / MAXP * 100}%">T2B${m >= 92 && m < 99.5 ? ' (marge ' + fmt(m, 0) + ' %)' : ''}</span></div><span></span></div></div>
-      <div class="glegend"><span><i style="background:var(--ok)"></i>sous ${fmt(m, 0)} % du T2B</span><span><i style="background:var(--warn)"></i>entre ${fmt(m, 0)} % et le T2B</span><span><i style="background:var(--crit)"></i>au-delà du T2B</span><span>Chaque case du formulaire prend la couleur de la jauge qu’elle fait bouger (la pire si elle en fait bouger plusieurs). Survole une barre pour voir ses cases.</span></div></div>`;
-  }
-  // Tableau : couples du réducteur traduits en courant moteur
+  /* Voyants : couple réducteur (jauge % du T2B, colore aussi les cases du formulaire), rapport d'inertie, courant / HSP / LSP */
+  S.gstate = {};
+  const MAXP = 125, mg = R.marge * 100;
+  const stT = t => t == null || !R.t2b ? null : (t / R.t2b * 100 > 100.05 || (R.t2not && t > R.t2not)) ? 'crit' : t / R.t2b * 100 > mg + 0.05 ? 'warn' : 'ok';
+  const Thold = R.vertical && R.Ihold ? R.Ihold * R.kt * R.i * R.eta : null, Tstop = R.IstopA && !R.atv ? R.IstopA * R.kt * R.i : null;
+  if (R.t2b) { S.gstate.lim = stT(R.Tlim); if (R.Tucl != null) S.gstate.ucl = stT(R.Tucl); if (Thold != null) S.gstate.hold = stT(Thold); if (Tstop != null) S.gstate.stop = stT(Tstop); }
+  const pT = R.t2b && R.Tlim != null ? R.Tlim / R.t2b * 100 : null;
+  const keyt = (cls, k, v, u, sub, extra = '', inner = '') => `<div class="keyt st-${cls}${extra}"><span class="k">${k}</span><span class="v">${v}${u ? `<small>${u}</small>` : ''}</span>${inner}<span class="s">${sub}</span></div>`;
+  const track = R.t2b ? `<div class="track" role="img" aria-label="${fmt(pT, 0)} % du T2B"><div class="fill ${S.gstate.lim}" style="width:${Math.min(pT, MAXP) / MAXP * 100}%"></div><div class="tick m" style="left:${mg / MAXP * 100}%"></div><div class="tick" style="left:${100 / MAXP * 100}%"></div></div>` : '';
+  const autres = [Tstop != null && Math.abs(Tstop - R.Tlim) > R.Tlim * 0.01 ? `arrêt d’urgence ${fmt(Tstop, 0)} Nm (${fmt(Tstop / R.t2b * 100, 0)} %)` : null, Thold != null ? `maintien de la charge ${fmt(Thold, 0)} Nm (${fmt(Thold / R.t2b * 100, 0)} %)` : null].filter(Boolean);
+  const coupleCard = R.t2b
+    ? `<div class="keyt st-${S.gstate.lim} gk" data-gk="lim ucl hold stop" tabindex="0" title="Fait bouger : moteur, réducteur, part de T2B, masse (axe vertical)"><span class="k">Couple réducteur</span><span class="v">${fmt(pT, 0)}<small>% du T2B</small></span>${track}<span class="s"><b>${fmt(R.Tlim, 0)} Nm</b> à la limite de courant · T2B ${fmt(R.t2b, 0)} Nm${R.t2n ? ' · T2N ' + fmt(R.t2n, 0) : ''}${R.t2not ? ' · T2Not ' + fmt(R.t2not, 0) : ''} · marge ${fmt(mg, 0)} %${autres.length ? '<br>' + autres.join(' · ') : ''}</span></div>`
+    : keyt('none', 'Couple réducteur', '—', '', R.sansRed ? 'sans réducteur (entraînement direct)' : 'T2B à renseigner dans la fiche réducteur');
+  const inertCard = keyt(R.ratioTot == null ? 'none' : R.ratioTot > 30 ? 'crit' : R.ratioTot > 10 ? 'warn' : 'ok', 'Rapport d’inertie', R.ratioTot != null ? fmt(R.ratioTot, R.ratioTot < 10 ? 1 : 0) : '—', '', `charge ramenée ÷ (moteur + réducteur) · visé ≤ 10 · inertie vue par le moteur ${fmt(R.Jtot, 2)} kg·cm²`);
+  const courantSt = R.Iacc != null ? (R.Iref && R.Iacc > R.Iref ? 'crit' : R.i0 && R.Iacc > R.i0 ? 'warn' : 'ok') : R.pct != null ? 'acc' : 'none';
+  const courantCard = keyt(courantSt, 'Limite de courant', R.Ilim != null ? fmt(R.Ilim, 2) : '—', 'A', R.Ilim != null ? `UserCurrentLimit ${fmt(R.pct, 1)} % de Imax ${fmt(R.Iref, 1)} A${R.I_T2B && R.Ilim < R.I_T2B * R.marge - 1e-6 ? ' · bornée par le moteur' : ''}${R.Iacc != null ? ' · accélération ' + fmt(R.Iacc, 2) + ' A' + (R.i0 ? ' (IN ' + fmt(R.i0, 2) + ' A)' : '') : ''}` : 'Imax moteur à renseigner');
+  const hspCard = R.async
+    ? keyt(R.nHsp == null ? 'none' : num(R.m.nMax) && R.nHsp > num(R.m.nMax) ? 'crit' : (R.fNom != null && R.hsp > R.fNom + 0.05) ? 'warn' : 'ok', 'HSP', fmt(R.hsp, 1), 'Hz', R.nHsp != null ? `${fmt(R.nHsp, 0)} tr/min moteur · ${fmt(R.nOutHsp, 1)} tr/min ${R.asyncConv ? 'virole' : 'en sortie'}${R.vHsp != null ? ' · <b>' + fmt(R.vHsp, 1) + ' ' + R.uV + '</b>' + (R.asyncConv ? ' (' + fmt(R.vHsp * 0.06, 2) + ' m/min)' : '') : ''}${R.fNom != null && R.hsp > R.fNom + 0.05 ? ' · au-dessus de FRS ' + fmt(R.fNom, 0) + ' Hz' : ''}` : 'vitesse nominale du moteur à renseigner')
+    : keyt(nMot == null ? 'none' : num(R.m.nMax) && nMot > num(R.m.nMax) ? 'crit' : num(R.m.nNom) && nMot > num(R.m.nNom) ? 'warn' : 'ok', 'HSP', R.hsp != null ? fmt(R.hsp, 1) : '—', 'Hz', nMot ? `${fmt(nMot, 0)} tr/min à Vmax · nominale ${R.fNom != null ? fmt(R.fNom, 0) + ' Hz' : '—'} · max ${R.fMax != null ? fmt(R.fMax, 0) + ' Hz' : '—'}` : 'vitesse max du cycle à saisir' + (R.pp ? '' : ' · paires de pôles à renseigner'));
+  const lspCard = R.async
+    ? keyt(R.nLsp == null ? 'none' : R.lsp > R.hsp ? 'warn' : 'ok', 'LSP', fmt(R.lsp, 1), 'Hz', R.nLsp != null ? `${fmt(R.nLsp, 0)} tr/min moteur · ${fmt(R.nOutLsp, 2)} tr/min ${R.asyncConv ? 'virole' : 'en sortie'}${R.vLsp != null ? ' · <b>' + fmt(R.vLsp, 2) + ' ' + R.uV + '</b>' + (R.asyncConv ? ' (' + fmt(R.vLsp * 0.06, 2) + ' m/min)' : '') : ''}` : 'vitesse nominale du moteur à renseigner')
+    : keyt(R.lsp == null || !R.pp ? 'none' : R.hsp != null && R.lsp > R.hsp ? 'warn' : 'ok', 'LSP', R.lsp != null && R.pp ? fmt(R.lsp, 1) : '—', 'Hz', num(S.draft.vMin) ? `${fmt(R.nAtVmin, 0)} tr/min à ${fmt(num(S.draft.vMin), 0)} ${R.uV}` : 'pas de vitesse basse saisie : 0 Hz');
+  const speedSt = !R.vPhys ? 'none' : !R.vMax ? 'acc' : R.vMax > R.vPhys ? 'crit' : (R.vNomAx && R.vMax > R.vNomAx) ? 'warn' : 'ok';
+  const speedCard = keyt(speedSt, 'Vitesse max de l’axe', R.vPhys ? fmt(R.vPhys, 0) : '—', R.vPhys ? R.uV : '', R.vPhys
+    ? `${R.altOf(R.vPhys) ? '<b>' + fmt(R.altOf(R.vPhys).v, R.altOf(R.vPhys).d) + ' ' + R.altOf(R.vPhys).u + '</b> · ' : ''}moteur ${fmt(num(R.m.nMax), 0)} tr/min max ÷ i ${fmt(R.i, 2)} × FeedConstant ${fmt(R.feed, 3)}${R.vNomAx ? ` · <b>${fmt(R.vNomAx, 0)}</b>${R.altTxt(R.vNomAx)} à la vitesse nominale (${fmt(num(R.m.nNom), 0)} tr/min)` : ''}${R.vMax ? ` · cycle ${fmt(R.vMax, 0)}${R.altTxt(R.vMax)} = ${fmt(R.nAtVmaxAx, 0)} tr/min` : ''}${R.uU === 'Units' ? ' · unité de l’axe à préciser dans « Charge »' : ''}`
+    : !R.feed ? 'FeedConstant à saisir' : 'vitesse max du moteur à renseigner (fiche moteur)');
+  const keys = `<div class="keys ${R.atv ? 'k3' : 'k4'}">${R.atv ? hspCard + lspCard + coupleCard : coupleCard + inertCard + courantCard + speedCard}</div>`;
+  // Tableau : couples du réducteur traduits en courant moteur (dans le détail)
   let ref = '';
   if (R.TR && R.TR.some(x => x.ref)) {
     const rows = R.TR.filter(x => x.ref || x.hl).map(x => {
@@ -2520,41 +2707,24 @@ function renderResults() {
     ${!alerts.length ? `<li class="ok"><span class="tag">OK</span><span class="grow">Aucun problème détecté${acked.length ? ' · ' + acked.length + ' attention' + (acked.length > 1 ? 's' : '') + ' acquittée' + (acked.length > 1 ? 's' : '') : ''}.</span></li>` : ''}
     ${acked.map(c => `<li class="acked"><span class="tag">Acquitté</span><span class="grow">${esc(c[1])}<div class="ackmeta">le ${ackDate(c[2].date)}<input type="text" class="ackin" data-acknote="${esc(c[3])}" value="${esc(c[2].note || '')}" placeholder="motif (facultatif)" aria-label="Motif de l’acquittement"></div></span><button type="button" class="btn ghost ackbtn" data-unack="${esc(c[3])}" title="Remettre cette attention en orange">Annuler</button></li>`).join('')}</ul>`;
   const seg = (v, c) => R.Jtot > 0 ? `<div style="width:${Math.max(0, v / R.Jtot * 100)}%;background:var(${c})"></div>` : '';
-  const kv = [['Courant limite', fmt(R.Ilim) + ' A'], R.vertical ? ['Courant de maintien', fmt(R.Ihold) + ' A'] : null, ['Accélération max', fmt(R.accMax, 0) + ' Units/s²'],
-    ['Distance d’arrêt', R.dist ? fmt(R.dist, 1) + ' Units' : '—'], R.jerkMove ? ['Jerk du mouvement', fmt(R.jerkMove, 0) + ' Units/s³'] : null].filter(Boolean);
-  const st = S.gstate.lim || 'none', pT = R.t2b && R.Tlim != null ? R.Tlim / R.t2b * 100 : null;
-  const keyt = (cls, k, v, u, sub, extra = '') => `<div class="keyt st-${cls}${extra}"><span class="k">${k}</span><span class="v">${v}${u ? `<small>${u}</small>` : ''}</span><span class="s">${sub}</span></div>`;
-  const keys = `<div class="keys">
-    ${R.atv ? keyt(R.Ilim != null ? 'acc' : 'none', 'Limite de courant', R.pct != null ? fmt(R.pct, 1) : R.Ilim != null ? fmt(R.Ilim, 2) : '—', R.pct != null ? '%' : 'A', R.Ilim != null ? `CLI ${fmt(R.Ilim, 2)} A${R.Iref ? ' sur Imax ' + fmt(R.Iref, 1) + ' A (' + (R.refLim === 'atv' ? 'ATV320 ' + esc(R.drv.ref) : 'moteur' + (R.iDrv ? ', ATV ' + fmt(R.iDrv, 1) + ' A' : '')) + ')' : ''}${R.i0 ? ' · IN ' + fmt(R.i0, 2) + ' A' : ''}` : 'Imax moteur à renseigner')
-      + keyt(R.Iacc == null ? 'none' : R.Iref && R.Iacc > R.Iref ? 'crit' : R.i0 && R.Iacc > R.i0 ? 'warn' : 'ok', 'Courant d’accélération', R.Iacc != null ? fmt(R.Iacc, 2) : '—', 'A', R.Iacc != null ? `pour ${fmt(R.acc, 0)} ${R.uV}²${R.Iref ? ' · max ' + fmt(R.Iref, 1) + ' A' : ''}` : 'vitesse et accélération du cycle à saisir')
-      + (R.async
-        ? keyt(R.nHsp == null ? 'none' : num(R.m.nMax) && R.nHsp > num(R.m.nMax) ? 'crit' : (R.vMax && R.hzAtVmax != null && R.hzAtVmax > R.hsp + 0.05) || (R.fNom != null && R.hsp > R.fNom + 0.05) ? 'warn' : 'ok', 'HSP', fmt(R.hsp, 1), 'Hz', R.nHsp != null ? `${fmt(R.nHsp, 0)} tr/min moteur · ${fmt(R.nOutHsp, 1)} tr/min ${R.asyncConv ? 'virole' : 'en sortie'}${R.vHsp != null ? ' · ' + fmt(R.vHsp, 1) + ' ' + R.uV + (R.asyncConv ? ' (' + fmt(R.vHsp * 0.06, 2) + ' m/min)' : '') : ''}${R.fNom != null && R.hsp > R.fNom + 0.05 ? ' · au-dessus de FRS ' + fmt(R.fNom, 0) + ' Hz' : ''}${R.vMax && R.hzAtVmax != null && R.hzAtVmax > R.hsp + 0.05 ? ' · le cycle demande ' + fmt(R.hzAtVmax, 1) + ' Hz' : ''}` : 'vitesse nominale du moteur à renseigner')
-          + keyt(R.nLsp == null ? 'none' : R.lsp > R.hsp ? 'warn' : 'ok', 'LSP', fmt(R.lsp, 1), 'Hz', R.nLsp != null ? `${fmt(R.nLsp, 0)} tr/min moteur · ${fmt(R.nOutLsp, 2)} tr/min ${R.asyncConv ? 'virole' : 'en sortie'}${R.vLsp != null ? ' · ' + fmt(R.vLsp, 2) + ' ' + R.uV + (R.asyncConv ? ' (' + fmt(R.vLsp * 0.06, 2) + ' m/min)' : '') : ''}` : 'vitesse nominale du moteur à renseigner')
-        : keyt(nMot == null ? 'none' : num(R.m.nMax) && nMot > num(R.m.nMax) ? 'crit' : num(R.m.nNom) && nMot > num(R.m.nNom) ? 'warn' : 'ok', 'HSP', R.hsp != null ? fmt(R.hsp, 1) : '—', 'Hz', nMot ? `${fmt(nMot, 0)} tr/min à Vmax · nominale ${R.fNom != null ? fmt(R.fNom, 0) + ' Hz' : '—'} · max ${R.fMax != null ? fmt(R.fMax, 0) + ' Hz' : '—'}` : 'vitesse du cycle à saisir' + (R.pp ? '' : ' · paires de pôles à renseigner'))
-          + keyt(R.lsp == null || !R.pp ? 'none' : R.hsp != null && R.lsp > R.hsp ? 'warn' : 'ok', 'LSP', R.lsp != null && R.pp ? fmt(R.lsp, 1) : '—', 'Hz', num(S.draft.vMin) ? `${fmt(R.nAtVmin, 0)} tr/min à ${fmt(num(S.draft.vMin), 0)} Units/s` : 'pas de vitesse basse saisie : 0 Hz'))
-      + keyt(R.ith == null ? 'none' : R.ithPct > 100 ? 'warn' : 'ok', 'ITH', R.ith != null ? fmt(R.ith, 2) : '—', 'A', R.ith != null ? `${fmt(R.ithPct, 0)} % de IN (${fmt(R.i0, 2)} A)` : 'IN du moteur à renseigner')
-    : keyt(R.pct != null ? 'acc' : 'none', 'UserCurrentLimit', R.pct != null ? fmt(R.pct, 1) : '—', '%', R.Iref ? `${fmt(R.Ilim)} A sur Imax ${fmt(R.Iref, 1)} A` : 'Imax moteur à renseigner')
-    + keyt(vpR != null ? 'acc' : 'sugg', 'Vel_P_Gain', vpShow, '', vpSub)
-    + keyt(viR != null ? 'acc' : 'sugg', 'Vel_I_Gain', viShow, '', viSub)}
-    ${keyt(R.t2b ? st : 'none', 'Couple max réducteur', R.t2b ? fmt(R.t2b, 0) : '—', 'Nm', R.t2b ? `T2B · réglage : <b>${fmt(R.Tlim, 0)} Nm</b> (${fmt(pT, 0)} %)${R.t2not ? ` · T2Not ${fmt(R.t2not, 0)}` : ''}` : 'T2B à renseigner dans la fiche réducteur', ' g2')}
-    ${keyt(R.t2n ? 'ok' : 'none', 'Couple nominal réducteur', R.t2n ? fmt(R.t2n, 0) : '—', 'Nm', R.t2n ? `T2N · réglage : <b>${fmt(R.Tlim, 0)} Nm</b> (${fmt(R.Tlim / R.t2n * 100, 0)} %)${R.I_T2N ? ` · T2N = ${fmt(R.I_T2N, 1)} A moteur` : ''}` : 'T2N non renseigné dans la fiche réducteur', ' g2')}
-    ${keyt(R.ratioTot == null ? 'none' : R.ratioTot > 30 ? 'crit' : R.ratioTot > 10 ? 'warn' : 'ok', 'Rapport d’inertie', R.ratioTot != null ? fmt(R.ratioTot, R.ratioTot < 10 ? 1 : 0) : '—', '', 'charge ramenée ÷ (moteur + réducteur) · visé : 10 ou moins', ' g2')}
-    ${keyt('acc', 'Inertie vue par le moteur', fmt(R.Jtot, 2), 'kg·cm²', `moteur ${fmt(R.Jm, 2)} · réducteur ${fmt(R.Jg, 2)} · charge ramenée ${fmt(R.JLm, 2)}`, ' g2')}
-  </div>`;
-  box.innerHTML = `<div class="panel-h"><div class="ph-t"><h2>${R.atv ? 'Données de l’axe · ' + (R.async ? 'asynchrone' : 'synchrone') + ' sur ATV320' : 'À saisir dans le variateur'}</h2><div class="el-sub">${R.atv ? (R.async ? 'Moteur asynchrone piloté par un ATV320 (loi vectorielle)' : 'Moteur synchrone (BMP, tambour NGI MTS62 ou Interroll DM) piloté par un ATV320 en loi SYN') + ' : rien à saisir dans Machine Expert, le variateur se règle en Modbus. Ici : limite de courant, HSP / LSP / ITH, tenue du réducteur, inertie et vitesse ; la plaque (' + (R.async ? 'NPR, UNS, NCR, FRS, NSP, COS' : 'NCRS, NSPS, PPNS, PHS') + ') est dans l’onglet ATV320.' : 'Rangé comme dans Machine Expert, dossier du variateur ' + esc('DRV_' + (S.draft.nom || '')) + ' : Mechanic, Control loop, General. Les jauges disent ce que le réducteur encaisse.'}</div></div><button class="btn" id="copyP" title="Copie la liste des paramètres et leurs valeurs (texte), à coller dans un mail ou un rapport">Copier</button></div>
+  const kv = [['Courant limite', fmt(R.Ilim) + ' A'], R.vertical ? ['Courant de maintien', fmt(R.Ihold) + ' A'] : null, R.accMax != null ? ['Accélération max', fmt(R.accMax, 0) + ' ' + R.uV + '²'] : null,
+    ['Distance d’arrêt', R.dist ? fmt(R.dist, 1) + ' ' + R.uU : '—'], R.atv && R.feed ? [R.asyncConv ? 'Rouleau' : 'FeedConstant', R.asyncConv ? fmt(R.dRoul, 1) + ' mm · π × D = ' + fmt(R.feed, 1) + ' mm/tr' : fmt(R.feed, 3) + ' Units/tr'] : null, R.atv ? ['Rapport', fmt(R.i, 3) + (R.gears ? ' (' + R.gears.gOut + '/' + R.gears.gIn + ')' : '')] : null].filter(Boolean);
+  const speeds = R.async && spdRows ? `<div class="pgroup"><div class="pg-h">Vitesses à HSP / LSP</div>${spdRows}</div>` : '';
+  const inertD = R.atv && R.async ? '' : `<div><h3 style="margin-bottom:6px">Inertie vue par le moteur · ${fmt(R.Jtot, 2)} kg·cm²</h3>
+        <div class="ibar" role="img" aria-label="Répartition de l’inertie">${seg(R.Jm, '--seg-m')}${seg(R.Jg, '--seg-g')}${seg(R.JLm, '--seg-l')}</div>
+        <div class="ilegend"><span><i style="background:var(--seg-m)"></i>Moteur ${fmt(R.Jm, 2)}</span><span><i style="background:var(--seg-g)"></i>Réducteur ${fmt(R.Jg, 2)}</span><span><i style="background:var(--seg-l)"></i>Charge ramenée au moteur ${fmt(R.JLm, 2)}</span></div>
+        <div class="muted" style="font-size:12px;margin-top:6px">Répartition seulement, ce n’est pas une alerte. Rapport d’inertie charge / (moteur + réducteur) : <b style="color:var(--fg)">${fmt(R.ratioTot, 1)}</b>${R.ratioTot != null ? (R.ratioTot > 30 ? ' : très élevé.' : R.ratioTot > 10 ? ' : élevé, monter les gains par petites étapes.' : ' : correct.') : ''}</div></div>`;
+  const sub = R.atv ? (R.async ? 'Moteur asynchrone piloté par un ATV320 (loi vectorielle)' : 'Moteur synchrone (BMP, tambour NGI MTS62 ou Interroll DM) piloté par un ATV320 en loi SYN') + ' : rien à saisir dans Machine Expert, le variateur se règle en Modbus.' : 'Rangé comme dans Machine Expert, dossier du variateur ' + esc('DRV_' + (S.draft.nom || '')) + ' : Mechanic, Control loop, General.';
+  box.innerHTML = `<div class="panel-h"><div class="ph-t"><h2>${R.atv ? 'Réglages ATV320' : 'À saisir dans Machine Expert'}</h2><div class="el-sub">${sub}</div></div><button class="btn" id="copyP" title="Copie la liste des paramètres et leurs valeurs (texte), à coller dans un mail ou un rapport">Copier</button></div>
   <div class="panel-b">
     ${keys}
     ${groups}
-    ${gear}
-    ${ref}
     ${alertHtml}
     <details class="calcd"><summary>Détail des calculs</summary><div class="calcbody">
       <div class="kv">${kv.map(x => `<div>${esc(x[0])}<b>${esc(x[1])}</b></div>`).join('')}</div>
-      <div><h3 style="margin-bottom:6px">Inertie vue par le moteur · ${fmt(R.Jtot, 2)} kg·cm²</h3>
-        <div class="ibar" role="img" aria-label="Répartition de l’inertie">${seg(R.Jm, '--seg-m')}${seg(R.Jg, '--seg-g')}${seg(R.JLm, '--seg-l')}</div>
-        <div class="ilegend"><span><i style="background:var(--seg-m)"></i>Moteur ${fmt(R.Jm, 2)}</span><span><i style="background:var(--seg-g)"></i>Réducteur ${fmt(R.Jg, 2)}</span><span><i style="background:var(--seg-l)"></i>Charge ramenée au moteur ${fmt(R.JLm, 2)}</span></div>
-        <div class="muted" style="font-size:12px;margin-top:6px">Répartition seulement, ce n’est pas une alerte. Rapport d’inertie charge / (moteur + réducteur) : <b style="color:var(--fg)">${fmt(R.ratioTot, 1)}</b>${R.ratioTot != null ? (R.ratioTot > 30 ? ' : très élevé.' : R.ratioTot > 10 ? ' : élevé, monter les gains par petites étapes.' : ' : correct.') : ''}</div></div>
-      ${R.gainFactor ? `<div class="muted" style="font-size:12px">Vel_P_Gain transposé : ${fmt(num(S.draft.velPActuel), 2)} × ${fmt(R.gainFactor, 3)} = ${fmt(R.velPTransp, 1)} (inertie déclarée ${fmt(R.Jold, 2)} → ${fmt(R.Jtot, 2)} kg·cm²).</div>` : ''}
+      ${speeds}
+      ${inertD}
+      ${ref}
       <div class="calc">${R.calc.map(c => `<div>${esc(c[0])} = <b>${fmt(c[1], 4)}</b> ${esc(c[2])} <span class="c">· ${esc(c[3])}</span></div>`).join('')}</div>
       ${infos.length ? `<ul class="checks">${infos.map(c => `<li class="info"><span class="tag">À voir</span><span>${esc(c[1])}</span></li>`).join('')}</ul>` : ''}
     </div></details>
@@ -2584,7 +2754,7 @@ function glow(keys, on) {
   if (!keys) return;
   keys.split(' ').forEach(k => {
     document.querySelectorAll(`#axisForm .field[data-g~="${k}"]`).forEach(el => el.classList.toggle('glow', on));
-    document.querySelectorAll(`#results .gi[data-gk="${k}"]`).forEach(el => el.classList.toggle('glow', on));
+    document.querySelectorAll(`#results [data-gk~="${k}"]`).forEach(el => el.classList.toggle('glow', on));
   });
 }
 const RANK = { ok: 1, warn: 2, crit: 3 };
@@ -2600,7 +2770,7 @@ function colorFields() {
 }
 function linkGauges() {
   colorFields();
-  document.querySelectorAll('#results .gi[data-gk]').forEach(gi => {
+  document.querySelectorAll('#results [data-gk]').forEach(gi => {
     const k = gi.dataset.gk;
     gi.onmouseenter = gi.onfocus = () => glow(k, true);
     gi.onmouseleave = gi.onblur = () => glow(k, false);
@@ -2611,7 +2781,7 @@ function linkGauges() {
 }
 function glowField(f, on) {
   f.classList.toggle('glow', on);
-  f.dataset.g.split(' ').forEach(k => document.querySelectorAll(`#results .gi[data-gk="${k}"]`).forEach(el => el.classList.toggle('glow', on)));
+  f.dataset.g.split(' ').forEach(k => document.querySelectorAll(`#results [data-gk~="${k}"]`).forEach(el => el.classList.toggle('glow', on)));
 }
 /* ---------- Champ moteur / réducteur : taper la référence pour filtrer ---------- */
 const norm = t => String(t ?? '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
@@ -2619,14 +2789,46 @@ function comboItems(type, q) {
   const list = type === 'motor' ? S.motors : S.reducers;
   const toks = norm(q).split(/\s+/).filter(Boolean).map(qTok);
   if (!toks.length) return list;
-  return list.filter(x => {
-    const w = norm([x.ref, x.serie, x.marque].concat(sewAlias(x)).join(' ')).split(/[\s()·]+/).filter(Boolean);
+  /* rang : 0 = le mot tapé est au début de la référence ou de la série, 1 = trouvé ailleurs dans la fiche, 2 = trouvé seulement par un alias SEW (KHF19 → K19) */
+  const hits = [];
+  list.forEach((x, n) => {
+    const own = norm([x.ref, x.serie, x.marque].join(' ')).split(/[\s()·]+/).filter(Boolean), al = norm(sewAlias(x).join(' ')).split(/\s+/).filter(Boolean);
+    const w = own.concat(al);
     if (x.ratio != null) { const r = String(num(x.ratio)); w.push(r, r.replace('.', ','), 'i=' + r, 'i=' + r.replace('.', ',')); }
     w.slice().forEach(v => { if (/^0+\d/.test(v)) w.push(v.replace(/^0+/, '')); });
     const pairs = w.slice(0, -1).map((v, n) => v + w[n + 1]);
-    const flat = norm(x.ref).replace(/[\s\-_/.,()]/g, '');
-    return toks.every(t => t.startsWith('i=') ? (w.includes(t) || w.includes(t.replace(',', '.'))) : (w.some(v => v.startsWith(t)) || pairs.some(v => v.startsWith(t)) || (t.length >= 4 && flat.includes(t))));
+    const flat = norm(x.ref).replace(/[\s\-_/.,()]/g, ''), flatS = norm(x.serie).replace(/[\s\-_/.,()]/g, '');
+    const ok = toks.every(t => t.startsWith('i=') ? (w.includes(t) || w.includes(t.replace(',', '.'))) : (w.some(v => v.startsWith(t)) || pairs.some(v => v.startsWith(t)) || (t.length >= 4 && flat.includes(t))));
+    if (!ok) return;
+    const t0 = toks.find(t => !t.startsWith('i=') && !/^[\d.,]+$/.test(t)) || toks[0];
+    const rang = flat.startsWith(t0.replace(/[\s\-_/.,()]/g, '')) || flatS.startsWith(t0.replace(/[\s\-_/.,()]/g, '')) || own[0] === t0 ? 0 : own.some(v => v.startsWith(t0)) || flat.includes(t0) ? 1 : 2;
+    hits.push({ x, n, rang });
   });
+  /* on garde les séries groupées : chaque série prend le meilleur rang de ses fiches */
+  const rs = new Map(); hits.forEach(h => { const g = h.x.serie || 'Autres'; rs.set(g, Math.min(rs.get(g) ?? 9, h.rang)); });
+  return hits.sort((a, b) => rs.get(a.x.serie || 'Autres') - rs.get(b.x.serie || 'Autres') || a.n - b.n).map(h => h.x);
+}
+/* Désignation exacte tapée dans le combo réducteur (« KHF19 AQSH80/1 i=15,84 ») absente du catalogue : fiche de base SEW de même taille et même rapport
+   → proposition de créer la fiche à ce nom, données reprises de la base */
+function sewVariante(q) {
+  const t = String(q || '').trim(); if (!t) return null;
+  const d = sewDesig(t); if (!d) return null;
+  const mi = /(?:^|\s)i\s*=?\s*([\d]+(?:[.,]\d+)?)\s*$/i.exec(t) || (t.split(/\s+/).length > 1 && /(?:^|\s)([\d]+(?:[.,]\d+)?)\s*$/.exec(t));
+  const ratio = mi ? parseFloat(mi[1].replace(',', '.')) : null; if (!(ratio > 0)) return null;
+  const desig = d.desig, ref = desig + ' i=' + (Math.round(ratio * 100) / 100);
+  if (S.reducers.some(x => refKey(x.ref) === refKey(ref))) return null;
+  const base = S.reducers.filter(x => /^sew$/i.test(String(x.marque || '')) && (sewDesig(x.serie.replace(/^SEW\s+/i, '')) || {}).base === d.base && Math.abs(num(x.ratio) - ratio) <= Math.max(0.02, ratio * 0.006))
+    .sort((a, b) => (String(a.serie).toUpperCase() === 'SEW ' + d.base ? 0 : 1) - (String(b.serie).toUpperCase() === 'SEW ' + d.base ? 0 : 1) || Math.abs(num(a.ratio) - ratio) - Math.abs(num(b.ratio) - ratio))[0];
+  if (!base) return null;
+  return { ref, desig, ratio, base };
+}
+async function creerVariante(v) {
+  const b = v.base, id = newId('reducers');
+  const fiche = { ref: v.ref, marque: 'SEW', serie: 'SEW ' + v.desig, ratio: num(b.ratio), ...(b.t2n != null ? { t2n: b.t2n } : {}), ...(b.t2b != null ? { t2b: b.t2b } : {}), ...(b.t2not != null ? { t2not: b.t2not } : {}), ...(b.jGear != null ? { jGear: b.jGear } : {}), ...(b.rendement != null ? { rendement: b.rendement } : {}), ...(b.gearIn ? { gearIn: b.gearIn } : {}), ...(b.gearOut ? { gearOut: b.gearOut } : {}),
+    notes: 'Désignation exacte (plaque / dossier). Données reprises de la fiche « ' + b.ref + ' » : ' + String(b.notes || '').replace(/\s+/g, ' ').slice(0, 300) + (v.desig.includes(' ') ? ' — Avec adaptateur servo, le couple max peut être limité par l’adaptateur : T2B à confirmer dans le catalogue SEW.' : '') };
+  const G = gearsOf(b); if (G && G.exact && !fiche.gearIn) { fiche.gearIn = String(G.gIn); fiche.gearOut = String(G.gOut); }   // rapport exact (nombre de dents) hérité de la fiche de base
+  await writeDoc('reducers', id, fiche);
+  return id;
 }
 function comboSub(type, x) {
   return type === 'motor'
@@ -2642,17 +2844,21 @@ function bindCombos() {
     let items = [], act = -1;
     const draw = q => {
       items = comboItems(type, q);
-      if (!items.length) { lst.innerHTML = `<div class="cempty">Aucune référence ne correspond. Ajoute-la dans l’onglet ${type === 'motor' ? 'Moteurs' : 'Réducteurs'}.</div>`; act = -1; return; }
+      const vr = type === 'reducer' && q ? sewVariante(q) : null;
+      if (vr) items = items.concat([{ _variante: vr, id: '_new', ref: '+ Créer « ' + vr.ref + ' »', serie: 'Désignation exacte' }]);
+      if (!items.length) { lst.innerHTML = `<div class="cempty">Aucune référence ne correspond. Ajoute-la dans l’onglet ${type === 'motor' ? 'Moteurs' : 'Réducteurs'}${type === 'reducer' ? ', ou tape la désignation SEW complète avec son rapport (ex. KHF19 AQSH80/1 i=15,84) pour la créer d’après la fiche de base' : ''}.</div>`; act = -1; return; }
       const curId = S.draft[k]; act = Math.max(0, items.findIndex(x => x.id === curId)); if (q) act = 0;
       let h = '', last = null;
       items.forEach((x, n) => { const g = x.serie || 'Autres'; if (g !== last) { h += `<div class="cgrp">${esc(g)}</div>`; last = g; }
-        h += `<div class="copt${x.id === curId ? ' cur' : ''}" role="option" id="${inp.id}-o${n}" data-n="${n}" aria-selected="${n === act}"><b>${esc(x.ref)}</b><small>${esc(comboSub(type, x))}</small></div>`; });
+        h += `<div class="copt${x.id === curId ? ' cur' : ''}${x._variante ? ' cnew' : ''}" role="option" id="${inp.id}-o${n}" data-n="${n}" aria-selected="${n === act}"><b>${esc(x.ref)}</b><small>${x._variante ? esc('d’après ' + x._variante.base.ref + (x._variante.base.t2b != null ? ' · T2B ' + fmt(num(x._variante.base.t2b), 0) + ' Nm' : '') + ' · rapport exact et rendement repris') : esc(comboSub(type, x))}</small></div>`; });
       lst.innerHTML = h; mark();
     };
     const mark = () => { lst.querySelectorAll('.copt').forEach(o => o.setAttribute('aria-selected', String(+o.dataset.n === act))); const a = lst.querySelector(`[data-n="${act}"]`); if (a) { inp.setAttribute('aria-activedescendant', a.id); a.scrollIntoView({ block: 'nearest' }); } };
     const open = q => { draw(q); lst.hidden = false; inp.setAttribute('aria-expanded', 'true'); };
     const close = () => { lst.hidden = true; inp.setAttribute('aria-expanded', 'false'); inp.removeAttribute('aria-activedescendant'); };
-    const pick = x => { close(); if (!x) { inp.value = label(); return; } if (S.draft[k] !== x.id) { S.draft[k] = x.id; S.dirty = true; S.justSaved = false; renderAxes(); const n = document.getElementById(inp.id); if (n) { S.comboSkip = inp.id; n.focus(); } } else inp.value = label(); };
+    const pick = async x => { close(); if (!x) { inp.value = label(); return; }
+      if (x._variante) { try { const id = await creerVariante(x._variante); S.draft[k] = id; S.dirty = true; S.justSaved = false; setStatus('Fiche « ' + x._variante.ref + ' » créée dans Catalogue › Réducteurs (données de ' + x._variante.base.ref + ', à vérifier) et choisie pour cet axe.'); if (!S.db) onData(); else renderAxes(); } catch (e) { setStatus('Création impossible : ' + (e.message || e.code), true); } return; }
+      if (S.draft[k] !== x.id) { S.draft[k] = x.id; S.dirty = true; S.justSaved = false; renderAxes(); const n = document.getElementById(inp.id); if (n) { S.comboSkip = inp.id; n.focus(); } } else inp.value = label(); };
     inp.addEventListener('focus', () => { inp.select(); if (S.comboSkip === inp.id) { S.comboSkip = null; return; } open(''); });
     inp.addEventListener('click', () => { if (lst.hidden) open(''); });
     inp.addEventListener('input', () => open(inp.value));
@@ -2678,9 +2884,12 @@ function bindAxes() {
     if (S.dirty && !b.dataset.force) { b.dataset.force = '1'; setStatus('Modifications non enregistrées : clique à nouveau sur l’axe pour les abandonner.'); return; }
     setStatus(''); S.axisId = b.dataset.axis; S.dirty = false; S.justSaved = false; S.draft = { ...pAxes().find(a => a.id === S.axisId) }; render();
   });
-  const newAxis = () => { S.draft = axesVue() === 'atv' ? { _new: true, nom: '', gamme: 'BMP', typeCharge: 'convoyeur', marge: 80, tStop: 0.2 } : { _new: true, nom: '', typeCharge: 'lineaire', marge: 80, tStop: 0.2 }; S.dirty = true; S.justSaved = false; render(); setTimeout(() => { const i = $('#ax-nom'); if (i) i.focus(); }, 0); };
-  const nb = $('#newAxis'); if (nb) nb.onclick = newAxis;
-  const ea = $('#emptyAxis'); if (ea) ea.onclick = newAxis;
+  const newAxis = atv => () => { if (S.dirty && !(S.draft && S.draft._new)) { setStatus('Modifications non enregistrées : enregistre ou annule l’axe en cours avant d’en créer un autre.', true); return; }
+    S.draft = atv ? { _new: true, nom: '', gamme: 'BMP', typeCharge: 'convoyeur', marge: 80, tStop: 0.2 } : { _new: true, nom: '', gamme: 'LXM62', ioCard: true, typeCharge: 'lineaire', marge: 80, tStop: 0.2 }; S.dirty = true; S.justSaved = false; render(); setTimeout(() => { const i = $('#ax-nom'); if (i) i.focus(); }, 0); };
+  const nb = $('#newAxis'); if (nb) nb.onclick = newAxis(false);
+  const na = $('#newAtv'); if (na) na.onclick = newAxis(true);
+  const ea = $('#emptyAxis'); if (ea) ea.onclick = newAxis(false);
+  const eb = $('#emptyAtv'); if (eb) eb.onclick = newAxis(true);
   const ee = $('#emptyElec'); if (ee) ee.onclick = () => { const f = $('#elecFile'); if (f) f.click(); };
   const ep = $('#emptyProj'); if (ep) ep.onclick = () => { const b = $('#projNew'); if (b) b.click(); };
   const eh = $('#emptyHelp'); if (eh) eh.onclick = () => toggleHelp(true);
@@ -2691,11 +2900,13 @@ function bindAxes() {
   form.addEventListener('mouseover', e => { const f = e.target.closest('.field[data-g]'); if (f && !f.contains(e.relatedTarget)) glowField(f, true); });
   form.addEventListener('mouseout', e => { const f = e.target.closest('.field[data-g]'); if (f && !f.contains(e.relatedTarget) && !f.contains(document.activeElement)) glowField(f, false); });
   form.addEventListener('input', e => { const el = e.target; if (!el.dataset.k) return; S.draft[el.dataset.k] = readInput(el); S.dirty = true; S.justSaved = false; updateDirty(); if (el.dataset.k === 'dRouleau') feedPh(); renderResults(); });
-  form.addEventListener('change', e => { const el = e.target; if (!el.dataset.k) return; S.draft[el.dataset.k] = readInput(el); S.dirty = true; if (el.dataset.k === 'typeCharge' || el.dataset.k === 'reducteurId') { renderAxes(); const n = document.getElementById(el.id); if (n) n.focus(); } else { updateDirty(); renderResults(); } });
+  form.addEventListener('change', e => { const el = e.target; if (!el.dataset.k) return; S.draft[el.dataset.k] = readInput(el); S.dirty = true; if (el.dataset.k === 'typeCharge' || el.dataset.k === 'reducteurId' || el.dataset.k === 'unite') { renderAxes(); const n = document.getElementById(el.id); if (n) n.focus(); } else { updateDirty(); renderResults(); } });
   const st = $('#saveAxisTop'); if (st) st.onclick = () => $('#saveAxis').click();
   $('#saveAxis').onclick = async () => {
     const d = { ...S.draft, projetId: S.projId }; const isNew = d._new; delete d._new;
     if (!d.nom) { setStatus('Donne un nom à l’axe avant d’enregistrer.', true); return; }
+    if (isNew && pAxes().some(a => nrmE(a.nom) === nrmE(d.nom))) { setStatus('« ' + d.nom + ' » existe déjà dans ce projet.', true); return; }
+    if (isNew && d.gamme !== 'BMP' && d.ordre == null) d.ordre = Math.max(0, ...pAxes().map(a => num(a.ordre) || 0)) + 1;   // place sur l'anneau Sercos
     const id = isNew ? newId('axes') : d.id; delete d.id;
     try { S.axisId = id; S.dirty = false; S.justSaved = true; S.draft = { id, ...d }; await writeDoc('axes', id, d); setStatus(''); updateDirty(); render(); }
     catch (e) { S.dirty = true; setStatus('Enregistrement impossible : ' + (e.message || e.code), true); }
@@ -2709,7 +2920,7 @@ function bindAxes() {
   };
 }
 
-/* key = collection ; typ (moteurs seulement) = 'sync' (onglet Brushless) ou 'async' (onglet Asynchrones) : même collection, deux listes */
+/* key = collection ; typ (moteurs seulement) = 'sync' (Catalogue › Brushless) ou 'async' (Catalogue › Asynchrones) : même collection, deux listes */
 function renderLib(key, typ) {
   const v = $('#view'); if (!allLoaded()) { v.innerHTML = ''; return; }
   const isM = key === 'motors', isH = key === 'hwtypes', isD = key === 'drives', FIELDS = isM ? MOTOR_FIELDS : isH ? HWTYPE_FIELDS : isD ? DRIVE_FIELDS : REDUCER_FIELDS;
@@ -2731,13 +2942,24 @@ function renderLib(key, typ) {
   const used = id => isH ? (t => S.projects.filter(p => (p.materiel || []).some(m => m.type === t)).map(p => p.nom))((S[key].find(x => x.id === id) || {}).ref) : isD ? S.axes.filter(a => a.variateur && driveOf(a.variateur)?.id === id).map(a => (projName(a.projetId) ? projName(a.projetId) + ' › ' : '') + a.nom) : S.axes.filter(a => (isM ? a.moteurId : a.reducteurId) === id).map(a => (projName(a.projetId) ? projName(a.projetId) + ' › ' : '') + a.nom);
   let ed = S.lib[key];
   if (isM && ed && ed.id && ((ed.typeMot === 'async') !== isA)) ed = null;   // fiche de l'autre onglet : pas ici
-  let body = '', last = null;
-  list.forEach(x => {
-    const g = x.serie || 'Autres';
-    if (g !== last) { body += `<tr class="grp"><td colspan="${cols.length + 2}">${esc(g)}</td></tr>`; last = g; }
-    body += `<tr class="row ${ed && ed.id === x.id ? 'sel' : ''}" data-edit="${esc(x.id)}"><td><button class="linkbtn" data-edit="${esc(x.id)}">${esc(x.ref)}</button></td>${cols.map(c => `<td class="n">${c[1](x)}</td>`).join('')}<td class="used">${esc(used(x.id).join(', '))}</td></tr>`;
-  });
-  const table = list.length ? `<div class="tblwrap"><table><thead><tr><th>Référence</th>${cols.map(c => `<th class="n">${c[0]}${c[2] ? ` <span style="text-transform:none;letter-spacing:0">${c[2]}</span>` : ''}</th>`).join('')}<th>Utilisé par</th></tr></thead><tbody>${body}</tbody></table></div>`
+  /* Séries repliées par défaut (le catalogue des réducteurs fait des milliers de lignes) : une recherche ou un filtre déplie tout,
+     un clic sur la série la déplie, la série de la fiche ouverte et celles utilisées par le projet en cours sont dépliées */
+  S.libOpen = S.libOpen || {}; const open = S.libOpen[sk] || (S.libOpen[sk] = new Set());
+  const filtering = !!(words.length || ser || mq), projIds = new Set(S.axes.filter(a => a.projetId === S.projId).map(a => isM ? a.moteurId : a.reducteurId));
+  const twoLvl = !isM && !isH && !isD;   // réducteurs : marque › série
+  const openG = (k, L) => filtering || open.has(k) || (ed && ed.id && L.some(x => x.id === ed.id)) || L.some(x => projIds.has(x.id));
+  const rowH = x => `<tr class="row ${ed && ed.id === x.id ? 'sel' : ''}" data-edit="${esc(x.id)}"><td><button class="linkbtn" data-edit="${esc(x.id)}">${esc(x.ref)}</button></td>${cols.map(c => `<td class="n">${c[1](x)}</td>`).join('')}<td class="used">${esc(used(x.id).join(', '))}</td></tr>`;
+  const grpH = (k, label, n, lvl, isOpen) => `<tr class="grp l${lvl}" data-grp="${esc(k)}" title="${isOpen ? 'Replier' : 'Déplier'}"><td colspan="${cols.length + 2}"><span class="caret">${isOpen ? '▾' : '▸'}</span>${esc(label)}<span class="gcount">${n}</span></td></tr>`;
+  const bySerie = L => { const g = new Map(); L.forEach(x => { const k = x.serie || 'Autres'; if (!g.has(k)) g.set(k, []); g.get(k).push(x); }); return [...g]; };
+  let body = '';
+  if (twoLvl) {
+    const byB = new Map(); list.forEach(x => { const k = x.marque || 'Autres'; if (!byB.has(k)) byB.set(k, []); byB.get(k).push(x); });
+    [...byB].sort((a, b) => a[0].localeCompare(b[0], 'fr')).forEach(([bk, L]) => {
+      const ob = openG('m:' + bk, L); body += grpH('m:' + bk, bk, L.length, 1, ob); if (!ob) return;
+      bySerie(L).forEach(([gk, G]) => { const og = openG('s:' + gk, G); body += grpH('s:' + gk, gk, G.length, 2, og); if (og) body += G.map(rowH).join(''); });
+    });
+  } else bySerie(list).forEach(([gk, G]) => { const og = openG('s:' + gk, G); body += grpH('s:' + gk, gk, G.length, 1, og); if (og) body += G.map(rowH).join(''); });
+  const table = list.length ? `<div class="tblwrap"><table class="lib"><thead><tr><th>Référence</th>${cols.map(c => `<th class="n">${c[0]}${c[2] ? ` <span style="text-transform:none;letter-spacing:0">${c[2]}</span>` : ''}</th>`).join('')}<th>Utilisé par</th></tr></thead><tbody>${body}</tbody></table></div>`
     : `<div class="empty"><b>Aucun résultat</b><span>${q || ser ? 'Rien ne correspond à ce filtre.' : 'Clique sur « + Ajouter » pour créer le premier ' + noun + '.'}</span></div>`;
   const form = ed ? `<section class="panel edit sticky"><div class="panel-h"><h2>${ed.id ? esc(ed.ref || '') : 'Nouveau ' + noun}</h2><button class="btn ghost" id="libCancel">Fermer</button></div>
     <div class="panel-b" id="libForm"><fieldset>${FIELDS.filter(f => !f.only || f.only === (ed.typeMot || 'sync')).map(f => inputHtml(isM && ed.typeMot === 'async' && (f.la || f.ha) ? { ...f, l: f.la || f.l, h: f.ha || f.h } : f, f.k === 'integre' ? isIntegre(ed) : ed[f.k], 'lib-')).join('')}</fieldset>
@@ -2746,13 +2968,14 @@ function renderLib(key, typ) {
       ${isM || isH || isD ? '' : `<select id="libMarque" aria-label="Marque"><option value="">Toutes les marques</option>${brands.map(g => `<option ${g === mq ? 'selected' : ''}>${esc(g)}</option>`).join('')}</select>`}
       <select id="libSerie" aria-label="Série"><option value="">${isH ? 'Toutes les familles' : 'Toutes les séries'} (${inBrand.length})</option>${series.map(g => `<option ${g === ser ? 'selected' : ''}>${esc(g)}</option>`).join('')}</select>
       ${isH ? '<label class="btn" for="meJson" style="cursor:pointer" title="Fichier explo_materiel.json du script explorer_materiel.py">Importer depuis Machine Expert</label><input type="file" id="meJson" accept=".json,application/json" hidden>' : ''}<button class="btn primary" id="libNew">+ Ajouter</button>
-      <div class="libnote">${isD ? 'Fiches variateurs : courant nominal In et courant max Imax, communes à tous les projets. Une référence du dossier (ATV320U06N4C, LXM62DU60C21000) est rattachée à la fiche dont la référence est le début de la sienne. Pour un axe BMP, l’Imax de l’ATV320 borne la limite de courant ; pour un Lexium 62, c’est le moteur qui fait référence (MaxDrivePeakCurrent à vérifier). « Utilisé par » = axes dont le variateur est rattaché à cette fiche.' : isH ? 'Chaque type dit au script comment créer l’appareil dans Machine Expert : DeviceID (type, identifiant, version), module et parent dans l’arbre. « Nom dans l’automate » = modèle du nom donné à l’appareil dans Machine Expert ({dossier} = nom du dossier élec, {n} = n° d’ordre, {ilot} = n° d’îlot TM5). Les fiches intégrées viennent du dictionnaire de l’Auto_Pannel ; « Importer depuis Machine Expert » lit les DeviceID d’un projet existant avec explorer_materiel.py. « Utilisé par » = projets où ce type apparaît.' : isA ? 'Moteurs asynchrones (fichier catalogue/moteurs_asynchrones.js), communs à tous les projets : la plaque (puissance, tension, IN, fréquence, vitesse, cos φ) donne les paramètres NPR, UNS, NCR, FRS, NSP, COS et ITH de l’ATV320, affichés dans l’onglet ATV320 du projet. Mets la puissance dans la référence (« LSES 90 LU 1,5 kW ») quand le type seul ne suffit pas, pour qu’une référence du dossier commençant pareil soit rattachée à la bonne fiche. L’import du dossier élec ne crée les fiches absentes qu’avec la référence et le fabricant : les données constructeur se saisissent depuis le catalogue ou la plaque, jamais depuis le dossier (qui peut se tromper ; l’écart est signalé dans l’onglet ATV320). Catalogue livré : SEW DRN (IE3, 2 / 4 / 6 / 8 pôles), Leroy-Somer LSES (IE3), Interroll DM 0080. Clique sur une référence pour la voir ; le bouton ? dit où trouver chaque valeur.' : isM ? 'Moteurs synchrones (fichier catalogue/moteurs_brushless.js), communs à tous les projets : Kt, inertie et courants servent aux calculs des axes (Lexium 62) ; pour un synchrone sur ATV320 (BMP, tambour NGI MTS62 ou Interroll DM) s’ajoutent les paires de pôles et la constante ke (PHS). Le catalogue livré (Schneider SH3 / ILM / BMP, NGI, Interroll) se complète ou se corrige, une fiche modifiée est gardée à la mise à jour du catalogue. Clique sur une référence pour la voir ; le bouton ? dit où trouver chaque valeur.' : 'Fiches réducteurs communes à tous les projets : rapport, couples T2B / T2N / T2Not et J_Gear servent aux calculs. Pour SEW, GearIn / GearOut exacts viennent du tableau des dents. Clique sur une référence pour la voir ; le bouton ? dit où trouver chaque valeur.'}</div></div></div>
+      <div class="libnote">${isD ? 'Fiches variateurs : courant nominal In et courant max Imax, communes à tous les projets. Une référence du dossier (ATV320U06N4C, LXM62DU60C21000) est rattachée à la fiche dont la référence est le début de la sienne. Pour un axe BMP, l’Imax de l’ATV320 borne la limite de courant ; pour un Lexium 62, c’est le moteur qui fait référence (MaxDrivePeakCurrent à vérifier). « Utilisé par » = axes dont le variateur est rattaché à cette fiche.' : isH ? 'Chaque type dit au script comment créer l’appareil dans Machine Expert : DeviceID (type, identifiant, version), module et parent dans l’arbre. « Nom dans l’automate » = modèle du nom donné à l’appareil dans Machine Expert ({dossier} = nom du dossier élec, {n} = n° d’ordre, {ilot} = n° d’îlot TM5). Les fiches intégrées viennent du dictionnaire de l’Auto_Pannel ; « Importer depuis Machine Expert » lit les DeviceID d’un projet existant avec explorer_materiel.py. « Utilisé par » = projets où ce type apparaît.' : isA ? 'Moteurs asynchrones (fichier catalogue/moteurs_asynchrones.js), communs à tous les projets : la plaque (puissance, tension, IN, fréquence, vitesse, cos φ) donne les paramètres NPR, UNS, NCR, FRS, NSP, COS et ITH de l’ATV320, affichés dans l’onglet Axes et dans Machine Expert › ATV320. Mets la puissance dans la référence (« LSES 90 LU 1,5 kW ») quand le type seul ne suffit pas, pour qu’une référence du dossier commençant pareil soit rattachée à la bonne fiche. L’import du dossier élec ne crée les fiches absentes qu’avec la référence et le fabricant : les données constructeur se saisissent depuis le catalogue ou la plaque, jamais depuis le dossier (qui peut se tromper ; l’écart est signalé dans Machine Expert › ATV320). Catalogue livré : SEW DRN (IE3, 2 / 4 / 6 / 8 pôles), Leroy-Somer LSES (IE3), Interroll DM 0080. Clique sur une référence pour la voir ; le bouton ? dit où trouver chaque valeur.' : isM ? 'Moteurs synchrones (fichier catalogue/moteurs_brushless.js), communs à tous les projets : Kt, inertie et courants servent aux calculs des axes (Lexium 62) ; pour un synchrone sur ATV320 (BMP, tambour NGI MTS62 ou Interroll DM) s’ajoutent les paires de pôles et la constante ke (PHS). Le catalogue livré (Schneider SH3 / ILM / BMP, NGI, Interroll) se complète ou se corrige, une fiche modifiée est gardée à la mise à jour du catalogue. Clique sur une référence pour la voir ; le bouton ? dit où trouver chaque valeur.' : 'Fiches réducteurs communes à tous les projets : rapport, couples T2B / T2N / T2Not et J_Gear servent aux calculs. Pour SEW, GearIn / GearOut exacts viennent du tableau des dents. Clique sur une référence pour la voir ; le bouton ? dit où trouver chaque valeur.'}</div></div></div>
     ${isH ? meImpPanel() : ''}<div class="libgrid ${ed ? 'editing' : ''}" style="margin-top:14px"><section class="panel">${table}</section>${form}</div>`;
   const ls = $('#libSearch'); ls.oninput = () => { S.search[sk] = ls.value; const pos = ls.selectionStart; render(); const n = $('#libSearch'); n.focus(); try { n.setSelectionRange(pos, pos); } catch (e) {} };
   $('#libSerie').onchange = e => { S.serie[sk] = e.target.value; render(); };
   const lm = $('#libMarque'); if (lm) lm.onchange = e => { S.marque[sk] = e.target.value; S.serie[sk] = ''; render(); };
   $('#libNew').onclick = () => { S.lib[key] = isM ? { typeMot: typ2 } : {}; S.confirm = null; render(); };
   v.querySelectorAll('tr[data-edit]').forEach(b => b.onclick = () => { S.lib[key] = { ...S[key].find(x => x.id === b.dataset.edit) }; S.confirm = null; render(); });
+  v.querySelectorAll('tr[data-grp]').forEach(tr => tr.onclick = () => { const k = tr.dataset.grp; if (open.has(k)) open.delete(k); else open.add(k); const y = window.scrollY; render(); window.scrollTo({ top: y }); });
   if (isH) bindMeImp();
   if (!ed) return;
   const lf = $('#libForm');
@@ -2781,7 +3004,7 @@ function renderLib(key, typ) {
 
 /* Barre d'onglets : le groupe de l'onglet actif est déplié, l'autre est un menu déroulant */
 const TAB_GROUPS = [
-  { k: 'projet', l: 'Projet', tabs: [['axes', 'Brushless', 'Axes brushless (Lexium 62 / ILM62) : moteur, réducteur, charge → valeurs à saisir dans le variateur'], ['axesatv', 'Asynchrones', 'Axes sur ATV320 (asynchrones, BMP, tambours) : moteur, réducteur, charge → HSP / LSP / ITH / limite de courant'], ['brushless', 'Lexium 62', 'Variateurs Lexium 62 : ordre Sercos, LXM62 / ILM62, codeur, carte IO'], ['atv', 'ATV320', 'Variateurs ATV320 sur CANopen : Node-ID, Optional device, paramètres'], ['es', 'E/S', 'Entrées / sorties du projet : désignations du dossier et noms des variables automate']] },
+  { k: 'projet', l: 'Projet', tabs: [['axes', 'Axes', 'Tous les axes du projet (Lexium 62 et ATV320) : moteur, réducteur, charge → ce qu’il faut régler'], ['me', 'Machine Expert', 'Ce que le script crée et règle dans Machine Expert : ordre Sercos des Lexium 62, ATV320 (Node-ID, plaques moteurs), matériel du projet'], ['es', 'E/S', 'Entrées / sorties du projet : désignations du dossier et noms des variables automate'], ['bilan', 'Bilan & script', 'Tous les axes sur une page, génération du script Machine Expert et export Excel']] },
   { k: 'catalogue', l: 'Catalogue', tabs: [['motors', 'Brushless', 'Moteurs synchrones (SH3 / ILM, BMP, tambours synchrones) : Kt, inertie, courants'], ['asyncs', 'Asynchrones', 'Moteurs asynchrones (sur ATV320 ou direct réseau) : plaque (puissance, IN, vitesse, cos φ)'], ['reducers', 'Réducteurs', 'Fiches réducteurs (rapport, T2B, J_Gear), communes à tous les projets'], ['hwtypes', 'Matériel', 'Types d’appareils que le script sait créer dans Machine Expert (DeviceID)'], ['drives', 'Variateurs', 'Fiches variateurs : In et Imax des ATV320 et des Lexium 62'], ['iodict', 'Dictionnaire E/S', 'Mots du dossier → noms des variables automate (vérin → V, monter → raisingUp…)']] }
 ];
 /* Ligne 1 : Projet | Catalogue. Ligne 2 : les onglets de la section active. */
@@ -2794,7 +3017,9 @@ function renderNav() {
   sub.innerHTML = g.tabs.map(([k, l, t]) => `<button class="tab" role="tab" id="tab-${k}" data-tab="${k}" aria-selected="${k === S.tab}" title="${esc(t)}">${esc(l)}</button>`).join('');
   $('#helpBtn').onclick = () => toggleHelp();
 }
-const goTab = t => { S.tab = t; S.confirm = null; try { localStorage.setItem('servo-tab', S.tab); } catch (e) {} render(); };
+/* Anciens noms d'onglets (version ≤ 118, liens et tests) : Brushless / Asynchrones → Axes, Lexium 62 / ATV320 → Machine Expert */
+const TAB_ALIAS = { axesatv: 'axes', brushless: 'me', atv: 'me' };
+const goTab = t => { S.tab = TAB_ALIAS[t] || t; S.confirm = null; try { localStorage.setItem('servo-tab', S.tab); } catch (e) {} render(); };
 $('#tabs').addEventListener('click', e => {
   const b = e.target.closest('[data-sec]'); if (!b) return;
   const g = TAB_GROUPS.find(x => x.k === b.dataset.sec); if (!g || g.tabs.some(t => t[0] === S.tab)) return;
@@ -2803,7 +3028,7 @@ $('#tabs').addEventListener('click', e => {
 });
 $('#subtabs').addEventListener('click', e => { const b = e.target.closest('.tab[data-tab]'); if (b) goTab(b.dataset.tab); });
 document.addEventListener('keydown', e => {
-  if ((e.ctrlKey || e.metaKey) && !e.altKey && String(e.key).toLowerCase() === 's') { const b = $('#saveAxis'); if (b && (S.tab === 'axes' || S.tab === 'axesatv') && S.draft) { e.preventDefault(); const ae = document.activeElement; if (ae && ae.blur) ae.blur(); if (S.dirty) b.click(); } }
+  if ((e.ctrlKey || e.metaKey) && !e.altKey && String(e.key).toLowerCase() === 's') { const b = $('#saveAxis'); if (b && S.tab === 'axes' && S.draft) { e.preventDefault(); const ae = document.activeElement; if (ae && ae.blur) ae.blur(); if (S.dirty) b.click(); } }
 });
 function toggleHelp(on) {
   const h = $('#helpbox'), b = $('#helpBtn'); if (!h) return;
@@ -2812,7 +3037,7 @@ function toggleHelp(on) {
   if (!h.hidden) h.scrollIntoView({ block: 'nearest' });
 }
 $('#helpClose').onclick = () => toggleHelp(false);
-try { const t = localStorage.getItem('servo-tab'); if (t && ['axes', 'axesatv', 'brushless', 'atv', 'es', 'motors', 'asyncs', 'reducers', 'hwtypes', 'drives', 'iodict'].includes(t)) S.tab = t; } catch (e) {}
+try { const t0 = localStorage.getItem('servo-tab'), t = TAB_ALIAS[t0] || t0; if (t && ['axes', 'me', 'es', 'bilan', 'motors', 'asyncs', 'reducers', 'hwtypes', 'drives', 'iodict'].includes(t)) S.tab = t; } catch (e) {}
 renderNav();
 try { if (localStorage.getItem('servo-help') === '1') toggleHelp(true); } catch (e) {}
 

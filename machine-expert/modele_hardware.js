@@ -109,6 +109,39 @@ def hw_struct_txt(elems):
 OPT_FLAGS = [u"FLAG_DCF_Write", u"FLAG_CreateAllSDOs", u"FLAG_Optional", u"FLAG_NotInitialize", u"FLAG_ResetNode"]
 OPT_INDEX = 2
 
+def hw_versions_connues(typ, ident, tous_devs):
+    """Versions d'un type d'appareil (type + identifiant) connues : dans le projet ouvert, puis dans le depot d'appareils de Machine Expert"""
+    vus = []
+    for d in tous_devs:
+        i = safe(lambda: d.get_device_identification())
+        if i is not None and unicode(safe(lambda: i.type, u"")) == unicode(typ) and unicode(safe(lambda: i.id, u"")).strip().lower() == unicode(ident).strip().lower():
+            v = unicode(safe(lambda: i.version, u""))
+            if v and v not in vus:
+                vus.append(v)
+    try:
+        for dd in device_repository.get_all_devices():
+            i = safe(lambda: dd.device_id, None)
+            if i is None:
+                continue
+            if unicode(safe(lambda: i.type, u"")) == unicode(typ) and unicode(safe(lambda: i.id, u"")).strip().lower() == unicode(ident).strip().lower():
+                v = unicode(safe(lambda: i.version, u""))
+                if v and v not in vus:
+                    vus.append(v)
+    except Exception:
+        pass
+    return vus
+
+def hw_sous_elements(p):
+    """Sous-elements d'un parametre structure ou bitfield (ScriptCompoundDataElement) : plusieurs acces essayes"""
+    for f in (lambda: list(p), lambda: list(p.sub_elements), lambda: list(p.elements), lambda: list(p.get_sub_elements()), lambda: [p[k] for k in range(len(p))]):
+        try:
+            l = f()
+            if l:
+                return l
+        except Exception:
+            pass
+    return []
+
 def hw_optionnel(dev, oui, nom=u""):
     """Case « Optional device » de l'esclave CANopen : 3e drapeau du parametre General Options."""
     ps = parametres(dev)
@@ -134,8 +167,32 @@ def hw_optionnel(dev, oui, nom=u""):
     voulu = u"TRUE" if oui else u"FALSE"
     if elems[OPT_INDEX].strip().upper() == voulu:
         return "inchange"
-    elems[OPT_INDEX] = voulu
+    # bitfield : chaque drapeau est un sous-element (ScriptCompoundDataElement) ; on ecrit le drapeau Optional seul
+    subs = hw_sous_elements(p)
+    if subs:
+        cible = None
+        for se in subs:
+            txt = unicode(safe(lambda: se.identifier, u"")) + u" " + unicode(safe(lambda: se.visible_name, u"")) + u" " + unicode(safe(lambda: se.name, u""))
+            if hw_re.search(u"optional", txt, hw_re.I):
+                cible = se
+                break
+        if cible is None and len(subs) > OPT_INDEX:
+            cible = subs[OPT_INDEX]
+        if cible is not None:
+            derniere = None
+            for val in (voulu, bool(oui), 1 if oui else 0, u"1" if oui else u"0"):
+                try:
+                    cible.value = val
+                    relu = unicode(safe(lambda: cible.value, u"")).strip().upper()
+                    if relu in (voulu, u"1" if oui else u"0"):
+                        return "ecrit"
+                    derniere = u"valeur relue %s" % relu
+                except Exception as ex:
+                    derniere = ex
+            membres = u", ".join([a for a in dir(cible) if not a.startswith("_")][:40])
+            return "non ecrit : drapeau Optional trouve (%s) mais refuse (%s). Membres du drapeau : %s" % (unicode(safe(lambda: cible.visible_name, u"?")), derniere, membres)
     try:
+        elems[OPT_INDEX] = voulu
         ecrire(p, hw_struct_txt(elems))
         relu = hw_struct(unicode(safe(lambda: p.value, u"")))
         if relu is not None and len(relu) > OPT_INDEX and relu[OPT_INDEX].strip().upper() == voulu:
@@ -143,7 +200,8 @@ def hw_optionnel(dev, oui, nom=u""):
         raise Exception(u"valeur relue %s" % unicode(safe(lambda: p.value, u"")))
     except Exception as ex:
         # l'API n'accepte pas la structure : on ne reimporte jamais un export d'appareil (Machine Expert cree un doublon au lieu de remplacer)
-        return "non ecrit, l'API refuse la structure General Options (%s) : coche la case a la main (ATV320 > General > Optional device)" % ex
+        membres = u", ".join([a for a in dir(p) if not a.startswith("_")][:40])
+        return "non ecrit, l'API refuse la structure General Options (%s) : coche la case a la main (ATV320 > General > Optional device). Membres du parametre : %s" % (ex, membres)
 
 def hw_cobids(dev, nom, node):
     """Apres un changement de Node-ID : COB-ID des PDO et de l'EMCY recalcules d'apres leur formule '$NODEID+16#...'. Renvoie (n_ecrits, erreurs)."""
@@ -631,9 +689,28 @@ def hardware():
                     if rang is not None and rang < len(safe(lambda: list(par.get_children(False)), [])) - 1:
                         dire("   %-28s ajoute en fin d'ilot (insertion au rang %d refusee) : a deplacer a la main en position %d" % (nom, rang, rang + 1))
             except Exception as ex:
-                dire("   %-28s ERREUR de creation (%s) : %s" % (nom, typ, ex))
-                n_err += 1
-                continue
+                # version du catalogue absente de ce Machine Expert : on reessaie avec la version installee (projet ou depot d'appareils)
+                cree_autre = False
+                if "no device found" in unicode(ex).lower():
+                    cid = plc_id if c[1] == "plc_id" else c[1]
+                    for v in hw_versions_connues(c[0], cid, tous):
+                        if unicode(v) == unicode(plc_v if c[2] == "plc_v" else c[2]):
+                            continue
+                        try:
+                            did2 = DeviceID(c[0], cid, v)
+                            if c[3]:
+                                par.add(nom, did2, c[3])
+                            else:
+                                par.add(nom, did2)
+                            dire("   %-28s version %s absente de ce Machine Expert : cree en version %s (mets-la dans l'onglet Materiel de l'outil)" % (nom, unicode(c[2]), v))
+                            cree_autre = True
+                            break
+                        except Exception:
+                            pass
+                if not cree_autre:
+                    dire("   %-28s ERREUR de creation (%s) : %s" % (nom, typ, ex))
+                    n_err += 1
+                    continue
             dev = (hw_find(nom) or [None])[0]
             if dev is None:
                 dire("   %-28s cree mais introuvable ensuite (verifier dans l'arbre)" % nom)
