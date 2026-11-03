@@ -2588,7 +2588,7 @@ function renderAxes() {
   const main = grp.filter(g => !g.adv).map(fs).join('');
   const adv = grp.filter(g => g.adv).map(fs).join('');
   const isNew = !!d._new;
-  const list = `<aside class="panel axlist sticky"><div class="axl-h"><h2>Axes</h2><span class="el-sub">${LV.length}</span></div>
+  const list = `<aside class="panel axlist"><div class="axl-h"><h2>Axes</h2><span class="el-sub">${LV.length}</span></div>
       <div class="axl-b">${groups || '<div class="el-sub" style="padding:8px 12px">Aucun axe enregistré.</div>'}</div>
       <div class="axl-f"><button class="btn ghost" id="newAxis" title="Axe brushless sur Lexium 62">+ Brushless</button><button class="btn ghost" id="newAtv" title="Moteur asynchrone, BMP ou tambour piloté par un ATV320">+ ATV320</button></div></aside>`;
   v.innerHTML = top + `<div class="axes3" style="margin-top:14px">${list}
