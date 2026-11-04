@@ -23,7 +23,8 @@ reglages-servo/
 │   ├─ moteurs_asynchrones.js     Moteurs asynchrones : SEW DRN (IE3, 2/4/6/8 pôles), Leroy-Somer LSES,
 │   │                             Interroll DM 0080 et DM 0113. Catalogue › Asynchrones (plaque ATV320).
 │   ├─ reducteurs.js              Réducteurs (Neugart, Atlanta, STOBER, Wittenstein, Interroll, NGI…).
-│   │                             Les SEW viennent du tableau des dents dans app.js (sewCatalog).
+│   │                             Les SEW viennent du tableau des dents dans app.js (sewCatalog)
+│   │                             et des catalogues SEW dans sew_servo.js.
 │   ├─ variateurs.js              Variateurs : LXM62, ATV320 (In, Imax, puissance).
 │   ├─ materiel.js                Types d'appareils Machine Expert en plus du dictionnaire intégré
 │   │                             (le dictionnaire de l'Auto_Pannel est dans app.js : HW_CAT).
@@ -105,6 +106,18 @@ Courant limite = T2B ÷ i ÷ Kt × part autorisée (80 % par défaut)
 UserCurrentLimit (%) = Courant limite ÷ Imax moteur × 100 (arrondi en dessous)
 Exemple : 500 ÷ 449 ÷ 1,208 × 0,8 = 0,74 A → 0,74 ÷ 17,1 = 4,3 %
 
+Catalogue SEW, deuxième source : catalogue/sew_servo.js (catalogue servo « adaptateurs AQS.. »
+27788644/EN 02/2024 + catalogue motoréducteurs DRN.. 33346747). Il donne, par taille et par
+rapport : le couple de sortie Mamax pour chaque taille d'adaptateur servo, le couple de pointe
+Mapk, le couple d'arrêt d'urgence (mis en T2Not), la vitesse de sortie max nak, la vitesse
+d'entrée max nepk, la masse, le J_Gear du réducteur seul, le rendement, la charge radiale
+admissible FRa par forme de montage et les cotes des adaptateurs (B5, E5, alésages). Le
+catalogue passe ainsi de 1 502 à 4 930 fiches générées : toutes les tailles (y compris les
+réducteurs composés R27R17, les RX.., les S..p et les SPIROPLAN servo W19 à W59) et tous leurs
+rapports. Point important : l'adaptateur servo limite le couple. Un K19 i=4,5 accepte 80 Nm nu,
+mais 41 Nm avec un AQSH80 et 30 Nm avec un AQSH50. Quand tu tapes une désignation complète
+(KHF19 AQSH80/1), la fiche créée prend le couple de son adaptateur, pas celui du réducteur nu.
+
 Catalogue SEW (tableau SEW_CAT en tête de app/app.js, catalogue DRN.. 33346747/EN 02/2026) :
 les rapports (K19…K49 nommés KH, K37…K187, R07…R167, F27…F157, S37…S97, W10/20/30) viennent du
 tableau des dents, ce qui donne GearIn / GearOut exacts. Pour chaque rapport : T2B = Mamax à
@@ -116,7 +129,10 @@ Fiches produit du configurateur SEW (KH19/TAQSH80/2 et KH19BAQSH80/2, rapports 4
 AQSH80/2 le limite à 41 Nm en i=4,5 et 49 Nm en i=6,91 là où le catalogue K19 annonce 80 Nm),
 le J_Gear (0,53 à 0,77 kg·cm² rapportés côté entrée, réducteur + adaptateur), la masse (6,7 à
 7,0 kg) et le lubrifiant. Les fiches sont dans le catalogue à leur désignation exacte, et le
-J_Gear est repris sur la fiche de base K19 du même rapport.
+J_Gear est repris sur la fiche de base K19 du même rapport. Même chose pour KH29BAQSH100/4
+i=19,99 (Ma max 130 Nm, J_Gear 1,46 kg·cm², 9,6 kg, 0,85 l) et la fiche de base K29 i=19,99.
+Quand la désignation complète est tapée dans le choix du réducteur, les fiches qui portent déjà
+ce nom (adaptateur compris) passent devant les autres formes de la même taille.
 Formes de montage (notice SEW 31988628/FR §3.11, tableau SEW_FORMES dans app.js) : la fiche de
 base porte le nom de la taille (K19, K37, F47, W10…) ; KA, KF, KAF, KH, KHF, KV, KT, KZ, KM…
 (et FA, FAF, FH…, SA, SAF…, WA, WAF…, suffixe B, options /T /R /G, adaptateurs AQSH, AQSA, AM…)
@@ -126,6 +142,19 @@ base de cette taille sous ce nom : en choisir une crée la fiche à ce nom (rapp
 rendement repris, forme décrite dans les notes ; T2B à confirmer avec un adaptateur servo). À
 l'import du dossier, la désignation du réducteur est lue dans Réf2 (réducteur séparé) ou en tête
 de la référence du motoréducteur, et la fiche au nom exact est créée de la même façon.
+
+Motoréducteurs SEW DRN (catalogue/sew_drn.js, feuille de sélection du catalogue 33346747) :
+la liste des combinaisons réducteur + moteur DRN (15 461 combinaisons, 55 moteurs) et les tableaux
+« faibles vitesses ». Deux usages. 1) À l'import du dossier, quand la référence est celle d'un
+motoréducteur (K37 DRN90L4, WA10/T DRN71M4), l'outil lit le moteur : si la colonne i est vide il
+affiche les rapports que SEW propose avec ce moteur (et le prend tout seul s'il n'y en a qu'un) ;
+si le rapport du dossier n'existe pas pour cette combinaison, ou si le moteur n'est jamais associé
+à ce réducteur, l'import le signale. Le dossier ne fournit jamais de donnée constructeur : il
+donne le nom, le catalogue donne les valeurs. 2) Les tableaux « faibles vitesses » donnent le
+couple de sortie max des réducteurs composés (R27R17, K107R77, F127R87…) que le catalogue servo
+ne couvre pas : 2 668 fiches y gagnent leur T2B, avec FRa et masse. Les vitesses de sortie na et
+les couples Ma de la feuille ne sont pas repris : l'outil les recalcule (na = nN ÷ i,
+Ma = MN × i × rendement).
 
 Asynchrone sur ATV320 : HSP et LSP se saisissent en Hz dans l'axe (50 / 10 Hz par défaut) ;
 l'outil donne les tr/min moteur, les tr/min de la virole et la vitesse de bande (mm/s et m/min)
